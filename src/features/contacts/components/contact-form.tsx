@@ -63,11 +63,18 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
   const [educando, setEducando] = useState(initialMetadata.educando ?? '')
   const [turma, setTurma] = useState(initialMetadata.turma ?? '')
   const [disciplina, setDisciplina] = useState(initialMetadata.disciplina ?? '')
-
-  // Auto-fill WhatsApp with phone number if it's empty when phone is typed
   const handlePhoneChange = (val: string) => {
+    if (whatsapp === phone || !whatsapp) {
+      setWhatsapp(val)
+    }
     setPhone(val)
-    if (!whatsapp) setWhatsapp(val)
+  }
+
+  const handleWhatsappChange = (val: string) => {
+    if (phone === whatsapp || !phone) {
+      setPhone(val)
+    }
+    setWhatsapp(val)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -145,7 +152,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
               <input
                 type="tel"
                 value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
+                onChange={(e) => handleWhatsappChange(e.target.value)}
                 className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
                 placeholder="Ex: 912345678"
               />
