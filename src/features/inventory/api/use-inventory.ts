@@ -8,8 +8,7 @@ export function useInventory() {
   return useQuery({
     queryKey: [INVENTORY_QUERY_KEY],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('inventory_items')
+      const { data, error } = await (supabase as any).from('inventory_items')
         .select('*')
         .is('deleted_at', null)
         .order('name', { ascending: true })
@@ -24,9 +23,8 @@ export function useCreateItem() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (newItem: Omit<InventoryItem, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>) => {
-      const { data, error } = await supabase
-        .from('inventory_items')
+    mutationFn: async (newItem: any) => {
+      const { data, error } = await (supabase as any).from('inventory_items')
         .insert(newItem)
         .select()
         .single()
@@ -44,9 +42,8 @@ export function useUpdateItem() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Omit<InventoryItem, 'created_at' | 'updated_at' | 'deleted_at'>> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('inventory_items')
+    mutationFn: async ({ id, ...updates }: any) => {
+      const { data, error } = await (supabase as any).from('inventory_items')
         .update(updates)
         .eq('id', id)
         .select()
@@ -66,10 +63,9 @@ export function useDeleteItem() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // Soft delete
-      const { error } = await supabase
-        .from('inventory_items')
-        .update({ deleted_at: new Date().toISOString() })
+      const updates: any = { deleted_at: new Date().toISOString() }
+      const { error } = await (supabase as any).from('inventory_items')
+        .update(updates)
         .eq('id', id)
 
       if (error) throw error

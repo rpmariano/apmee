@@ -1,6 +1,6 @@
 import { Calendar, MoreVertical, AlertCircle, CheckCircle2, Clock } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
-import { ptPT } from 'date-fns/locale'
+import { pt } from 'date-fns/locale'
 import type { Task, TaskPriority, TaskStatus } from '@/types/database'
 import { cn } from '@/lib/utils'
 import { TASK_STATUSES, TASK_PRIORITIES } from '@/lib/constants'
@@ -71,7 +71,7 @@ export function TaskCard({ task, onEdit, onToggleStatus }: TaskCardProps) {
                 (new Date(task.due_date) < new Date() && !isDone) ? "text-red-500 font-medium" : "text-secondary-600"
               )}>
                 <Calendar className="h-3.5 w-3.5" />
-                <span>{format(parseISO(task.due_date), "d 'de' MMM", { locale: ptPT })}</span>
+                <span>{format(parseISO(task.due_date), "d 'de' MMM", { locale: pt })}</span>
               </div>
             )}
           </div>

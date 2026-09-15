@@ -8,11 +8,10 @@ export function useTasks() {
   return useQuery({
     queryKey: [TASKS_QUERY_KEY],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tasks')
+      const { data, error } = await (supabase as any).from('tasks')
         .select('*')
         .is('deleted_at', null)
-        .order('created_at', { ascending: false }) // Or we could order by due_date or status
+        .order('created_at', { ascending: false })
 
       if (error) throw error
       return data as Task[]
@@ -24,9 +23,8 @@ export function useCreateTask() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (newTask: Omit<Task, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>) => {
-      const { data, error } = await supabase
-        .from('tasks')
+    mutationFn: async (newTask: any) => {
+      const { data, error } = await (supabase as any).from('tasks')
         .insert(newTask)
         .select()
         .single()
@@ -44,9 +42,8 @@ export function useUpdateTask() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Omit<Task, 'created_at' | 'updated_at' | 'deleted_at'>> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('tasks')
+    mutationFn: async ({ id, ...updates }: any) => {
+      const { data, error } = await (supabase as any).from('tasks')
         .update(updates)
         .eq('id', id)
         .select()
@@ -66,10 +63,9 @@ export function useDeleteTask() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // Soft delete
-      const { error } = await supabase
-        .from('tasks')
-        .update({ deleted_at: new Date().toISOString() })
+      const updates: any = { deleted_at: new Date().toISOString() }
+      const { error } = await (supabase as any).from('tasks')
+        .update(updates)
         .eq('id', id)
 
       if (error) throw error

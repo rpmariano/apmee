@@ -29,7 +29,7 @@ export function EventList({ filter, onEditEvent }: EventListProps) {
   }
 
   // Filter logic
-  const now = new Date()
+  
   const filteredEvents = (events || []).filter((event) => {
     if (filter === 'all') return true
     

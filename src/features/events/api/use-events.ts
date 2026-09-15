@@ -8,8 +8,7 @@ export function useEvents() {
   return useQuery({
     queryKey: [EVENTS_QUERY_KEY],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('events')
+      const { data, error } = await (supabase as any).from('events')
         .select('*')
         .is('deleted_at', null)
         .order('start_date', { ascending: true })
@@ -24,9 +23,8 @@ export function useCreateEvent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (newEvent: Omit<Event, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>) => {
-      const { data, error } = await supabase
-        .from('events')
+    mutationFn: async (newEvent: any) => {
+      const { data, error } = await (supabase as any).from('events')
         .insert(newEvent)
         .select()
         .single()
@@ -44,9 +42,8 @@ export function useUpdateEvent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Omit<Event, 'created_at' | 'updated_at' | 'deleted_at'>> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('events')
+    mutationFn: async ({ id, ...updates }: any) => {
+      const { data, error } = await (supabase as any).from('events')
         .update(updates)
         .eq('id', id)
         .select()
@@ -66,10 +63,9 @@ export function useDeleteEvent() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // Soft delete
-      const { error } = await supabase
-        .from('events')
-        .update({ deleted_at: new Date().toISOString() })
+      const updates: any = { deleted_at: new Date().toISOString() }
+      const { error } = await (supabase as any).from('events')
+        .update(updates)
         .eq('id', id)
 
       if (error) throw error

@@ -13,7 +13,7 @@ import {
   parseISO,
   isToday,
 } from 'date-fns'
-import { ptPT } from 'date-fns/locale'
+import { pt } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEvents } from '@/features/events/api/use-events'
 import { EventCard } from '@/features/events/components/event-card'
@@ -73,7 +73,7 @@ export function MobileCalendar() {
         {/* Header */}
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold capitalize text-foreground">
-            {format(currentMonth, 'MMMM yyyy', { locale: ptPT })}
+            {format(currentMonth, 'MMMM yyyy', { locale: pt })}
           </h2>
           <div className="flex gap-2">
             <button
@@ -146,7 +146,7 @@ export function MobileCalendar() {
       {/* Selected Day Events List */}
       <div>
         <h3 className="mb-3 text-sm font-semibold text-secondary-700">
-          Eventos de {format(selectedDate, "d 'de' MMMM", { locale: ptPT })}
+          Eventos de {format(selectedDate, "d 'de' MMMM", { locale: pt })}
         </h3>
         
         {isLoading ? (

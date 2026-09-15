@@ -95,7 +95,7 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
         </a>
         
         <a
-          href={hasWhatsapp ? `https://wa.me/${contact.whatsapp.replace(/\D/g, '')}` : undefined}
+          href={hasWhatsapp ? `https://wa.me/${contact.whatsapp?.replace(/\D/g, '')}` : undefined}
           target="_blank"
           rel="noopener noreferrer"
           className={cn(

@@ -4,7 +4,7 @@ import { TaskList } from '@/features/tasks/components/task-list'
 import { TaskForm } from '@/features/tasks/components/task-form'
 import { useCreateTask, useUpdateTask } from '@/features/tasks/api/use-tasks'
 import type { Task, TaskStatus } from '@/types/database'
-import { TASK_STATUSES } from '@/lib/constants'
+
 import { cn } from '@/lib/utils'
 
 type FilterValue = TaskStatus | 'all'

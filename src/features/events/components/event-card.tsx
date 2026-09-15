@@ -1,6 +1,6 @@
 import { MapPin, Calendar, Clock, MoreVertical } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
-import { ptPT } from 'date-fns/locale'
+import { pt } from 'date-fns/locale'
 import type { Event, EventStatus } from '@/types/database'
 import { cn } from '@/lib/utils'
 
@@ -20,7 +20,7 @@ export function EventCard({ event, onEdit }: EventCardProps) {
   const startDate = parseISO(event.start_date)
   const endDate = event.end_date ? parseISO(event.end_date) : null
   
-  const formattedDate = format(startDate, "d 'de' MMMM", { locale: ptPT })
+  const formattedDate = format(startDate, "d 'de' MMMM", { locale: pt })
   const formattedTime = event.is_all_day ? 'Dia Inteiro' : format(startDate, 'HH:mm')
   const status = statusConfig[event.status]
 
@@ -53,7 +53,7 @@ export function EventCard({ event, onEdit }: EventCardProps) {
       <div className="mt-1 flex flex-col gap-1.5 border-t border-warm-100 pt-3">
         <div className="flex items-center gap-2 text-sm text-secondary-600">
           <Calendar className="h-4 w-4 shrink-0 opacity-70" />
-          <span>{formattedDate} {endDate && `- ${format(endDate, "d 'de' MMMM", { locale: ptPT })}`}</span>
+          <span>{formattedDate} {endDate && `- ${format(endDate, "d 'de' MMMM", { locale: pt })}`}</span>
         </div>
         
         {!event.is_all_day && (

@@ -7,13 +7,8 @@ interface InventoryFormProps {
   onClose: () => void
   onSubmit: (data: Partial<InventoryItem>) => void
   isLoading?: boolean
-}
 
-const CATEGORY_LABELS: Record<InventoryCategory, string> = {
-  duravel: 'Durável',
-  consumivel: 'Consumível',
 }
-
 export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryFormProps) {
   const [name, setName] = useState(item?.name ?? '')
   const [category, setCategory] = useState<InventoryCategory>(item?.category ?? 'consumivel')
