@@ -54,3 +54,17 @@
   /* Fonts */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
+
+/* Utilities */
+@layer utilities {
+  .scrollbar-hide {
+    /* IE and Edge */
+    -ms-overflow-style: none;
+    /* Firefox */
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    /* Chrome, Safari and Opera */
+    display: none;
+  }
+}
