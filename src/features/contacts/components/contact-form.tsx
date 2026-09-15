@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import type { Contact, ContactCategory } from '@/types/database'
 import { CONTACT_CATEGORIES, CONTACT_CATEGORY_LABELS } from '@/lib/constants'
 
+import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
 
@@ -41,6 +42,9 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
     if (isDirty) setShowUnsaved(true)
     else onClose()
   }
+
+  useHardwareBack(true, handleCloseClick)
+
 
   const handleSaveAndClose = () => {
     setShowUnsaved(false)

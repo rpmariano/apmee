@@ -3,6 +3,7 @@ import { X, Upload } from 'lucide-react'
 import type { FinancialMovement, FinancialType } from '@/types/database'
 import { supabase } from '@/lib/supabase'
 
+import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 
 interface MovementFormProps {
@@ -28,6 +29,9 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
     if (isDirty) setShowUnsaved(true)
     else onClose()
   }
+
+  useHardwareBack(true, handleCloseClick)
+
 
   const handleSaveAndClose = () => {
     setShowUnsaved(false)

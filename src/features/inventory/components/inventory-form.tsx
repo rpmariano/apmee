@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { X } from 'lucide-react'
 import type { InventoryItem, InventoryCategory } from '@/types/database'
 
+import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
 
@@ -22,6 +23,9 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
     if (isDirty) setShowUnsaved(true)
     else onClose()
   }
+
+  useHardwareBack(true, handleCloseClick)
+
 
   const handleSaveAndClose = () => {
     setShowUnsaved(false)

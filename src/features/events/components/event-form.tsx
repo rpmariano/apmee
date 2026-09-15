@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import type { Event, EventStatus } from '@/types/database'
 import { EVENT_STATUSES } from '@/lib/constants'
 
+import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
 
@@ -40,6 +41,9 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
     if (isDirty) setShowUnsaved(true)
     else onClose()
   }
+
+  useHardwareBack(true, handleCloseClick)
+
 
   const handleSaveAndClose = () => {
     setShowUnsaved(false)

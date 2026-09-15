@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import type { Task, TaskPriority, TaskStatus } from '@/types/database'
 import { TASK_PRIORITIES, TASK_STATUSES } from '@/lib/constants'
 
+import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
 
@@ -42,6 +43,9 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
     if (isDirty) setShowUnsaved(true)
     else onClose()
   }
+
+  useHardwareBack(true, handleCloseClick)
+
 
   const handleSaveAndClose = () => {
     setShowUnsaved(false)

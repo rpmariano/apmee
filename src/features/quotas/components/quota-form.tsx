@@ -4,6 +4,7 @@ import type { Quota } from '@/types/database'
 import { useContacts } from '@/features/contacts/api/use-contacts'
 import { supabase } from '@/lib/supabase'
 
+import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
 
@@ -29,6 +30,9 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
     if (isDirty) setShowUnsaved(true)
     else onClose()
   }
+
+  useHardwareBack(true, handleCloseClick)
+
 
   const handleSaveAndClose = () => {
     setShowUnsaved(false)
