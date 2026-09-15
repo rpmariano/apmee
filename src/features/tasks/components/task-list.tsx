@@ -2,6 +2,7 @@ import { useTasks, useUpdateTask } from '../api/use-tasks'
 import { TaskCard } from './task-card'
 import type { Task, TaskStatus } from '@/types/database'
 import { TASK_STATUSES } from '@/lib/constants'
+import { useBoardMembers } from '@/features/board/api/use-board'
 
 interface TaskListProps {
   filter: TaskStatus | 'all'
@@ -12,7 +13,9 @@ export function TaskList({ filter, onEditTask }: TaskListProps) {
   const { data: tasks, isLoading, error } = useTasks()
   const updateMutation = useUpdateTask()
 
-  if (isLoading) {
+  const { data: boardMembers, isLoading: isLoadingBoard } = useBoardMembers()
+
+  if (isLoading || isLoadingBoard) {
     return (
       <div className="flex flex-col gap-3 py-4">
         {[1, 2, 3].map((i) => (
@@ -62,15 +65,46 @@ export function TaskList({ filter, onEditTask }: TaskListProps) {
     )
   }
 
+  // Group tasks by assignee
+  const groupedTasks = filteredTasks.reduce((acc, task) => {
+    const assigneeId = task.assigned_to || 'unassigned'
+    if (!acc[assigneeId]) acc[assigneeId] = []
+    acc[assigneeId].push(task)
+    return acc
+  }, {} as Record<string, Task[]>)
+
+  // Helper to get assignee name
+  const getAssigneeName = (id: string) => {
+    if (id === 'unassigned') return 'Sem atribuição'
+    const member = boardMembers?.find(m => m.id === id)
+    return member ? (member.display_name || member.email) : 'Desconhecido'
+  }
+
+  // Sort groups: Unassigned first, then alphabetically
+  const groupKeys = Object.keys(groupedTasks).sort((a, b) => {
+    if (a === 'unassigned') return -1
+    if (b === 'unassigned') return 1
+    return getAssigneeName(a).localeCompare(getAssigneeName(b))
+  })
+
   return (
-    <div className="flex flex-col gap-3 py-4">
-      {filteredTasks.map((task) => (
-        <TaskCard 
-          key={task.id} 
-          task={task} 
-          onEdit={onEditTask} 
-          onToggleStatus={handleToggleStatus} 
-        />
+    <div className="flex flex-col gap-6 py-4">
+      {groupKeys.map((assigneeId) => (
+        <div key={assigneeId} className="flex flex-col gap-3">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-secondary-600">
+            {getAssigneeName(assigneeId)}
+          </h3>
+          <div className="flex flex-col gap-3">
+            {groupedTasks[assigneeId].map((task) => (
+              <TaskCard 
+                key={task.id} 
+                task={task} 
+                onEdit={onEditTask} 
+                onToggleStatus={handleToggleStatus} 
+              />
+            ))}
+          </div>
+        </div>
       ))}
     </div>
   )

@@ -33,6 +33,8 @@ function toDateString(isoString?: string | null) {
   return isoString.split('T')[0]
 }
 
+import { useBoardMembers } from '@/features/board/api/use-board'
+
 export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) {
 
   const [isDirty, setIsDirty] = useState(false)
@@ -57,6 +59,9 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? TASK_PRIORITIES.MEDIUM)
   const [status, setStatus] = useState<TaskStatus>(task?.status ?? TASK_STATUSES.TODO)
   const [dueDate, setDueDate] = useState(toDateString(task?.due_date))
+  const [assignedTo, setAssignedTo] = useState(task?.assigned_to ?? '')
+
+  const { data: boardMembers } = useBoardMembers()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,6 +75,7 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
       priority,
       status,
       due_date: dueIso,
+      assigned_to: assignedTo || null,
     })
   }
 
@@ -136,14 +142,32 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Data Limite</label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5 z-[50]">
+              <label className="text-sm font-medium text-secondary-700">Data Limite</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1.5 z-[50]">
+              <label className="text-sm font-medium text-secondary-700">Responsável</label>
+              <CustomSelect
+                value={assignedTo}
+                onChange={(val) => setAssignedTo(val)}
+                options={[
+                  { label: '(Sem atribuição)', value: '' },
+                  ...(boardMembers || []).map(m => ({ 
+                    label: m.display_name || m.email, 
+                    value: m.id 
+                  }))
+                ]}
+                placeholder="Atribuir a..."
+              />
+            </div>
           </div>
 
         
