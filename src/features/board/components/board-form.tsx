@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { X } from 'lucide-react'
 import type { AllowedUser } from '@/types/database'
+
+import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 
 interface BoardFormProps {
   member?: AllowedUser
@@ -10,6 +12,21 @@ interface BoardFormProps {
 }
 
 export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormProps) {
+
+  const [isDirty, setIsDirty] = useState(false)
+  const [showUnsaved, setShowUnsaved] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  const handleCloseClick = () => {
+    if (isDirty) setShowUnsaved(true)
+    else onClose()
+  }
+
+  const handleSaveAndClose = () => {
+    setShowUnsaved(false)
+    formRef.current?.requestSubmit()
+  }
+
   const [email, setEmail] = useState(member?.email ?? '')
   const [displayName, setDisplayName] = useState(member?.display_name ?? '')
   const [role, setRole] = useState(member?.role ?? 'vogal')
@@ -33,13 +50,13 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
         <h2 className="text-lg font-bold text-foreground">
           {member ? 'Editar Membro' : 'Novo Membro da Direção'}
         </h2>
-        <button onClick={onClose} className="rounded-full p-2 text-muted hover:bg-warm-100">
+        <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        <form id="board-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form ref={formRef} onChange={() => setIsDirty(true)}  id="board-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Email (Google) <span className="text-primary-500">*</span></label>
@@ -120,6 +137,16 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
           </div>
         </form>
       </div>
-    </div>
+    
+      <UnsavedDialog
+        isOpen={showUnsaved}
+        onCancel={() => setShowUnsaved(false)}
+        onDiscard={() => {
+          setShowUnsaved(false)
+          onClose()
+        }}
+        onSave={handleSaveAndClose}
+      />
+</div>
   )
 }

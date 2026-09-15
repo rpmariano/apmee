@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { X, Upload } from 'lucide-react'
 import type { FinancialMovement, FinancialType } from '@/types/database'
 import { supabase } from '@/lib/supabase'
+
+import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 
 interface MovementFormProps {
   movement?: FinancialMovement
@@ -17,6 +19,21 @@ function toDateString(isoString?: string | null) {
 }
 
 export function MovementForm({ movement, onClose, onSubmit, isLoading }: MovementFormProps) {
+
+  const [isDirty, setIsDirty] = useState(false)
+  const [showUnsaved, setShowUnsaved] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  const handleCloseClick = () => {
+    if (isDirty) setShowUnsaved(true)
+    else onClose()
+  }
+
+  const handleSaveAndClose = () => {
+    setShowUnsaved(false)
+    formRef.current?.requestSubmit()
+  }
+
   const [type, setType] = useState<FinancialType>(movement?.type ?? 'expense')
   const [amount, setAmount] = useState(movement?.amount ?? '')
   const [description, setDescription] = useState(movement?.description ?? '')
@@ -74,13 +91,13 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
         <h2 className="text-lg font-bold text-foreground">
           {movement ? 'Editar Movimento' : 'Novo Movimento'}
         </h2>
-        <button onClick={onClose} className="rounded-full p-2 text-muted hover:bg-warm-100">
+        <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        <form id="movement-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form ref={formRef} onChange={() => setIsDirty(true)}  id="movement-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           {/* Type Toggle */}
           <div className="flex rounded-[var(--radius-button)] bg-warm-100 p-1">
@@ -193,6 +210,16 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
       </div>
 
       
-    </div>
+    
+      <UnsavedDialog
+        isOpen={showUnsaved}
+        onCancel={() => setShowUnsaved(false)}
+        onDiscard={() => {
+          setShowUnsaved(false)
+          onClose()
+        }}
+        onSave={handleSaveAndClose}
+      />
+</div>
   )
 }

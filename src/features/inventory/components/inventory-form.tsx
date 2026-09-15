@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { X } from 'lucide-react'
 import type { InventoryItem, InventoryCategory } from '@/types/database'
+
+import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 
 interface InventoryFormProps {
   item?: InventoryItem
@@ -10,6 +12,21 @@ interface InventoryFormProps {
 
 }
 export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryFormProps) {
+
+  const [isDirty, setIsDirty] = useState(false)
+  const [showUnsaved, setShowUnsaved] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  const handleCloseClick = () => {
+    if (isDirty) setShowUnsaved(true)
+    else onClose()
+  }
+
+  const handleSaveAndClose = () => {
+    setShowUnsaved(false)
+    formRef.current?.requestSubmit()
+  }
+
   const [name, setName] = useState(item?.name ?? '')
   const [category, setCategory] = useState<InventoryCategory>(item?.category ?? 'consumivel')
   const [quantity, setQuantity] = useState(item?.quantity ?? 0)
@@ -37,13 +54,13 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
         <h2 className="text-lg font-bold text-foreground">
           {item ? 'Editar Item' : 'Novo Item'}
         </h2>
-        <button onClick={onClose} className="rounded-full p-2 text-muted hover:bg-warm-100">
+        <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        <form id="inventory-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form ref={formRef} onChange={() => setIsDirty(true)}  id="inventory-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Nome do Item <span className="text-primary-500">*</span></label>
@@ -145,6 +162,16 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
       </div>
 
       
-    </div>
+    
+      <UnsavedDialog
+        isOpen={showUnsaved}
+        onCancel={() => setShowUnsaved(false)}
+        onDiscard={() => {
+          setShowUnsaved(false)
+          onClose()
+        }}
+        onSave={handleSaveAndClose}
+      />
+</div>
   )
 }
