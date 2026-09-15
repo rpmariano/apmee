@@ -5,6 +5,7 @@ import { useContacts } from '@/features/contacts/api/use-contacts'
 import { supabase } from '@/lib/supabase'
 
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
+import { CustomSelect } from '@/components/ui/custom-select'
 
 interface QuotaFormProps {
   quota?: Quota
@@ -103,22 +104,16 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
       <div className="flex-1 overflow-y-auto p-4">
         <form ref={formRef} onChange={() => setIsDirty(true)}  id="quota-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 z-[60]">
             <label className="text-sm font-medium text-secondary-700">Associado <span className="text-primary-500">*</span></label>
-            <select
+            <CustomSelect
               value={contactId}
-              onChange={(e) => setContactId(e.target.value)}
+              onChange={(val) => setContactId(val)}
+              options={(contacts || []).map(c => ({ label: c.name, value: c.id }))}
+              placeholder={isLoadingContacts ? 'A carregar associados...' : 'Selecione o associado'}
+              disabled={!!quota}
               required
-              className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-              disabled={!!quota} // Don't allow changing contact when editing
-            >
-              <option value="" disabled>
-                {isLoadingContacts ? 'A carregar associados...' : 'Selecione o associado'}
-              </option>
-              {(contacts || []).map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -176,18 +171,19 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
                   className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
                 />
               </div>
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5 z-[50]">
                 <label className="text-xs font-medium text-secondary-700">Método</label>
-                <select
+                <CustomSelect
                   value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-                >
-                  <option value="">(Não definido)</option>
-                  <option value="numerario">Numerário</option>
-                  <option value="mbway">MB Way</option>
-                  <option value="transferencia">Transferência Bancária</option>
-                </select>
+                  onChange={(val) => setPaymentMethod(val)}
+                  options={[
+                    { label: '(Não definido)', value: '' },
+                    { label: 'Numerário', value: 'numerario' },
+                    { label: 'MB Way', value: 'mbway' },
+                    { label: 'Transferência Bancária', value: 'transferencia' },
+                  ]}
+                  placeholder="(Não definido)"
+                />
               </div>
             </div>
           )}

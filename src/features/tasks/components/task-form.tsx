@@ -4,6 +4,7 @@ import type { Task, TaskPriority, TaskStatus } from '@/types/database'
 import { TASK_PRIORITIES, TASK_STATUSES } from '@/lib/constants'
 
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
+import { CustomSelect } from '@/components/ui/custom-select'
 
 interface TaskFormProps {
   task?: Task
@@ -106,30 +107,28 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 z-[60]">
               <label className="text-sm font-medium text-secondary-700">Prioridade</label>
-              <select
+              <CustomSelect
                 value={priority}
-                onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-              >
-                {Object.values(TASK_PRIORITIES).map((p) => (
-                  <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>
-                ))}
-              </select>
+                onChange={(val) => setPriority(val as TaskPriority)}
+                options={Object.values(TASK_PRIORITIES).map((p) => ({
+                  label: PRIORITY_LABELS[p],
+                  value: p,
+                }))}
+              />
             </div>
             
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 z-[60]">
               <label className="text-sm font-medium text-secondary-700">Estado</label>
-              <select
+              <CustomSelect
                 value={status}
-                onChange={(e) => setStatus(e.target.value as TaskStatus)}
-                className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-              >
-                {Object.values(TASK_STATUSES).map((s) => (
-                  <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-                ))}
-              </select>
+                onChange={(val) => setStatus(val as TaskStatus)}
+                options={Object.values(TASK_STATUSES).map((s) => ({
+                  label: STATUS_LABELS[s],
+                  value: s,
+                }))}
+              />
             </div>
           </div>
 

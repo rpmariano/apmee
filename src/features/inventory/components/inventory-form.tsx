@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import type { InventoryItem, InventoryCategory } from '@/types/database'
 
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
+import { CustomSelect } from '@/components/ui/custom-select'
 
 interface InventoryFormProps {
   item?: InventoryItem
@@ -76,14 +77,16 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Categoria</label>
-            <select
+            
+            <CustomSelect
               value={category}
-              onChange={(e) => setCategory(e.target.value as InventoryCategory)}
-              className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-            >
-              <option value="consumivel">Consumível (ex: papel, canetas)</option>
-              <option value="duravel">Durável (ex: impressora, colunas)</option>
-            </select>
+              onChange={(val) => setCategory(val as InventoryCategory)}
+              options={[
+                { label: 'Consumível (ex: papel, canetas)', value: 'consumivel' },
+                { label: 'Durável (ex: impressora, colunas)', value: 'duravel' },
+              ]}
+            />
+  
           </div>
 
           <div className="grid grid-cols-2 gap-4">

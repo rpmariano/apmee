@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import type { AllowedUser } from '@/types/database'
 
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
+import { CustomSelect } from '@/components/ui/custom-select'
 
 interface BoardFormProps {
   member?: AllowedUser
@@ -96,31 +97,31 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 z-[60]">
             <label className="text-sm font-medium text-secondary-700">Cargo</label>
-            <select
+            <CustomSelect
               value={role}
-              onChange={(e) => setRole(e.target.value as any)}
-              className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-            >
-              <option value="admin">Admin</option>
-              <option value="presidente">Presidente</option>
-              <option value="tesoureiro">Tesoureiro</option>
-              <option value="gestor_social">Gestor Social</option>
-            </select>
+              onChange={(val) => setRole(val as any)}
+              options={[
+                { label: 'Admin', value: 'admin' },
+                { label: 'Presidente', value: 'presidente' },
+                { label: 'Tesoureiro', value: 'tesoureiro' },
+                { label: 'Gestor Social', value: 'gestor_social' },
+              ]}
+            />
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 z-[50]">
             <label className="text-sm font-medium text-secondary-700">Nível de Acesso (Permissões)</label>
-            <select
+            <CustomSelect
               value={permissionLevel}
-              onChange={(e) => setPermissionLevel(e.target.value as any)}
-              className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-            >
-              <option value="superadmin">Admin</option>
-              <option value="nivel_1">Nível 1</option>
-              <option value="nivel_2">Nível 2</option>
-            </select>
+              onChange={(val) => setPermissionLevel(val as any)}
+              options={[
+                { label: 'Admin', value: 'superadmin' },
+                { label: 'Nível 1', value: 'nivel_1' },
+                { label: 'Nível 2', value: 'nivel_2' },
+              ]}
+            />
           </div>
 
           <div className="my-2 border-t border-warm-200" />

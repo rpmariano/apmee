@@ -4,6 +4,7 @@ import type { Event, EventStatus } from '@/types/database'
 import { EVENT_STATUSES } from '@/lib/constants'
 
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
+import { CustomSelect } from '@/components/ui/custom-select'
 
 interface EventFormProps {
   event?: Event
@@ -161,17 +162,18 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
 
           <div className="my-2 border-t border-warm-200" />
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 z-[60]">
             <label className="text-sm font-medium text-secondary-700">Estado</label>
-            <select
+            
+            <CustomSelect
               value={status}
-              onChange={(e) => setStatus(e.target.value as EventStatus)}
-              className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-            >
-              {Object.values(EVENT_STATUSES).map((s) => (
-                <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-              ))}
-            </select>
+              onChange={(val) => setStatus(val as EventStatus)}
+              options={Object.values(EVENT_STATUSES).map((s) => ({
+                label: STATUS_LABELS[s],
+                value: s,
+              }))}
+            />
+  
           </div>
 
         
