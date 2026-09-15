@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Upload } from 'lucide-react'
 import type { FinancialMovement, FinancialType } from '@/types/database'
+import { supabase } from '@/lib/supabase'
 
 interface MovementFormProps {
   movement?: FinancialMovement
@@ -21,13 +22,41 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
   const [description, setDescription] = useState(movement?.description ?? '')
   const [category, setCategory] = useState(movement?.category ?? '')
   const [date, setDate] = useState(toDateString(movement?.date))
-  const [receiptUrl, setReceiptUrl] = useState(movement?.receipt_url ?? '')
+  const [file, setFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Add time part to make it a valid TIMESTAMPTZ
     const dateIso = date ? new Date(`${date}T12:00:00Z`).toISOString() : new Date().toISOString()
+
+    let finalReceiptUrl = movement?.receipt_url || null
+
+    if (file) {
+      try {
+        setIsUploading(true)
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+        
+        const { error: uploadError } = await (supabase as any).storage
+          .from('receipts')
+          .upload(fileName, file)
+
+        if (uploadError) throw uploadError
+
+        const { data } = (supabase as any).storage
+          .from('receipts')
+          .getPublicUrl(fileName)
+
+        finalReceiptUrl = data.publicUrl
+      } catch (err) {
+        console.error('Error uploading file:', err)
+        alert('Erro ao fazer upload da fatura. Verifique se o bucket "receipts" foi criado no Supabase.')
+        setIsUploading(false)
+        return // Stop submission if upload fails
+      }
+    }
 
     onSubmit({
       type,
@@ -35,7 +64,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
       description,
       category: category || null,
       date: dateIso,
-      receipt_url: receiptUrl || null,
+      receipt_url: finalReceiptUrl,
     })
   }
 
@@ -128,15 +157,25 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
           <div className="my-2 border-t border-warm-200" />
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Link do Comprovativo / Fatura</label>
-            <input
-              type="url"
-              value={receiptUrl}
-              onChange={(e) => setReceiptUrl(e.target.value)}
-              className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-              placeholder="https://..."
-            />
-            <p className="text-xs text-muted">Acesso na cloud ao recibo para justificação de contas.</p>
+            <label className="text-sm font-medium text-secondary-700">Fatura / Comprovativo</label>
+            
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-[var(--radius-card)] border-2 border-dashed border-warm-200 bg-surface py-6 text-center transition-colors hover:bg-warm-50">
+              <Upload className="mb-2 h-6 w-6 text-secondary-400" />
+              <span className="text-sm font-medium text-foreground">
+                {file ? file.name : 'Tocar para enviar documento'}
+              </span>
+              <span className="mt-1 text-xs text-muted">Imagens ou PDF</span>
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                className="hidden"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+            </label>
+            
+            {movement?.receipt_url && !file && (
+              <p className="text-xs text-green-600">Fatura atual anexada.</p>
+            )}
           </div>
 
         </form>
@@ -146,10 +185,10 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
         <button
           type="submit"
           form="movement-form"
-          disabled={isLoading}
+          disabled={isLoading || isUploading}
           className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
         >
-          {isLoading ? 'A Guardar...' : 'Guardar Movimento'}
+          {isUploading ? 'A enviar documento...' : isLoading ? 'A Guardar...' : 'Guardar Movimento'}
         </button>
       </div>
     </div>
