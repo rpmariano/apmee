@@ -199,10 +199,8 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
             </div>
           )}
 
-        </form>
-      </div>
-
-      <div className="border-t border-warm-200 bg-surface p-4">
+        
+<div className="border-t border-warm-200 bg-surface p-4">
         <button
           type="submit"
           form="quota-form"
@@ -212,6 +210,10 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
           {isUploading ? 'A anexar recibo...' : isLoading ? 'A Guardar...' : 'Guardar Quota'}
         </button>
       </div>
+</form>
+      </div>
+
+      
     </div>
   )
 }

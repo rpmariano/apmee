@@ -157,11 +157,8 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
             </select>
           </div>
 
-        </form>
-      </div>
-
-      {/* Footer / Submit Button */}
-      <div className="border-t border-warm-200 bg-surface p-4">
+        
+<div className="border-t border-warm-200 bg-surface p-4">
         <button
           type="submit"
           form="event-form"
@@ -171,6 +168,11 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
           {isLoading ? 'A Guardar...' : 'Guardar Evento'}
         </button>
       </div>
+</form>
+      </div>
+
+      {/* Footer / Submit Button */}
+      
     </div>
   )
 }

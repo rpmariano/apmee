@@ -177,11 +177,8 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
               placeholder="Informação adicional relevante..."
             />
           </div>
-        </form>
-      </div>
-
-      {/* Footer / Submit Button */}
-      <div className="border-t border-warm-200 bg-surface p-4">
+        
+<div className="border-t border-warm-200 bg-surface p-4">
         <button
           type="submit"
           form="contact-form"
@@ -191,6 +188,11 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
           {isLoading ? 'A Guardar...' : 'Guardar Contacto'}
         </button>
       </div>
+</form>
+      </div>
+
+      {/* Footer / Submit Button */}
+      
     </div>
   )
 }

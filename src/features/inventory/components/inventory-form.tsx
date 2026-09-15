@@ -130,10 +130,8 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
             />
           </div>
 
-        </form>
-      </div>
-
-      <div className="border-t border-warm-200 bg-surface p-4">
+        
+<div className="border-t border-warm-200 bg-surface p-4">
         <button
           type="submit"
           form="inventory-form"
@@ -143,6 +141,10 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
           {isLoading ? 'A Guardar...' : 'Guardar Item'}
         </button>
       </div>
+</form>
+      </div>
+
+      
     </div>
   )
 }

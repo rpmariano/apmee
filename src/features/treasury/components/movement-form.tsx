@@ -178,10 +178,8 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
             )}
           </div>
 
-        </form>
-      </div>
-
-      <div className="border-t border-warm-200 bg-surface p-4">
+        
+<div className="border-t border-warm-200 bg-surface p-4">
         <button
           type="submit"
           form="movement-form"
@@ -191,6 +189,10 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
           {isUploading ? 'A enviar documento...' : isLoading ? 'A Guardar...' : 'Guardar Movimento'}
         </button>
       </div>
+</form>
+      </div>
+
+      
     </div>
   )
 }

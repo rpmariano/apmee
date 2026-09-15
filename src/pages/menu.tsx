@@ -7,6 +7,7 @@ import {
   Wallet,
   Receipt,
   Eye,
+  Shield,
 } from 'lucide-react'
 import { usePermissions } from '@/hooks/use-permissions'
 import { cn } from '@/lib/utils'
@@ -17,6 +18,7 @@ interface MenuItem {
   icon: React.ComponentType<{ className?: string }>
   color: string
   module?: string
+  superadminOnly?: boolean
 }
 
 const menuItems: MenuItem[] = [
@@ -26,6 +28,7 @@ const menuItems: MenuItem[] = [
   { to: '/inventario', label: 'Inventário', icon: Package, color: 'bg-warm-100 text-secondary-700' },
   { to: '/tesouraria', label: 'Tesouraria', icon: Wallet, color: 'bg-primary-200 text-primary-700', module: 'treasury' },
   { to: '/quotas', label: 'Quotas', icon: Receipt, color: 'bg-warm-300 text-secondary-700', module: 'quotas' },
+  { to: '/board', label: 'Direção', icon: Shield, color: 'bg-secondary-200 text-secondary-700', superadminOnly: true },
 ]
 
 /**
@@ -33,10 +36,11 @@ const menuItems: MenuItem[] = [
  * Shows a read-only indicator (eye icon) on financial modules for nivel_2 users.
  */
 export default function MenuPage() {
-  const { isFinancialReadOnly } = usePermissions()
+  const { isSuperAdmin, isFinancialReadOnly } = usePermissions()
+  
 
   return (
-    <div className="px-4 pt-6">
+    <div className="px-4 pt-6 pb-24">
       <h1 className="text-xl font-bold text-foreground">Menu</h1>
 
       {/* Search bar placeholder */}
@@ -50,7 +54,9 @@ export default function MenuPage() {
 
       {/* 2-column grid of module cards */}
       <div className="mt-6 grid grid-cols-2 gap-3">
-        {menuItems.map((item) => {
+        {menuItems
+          .filter((item) => !item.superadminOnly || isSuperAdmin)
+          .map((item) => {
           const isReadOnly =
             isFinancialReadOnly() && item.module && ['treasury', 'quotas'].includes(item.module)
 

@@ -126,10 +126,8 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
             />
           </div>
 
-        </form>
-      </div>
-
-      <div className="border-t border-warm-200 bg-surface p-4">
+        
+<div className="border-t border-warm-200 bg-surface p-4">
         <button
           type="submit"
           form="task-form"
@@ -139,6 +137,10 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
           {isLoading ? 'A Guardar...' : 'Guardar Tarefa'}
         </button>
       </div>
+</form>
+      </div>
+
+      
     </div>
   )
 }

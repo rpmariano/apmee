@@ -11,6 +11,7 @@ import TasksPage from '@/pages/tasks'
 import InventoryPage from '@/pages/inventory'
 import TreasuryPage from '@/pages/treasury'
 import QuotasPage from '@/pages/quotas'
+import BoardPage from '@/pages/board'
 
 /**
  * App root — sets up the router with all application routes.
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/inventario" element={<InventoryPage />} />
           <Route path="/tesouraria" element={<TreasuryPage />} />
           <Route path="/quotas" element={<QuotasPage />} />
+          <Route path="/board" element={<BoardPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
