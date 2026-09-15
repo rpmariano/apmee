@@ -1,0 +1,83 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase'
+import type { Quota } from '@/types/database'
+
+const QUOTAS_QUERY_KEY = 'quotas'
+
+export function useQuotas() {
+  return useQuery({
+    queryKey: [QUOTAS_QUERY_KEY],
+    queryFn: async () => {
+      // Fetch quotas AND the related contact name
+      const { data, error } = await (supabase as any)
+        .from('quotas')
+        .select('*, contact:contacts(name, email)')
+        .is('deleted_at', null)
+        .order('year', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data as (Quota & { contact: { name: string; email: string | null } })[]
+    },
+  })
+}
+
+export function useCreateQuota() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (newQuota: any) => {
+      const { data, error } = await (supabase as any)
+        .from('quotas')
+        .insert(newQuota)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUOTAS_QUERY_KEY] })
+    },
+  })
+}
+
+export function useUpdateQuota() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: any) => {
+      const { data, error } = await (supabase as any)
+        .from('quotas')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUOTAS_QUERY_KEY] })
+    },
+  })
+}
+
+export function useDeleteQuota() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any)
+        .from('quotas')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id)
+
+      if (error) throw error
+      return id
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUOTAS_QUERY_KEY] })
+    },
+  })
+}
