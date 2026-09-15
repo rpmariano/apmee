@@ -1,4 +1,4 @@
-import { Shield, ShieldAlert, UserCog } from 'lucide-react'
+import { Shield, ShieldAlert, UserCog, Phone } from 'lucide-react'
 import type { AllowedUser } from '@/types/database'
 import { cn } from '@/lib/utils'
 
@@ -8,16 +8,16 @@ interface BoardCardProps {
 }
 
 const ROLE_LABELS: Record<string, string> = {
+  admin: 'Admin',
   presidente: 'Presidente',
   tesoureiro: 'Tesoureiro',
   gestor_social: 'Gestor Social',
-  vogal: 'Vogal',
 }
 
 const PERMISSION_LABELS: Record<string, string> = {
-  superadmin: 'Super Admin',
-  nivel_1: 'Nível 1 (Escrita Total)',
-  nivel_2: 'Nível 2 (Leitura Finanças)',
+  superadmin: 'Admin',
+  nivel_1: 'Nível 1',
+  nivel_2: 'Nível 2',
 }
 
 export function BoardCard({ member, onEdit }: BoardCardProps) {
@@ -49,6 +49,13 @@ export function BoardCard({ member, onEdit }: BoardCardProps) {
             </span>
             <span className="text-xs text-secondary-500 truncate">{member.email}</span>
             
+            {member.phone && (
+              <div className="mt-1 flex items-center gap-1 text-xs font-medium text-secondary-600">
+                <Phone className="h-3 w-3" />
+                {member.phone}
+              </div>
+            )}
+            
             <div className="mt-2 flex items-center gap-2">
               <span className="rounded-md bg-warm-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-secondary-700">
                 {ROLE_LABELS[member.role] || member.role}
@@ -70,7 +77,7 @@ export function BoardCard({ member, onEdit }: BoardCardProps) {
               Inativo
             </div>
           )}
-          <span className="text-[10px] text-muted">{PERMISSION_LABELS[member.permission_level]}</span>
+          <span className="text-[10px] font-bold text-primary-600">{PERMISSION_LABELS[member.permission_level]}</span>
         </div>
       </div>
     </div>

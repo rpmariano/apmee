@@ -29,7 +29,8 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
 
   const [email, setEmail] = useState(member?.email ?? '')
   const [displayName, setDisplayName] = useState(member?.display_name ?? '')
-  const [role, setRole] = useState(member?.role ?? 'vogal')
+  const [phone, setPhone] = useState(member?.phone ?? '')
+  const [role, setRole] = useState(member?.role ?? 'admin')
   const [permissionLevel, setPermissionLevel] = useState(member?.permission_level ?? 'nivel_2')
   const [isActive, setIsActive] = useState(member?.is_active ?? true)
 
@@ -38,6 +39,7 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
     onSubmit({
       email,
       display_name: displayName || null,
+      phone: phone || null,
       role: role as any,
       permission_level: permissionLevel as any,
       is_active: isActive,
@@ -84,16 +86,27 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
           </div>
 
           <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-secondary-700">Telemóvel</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+              placeholder="912345678"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Cargo</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as any)}
               className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
             >
+              <option value="admin">Admin</option>
               <option value="presidente">Presidente</option>
               <option value="tesoureiro">Tesoureiro</option>
               <option value="gestor_social">Gestor Social</option>
-              <option value="vogal">Vogal</option>
             </select>
           </div>
 
@@ -104,9 +117,9 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
               onChange={(e) => setPermissionLevel(e.target.value as any)}
               className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
             >
-              <option value="superadmin">Super Admin (Acesso Total + Gestão de Utilizadores)</option>
-              <option value="nivel_1">Nível 1 (Leitura/Escrita Total incluindo Tesouraria)</option>
-              <option value="nivel_2">Nível 2 (Apenas leitura na Tesouraria e Quotas)</option>
+              <option value="superadmin">Admin</option>
+              <option value="nivel_1">Nível 1</option>
+              <option value="nivel_2">Nível 2</option>
             </select>
           </div>
 

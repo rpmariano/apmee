@@ -7,7 +7,7 @@
  */
 
 export type PermissionLevel = 'superadmin' | 'nivel_1' | 'nivel_2'
-export type UserRole = 'presidente' | 'tesoureiro' | 'gestor_social' | 'vogal'
+export type UserRole = 'admin' | 'presidente' | 'tesoureiro' | 'gestor_social'
 export type ContactCategory = 'pai' | 'professor' | 'parceiro' | 'fornecedor' | 'associado'
 export type EventStatus = 'planned' | 'active' | 'completed' | 'cancelled'
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
@@ -21,6 +21,7 @@ export interface AllowedUser {
   role: UserRole
   permission_level: PermissionLevel
   display_name: string | null
+  phone: string | null
   avatar_url: string | null
   is_active: boolean
   created_at: string
