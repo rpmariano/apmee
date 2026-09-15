@@ -1,0 +1,14 @@
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/database'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Supabase URL and Anon Key are required. ' +
+      'Copy .env.example to .env.local and fill in your Supabase credentials.'
+  )
+}
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)

@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+/* ============================================
+   APMEE EB Cobre — Custom Theme
+   Paleta extraída do logótipo da associação
+   ============================================ */
+
+@theme {
+  /* Primary — Coral/Salmon */
+  --color-primary-50: #fef2ee;
+  --color-primary-100: #fde3d9;
+  --color-primary-200: #fbc3b2;
+  --color-primary-300: #f89a80;
+  --color-primary-400: #e8856c;
+  --color-primary-500: #e06b4d;
+  --color-primary-600: #cc4f33;
+  --color-primary-700: #ab3d28;
+  --color-primary-800: #8a3425;
+  --color-primary-900: #712f24;
+
+  /* Secondary — Dark Navy/Grey */
+  --color-secondary-50: #f4f6f7;
+  --color-secondary-100: #e2e7eb;
+  --color-secondary-200: #c8d1d9;
+  --color-secondary-300: #a1afbc;
+  --color-secondary-400: #748698;
+  --color-secondary-500: #596b7d;
+  --color-secondary-600: #4c5a6a;
+  --color-secondary-700: #424d59;
+  --color-secondary-800: #3b434c;
+  --color-secondary-900: #2d3748;
+
+  /* Warm Beige */
+  --color-warm-50: #fdfcf9;
+  --color-warm-100: #faf7f0;
+  --color-warm-200: #f3ede0;
+  --color-warm-300: #e8ddc8;
+  --color-warm-400: #d4c4a3;
+  --color-warm-500: #c2ab83;
+
+  /* Backgrounds */
+  --color-background: #fafaf8;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f5f3;
+
+  /* Text */
+  --color-foreground: #1a1a1a;
+  --color-muted: #6b7280;
+
+  /* Border radius for pastel cards */
+  --radius-card: 1rem;
+  --radius-button: 0.75rem;
+
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
