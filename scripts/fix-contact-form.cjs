@@ -1,9 +1,8 @@
-import { useState, useRef } from 'react'
-import { X } from 'lucide-react'
-import type { Contact, ContactCategory } from '@/types/database'
-import { CONTACT_CATEGORIES, CONTACT_CATEGORY_LABELS } from '@/lib/constants'
+const fs = require('fs');
 
-import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
+let content = fs.readFileSync('src/features/contacts/components/contact-form.tsx', 'utf8');
+
+const imports = `import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
 
 const TURMA_OPTIONS = [
@@ -22,84 +21,13 @@ const DISCIPLINA_OPTIONS = [
   { label: 'Principal', value: 'Principal' },
   { label: 'Diretor(a)', value: 'Diretor(a)' },
 ]
+`;
+content = content.replace("import { UnsavedDialog } from '@/components/ui/unsaved-dialog'", imports);
 
+const formRegex = /(<form[^>]*>)[\s\S]*?(<div className="my-2 border-t border-warm-200" \/>\s*<div className="flex flex-col gap-1\.5">\s*<label className="text-sm font-medium text-secondary-700">Notas \/ Observações<\/label>)/;
 
-interface ContactFormProps {
-  contact?: Contact
-  onClose: () => void
-  onSubmit: (data: Partial<Contact>) => void
-  isLoading?: boolean
-}
-
-export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFormProps) {
-
-  const [isDirty, setIsDirty] = useState(false)
-  const [showUnsaved, setShowUnsaved] = useState(false)
-  const formRef = useRef<HTMLFormElement>(null)
-
-  const handleCloseClick = () => {
-    if (isDirty) setShowUnsaved(true)
-    else onClose()
-  }
-
-  const handleSaveAndClose = () => {
-    setShowUnsaved(false)
-    formRef.current?.requestSubmit()
-  }
-
-  const [name, setName] = useState(contact?.name ?? '')
-  const [category, setCategory] = useState<ContactCategory>(contact?.category ?? 'pai')
-  const [email, setEmail] = useState(contact?.email ?? '')
-  const [phone, setPhone] = useState(contact?.phone ?? '')
-  const [whatsapp, setWhatsapp] = useState(contact?.whatsapp ?? '')
-  const [notes, setNotes] = useState(contact?.notes ?? '')
-
-  // Metadata
-  const initialMetadata = (contact?.metadata as Record<string, string>) ?? {}
-  const [educando, setEducando] = useState(initialMetadata.educando ?? '')
-  const [turma, setTurma] = useState(initialMetadata.turma ?? '')
-  const [disciplina, setDisciplina] = useState(initialMetadata.disciplina ?? '')
-
-  // Auto-fill WhatsApp with phone number if it's empty when phone is typed
-  const handlePhoneChange = (val: string) => {
-    setPhone(val)
-    if (!whatsapp) setWhatsapp(val)
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const metadata: Record<string, string> = {}
-    if (turma) metadata.turma = turma
-    if (category === 'pai' && educando) metadata.educando = educando
-    if (category === 'professor' && disciplina) metadata.disciplina = disciplina
-
-    onSubmit({
-      name,
-      category,
-      email: email || null,
-      phone: phone || null,
-      whatsapp: whatsapp || null,
-      notes: notes || null,
-      metadata,
-    })
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
-        <h2 className="text-lg font-bold text-foreground">
-          {contact ? 'Editar Contacto' : 'Novo Contacto'}
-        </h2>
-        <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-
-      {/* Form */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <form ref={formRef} onChange={() => setIsDirty(true)} id="contact-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+const newFormFields = `$1
+          
           <div className="flex flex-col gap-1.5 z-[60]">
             <label className="text-sm font-medium text-secondary-700">Categoria</label>
             <CustomSelect
@@ -204,41 +132,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
           <div className="my-2 border-t border-warm-200" />
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Notas / Observações</label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              className="resize-none rounded-[var(--radius-card)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-              placeholder="Informação adicional relevante..."
-            />
-          </div>
-        
-<div className="border-t border-warm-200 bg-surface p-4">
-        <button
-          type="submit"
-          form="contact-form"
-          disabled={isLoading}
-          className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
-        >
-          {isLoading ? 'A Guardar...' : 'Guardar Contacto'}
-        </button>
-      </div>
-</form>
-      </div>
+            <label className="text-sm font-medium text-secondary-700">Notas / Observações</label>`;
 
-      {/* Footer / Submit Button */}
-      
-    
-      <UnsavedDialog
-        isOpen={showUnsaved}
-        onCancel={() => setShowUnsaved(false)}
-        onDiscard={() => {
-          setShowUnsaved(false)
-          onClose()
-        }}
-        onSave={handleSaveAndClose}
-      />
-</div>
-  )
-}
+content = content.replace(formRegex, newFormFields);
+fs.writeFileSync('src/features/contacts/components/contact-form.tsx', content);
