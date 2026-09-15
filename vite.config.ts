@@ -6,8 +6,8 @@ import { resolve } from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Base path for GitHub Pages — change to '/<repo-name>/' if not using custom domain
-  base: '/apmee-app/',
+  // Base path for GitHub Pages
+  base: '/apmee/',
   plugins: [
     react(),
     tailwindcss(),
@@ -22,8 +22,8 @@ export default defineConfig({
         background_color: '#FAFAF8',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/apmee-app/',
-        scope: '/apmee-app/',
+        start_url: '/apmee/',
+        scope: '/apmee/',
         icons: [
           {
             src: 'pwa-192x192.png',
