@@ -6,6 +6,18 @@ import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
 
+const INVENTORY_CATEGORIES = [
+  { label: 'Consumíveis', value: 'consumivel' },
+  { label: 'Alimentos', value: 'alimento' },
+  { label: 'Mobilizado', value: 'mobilizado' }
+]
+
+const ITEMS_BY_CATEGORY: Record<string, string[]> = {
+  'consumivel': ['Pratos de papel', 'Pratos de Plástico', 'Talheres', 'Guardanapos', 'Copos de plástico'],
+  'alimento': ['Pacote batata frita', 'Pacote de pipocas', 'Sumos Naturais', 'Refrigerantes', 'Água', 'Pão cachorro', 'Salsicha'],
+  'mobilizado': ['Microfone', 'Coluna', 'Máquina Café']
+}
+
 interface InventoryFormProps {
   item?: InventoryItem
   onClose: () => void
@@ -67,28 +79,27 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
       <div className="flex-1 overflow-y-auto p-4">
         <form ref={formRef} onChange={() => setIsDirty(true)}  id="inventory-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 z-[70]">
             <label className="text-sm font-medium text-secondary-700">Nome do Item <span className="text-primary-500">*</span></label>
-            <input
-              type="text"
+            <CustomSelect
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(val) => setName(val)}
+              options={(ITEMS_BY_CATEGORY[category] || []).map(i => ({ label: i, value: i }))}
+              placeholder="Selecione ou crie..."
+              creatable
               required
-              className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-              placeholder="Ex: Resmas de Papel A4"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Categoria</label>
-            
             <CustomSelect
               value={category}
-              onChange={(val) => setCategory(val as InventoryCategory)}
-              options={[
-                { label: 'Consumível (ex: papel, canetas)', value: 'consumivel' },
-                { label: 'Durável (ex: impressora, colunas)', value: 'duravel' },
-              ]}
+              onChange={(val) => {
+                setCategory(val as InventoryCategory)
+                setName('')
+              }}
+              options={INVENTORY_CATEGORIES}
             />
   
           </div>

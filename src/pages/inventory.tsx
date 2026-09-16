@@ -11,7 +11,8 @@ type FilterValue = InventoryCategory | 'all'
 const tabs: { value: FilterValue; label: string }[] = [
   { value: 'all', label: 'Todos' },
   { value: 'consumivel', label: 'Consumíveis' },
-  { value: 'duravel', label: 'Duráveis' },
+  { value: 'alimento', label: 'Alimentos' },
+  { value: 'mobilizado', label: 'Mobilizado' },
 ]
 
 export default function InventoryPage() {

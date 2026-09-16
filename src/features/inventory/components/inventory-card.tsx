@@ -9,8 +9,9 @@ interface InventoryCardProps {
 }
 
 const categoryLabels: Record<InventoryCategory, string> = {
-  duravel: 'Durável',
   consumivel: 'Consumível',
+  alimento: 'Alimento',
+  mobilizado: 'Mobilizado',
 }
 
 export function InventoryCard({ item, onEdit, onUpdateQuantity }: InventoryCardProps) {

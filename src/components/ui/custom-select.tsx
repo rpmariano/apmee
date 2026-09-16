@@ -14,6 +14,7 @@ interface CustomSelectProps {
   placeholder?: string
   disabled?: boolean
   required?: boolean
+  creatable?: boolean
 }
 
 export function CustomSelect({
@@ -22,10 +23,19 @@ export function CustomSelect({
   options,
   placeholder = 'Selecione...',
   disabled,
-  required
+  required,
+  creatable = false
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const selectedOption = options.find((o) => o.value === value)
+  const [search, setSearch] = useState('')
+  
+  // If creatable, allow the value itself to be displayed even if not in options
+  const selectedOption = options.find((o) => o.value === value) || (creatable && value ? { label: value, value: value } : undefined)
+
+  // Reset search when opening
+  useEffect(() => {
+    if (isOpen) setSearch('')
+  }, [isOpen])
 
   // Allow closing when pressing Escape
   useEffect(() => {
@@ -79,27 +89,70 @@ export function CustomSelect({
           />
 
           {/* Dropdown menu */}
-          <div className="absolute left-0 top-full z-[70] mt-1 max-h-60 w-full overflow-y-auto rounded-[var(--radius-card)] border border-warm-200 bg-surface py-1 shadow-xl animate-in fade-in slide-in-from-top-2">
-            {options.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => {
-                  onChange(option.value)
-                  setIsOpen(false)
-                }}
-                className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm transition-colors hover:bg-warm-50 active:bg-warm-100"
-              >
-                <span
-                  className={cn(
-                    value === option.value ? 'font-bold text-primary-600' : 'text-foreground'
-                  )}
-                >
-                  {option.label}
-                </span>
-                {value === option.value && <Check className="h-4 w-4 text-primary-600" />}
-              </button>
-            ))}
+          <div className="absolute left-0 top-full z-[70] mt-1 max-h-60 w-full overflow-y-auto rounded-[var(--radius-card)] border border-warm-200 bg-surface py-1 shadow-xl animate-in fade-in slide-in-from-top-2 flex flex-col">
+            
+            {creatable && (
+              <div className="p-2 border-b border-warm-100">
+                <input
+                  type="text"
+                  autoFocus
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Procurar ou criar novo..."
+                  className="w-full rounded-md border border-warm-200 bg-warm-50 px-3 py-1.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                />
+              </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto">
+              {(() => {
+                const filtered = creatable && search 
+                  ? options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()))
+                  : options;
+                
+                const exactMatch = filtered.some(o => o.label.toLowerCase() === search.toLowerCase());
+
+                return (
+                  <>
+                    {filtered.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          onChange(option.value)
+                          setIsOpen(false)
+                        }}
+                        className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm transition-colors hover:bg-warm-50 active:bg-warm-100"
+                      >
+                        <span className={cn(value === option.value ? 'font-bold text-primary-600' : 'text-foreground')}>
+                          {option.label}
+                        </span>
+                        {value === option.value && <Check className="h-4 w-4 text-primary-600" />}
+                      </button>
+                    ))}
+
+                    {creatable && search && !exactMatch && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onChange(search.trim())
+                          setIsOpen(false)
+                        }}
+                        className="flex w-full items-center px-3 py-2.5 text-left text-sm text-primary-600 font-medium transition-colors hover:bg-warm-50 active:bg-warm-100"
+                      >
+                        + Criar "{search}"
+                      </button>
+                    )}
+                    
+                    {filtered.length === 0 && (!creatable || !search) && (
+                      <div className="px-3 py-3 text-center text-sm text-muted">
+                        Sem opções
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
+            </div>
           </div>
         </>
       )}

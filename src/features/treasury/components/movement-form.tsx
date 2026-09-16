@@ -184,7 +184,8 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
                 value={category}
                 onChange={(val) => setCategory(val)}
                 options={type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES}
-                placeholder="Selecione..."
+                placeholder="Selecione ou crie..."
+                creatable
               />
             </div>
             

@@ -12,7 +12,7 @@ export type ContactCategory = 'pai' | 'professor' | 'parceiro' | 'fornecedor' | 
 export type EventStatus = 'planned' | 'active' | 'completed' | 'cancelled'
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
 export type TaskStatus = 'todo' | 'in_progress' | 'done'
-export type InventoryCategory = 'duravel' | 'consumivel'
+export type InventoryCategory = 'consumivel' | 'alimento' | 'mobilizado'
 export type FinancialType = 'income' | 'expense'
 
 export interface AllowedUser {
