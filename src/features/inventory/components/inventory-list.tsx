@@ -1,15 +1,15 @@
-import { useInventory, useUpdateItem } from '../api/use-inventory'
+import { useInventory } from '../api/use-inventory'
 import { InventoryCard } from './inventory-card'
 import type { InventoryItem, InventoryCategory } from '@/types/database'
 
 interface InventoryListProps {
-  category: InventoryCategory | 'all'
+  filter: InventoryCategory | 'all'
   onEditItem?: (item: InventoryItem) => void
+  onTransaction?: (item: InventoryItem) => void
 }
 
-export function InventoryList({ category, onEditItem }: InventoryListProps) {
+export function InventoryList({ filter, onEditItem, onTransaction }: InventoryListProps) {
   const { data: items, isLoading, error } = useInventory()
-  const updateMutation = useUpdateItem()
 
   if (isLoading) {
     return (
@@ -30,18 +30,22 @@ export function InventoryList({ category, onEditItem }: InventoryListProps) {
   }
 
   const filteredItems = (items || []).filter((item) => {
-    if (category === 'all') return true
-    return item.category === category
+    if (filter === 'all') return true
+    return item.category === filter
   })
 
-  const handleUpdateQuantity = async (item: InventoryItem, newQuantity: number) => {
-    await updateMutation.mutateAsync({
-      id: item.id,
-      quantity: newQuantity,
-    })
-  }
+  // Sort: Low stock items first, then alphabetical
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    const aLowStock = a.min_stock !== null && a.quantity <= a.min_stock
+    const bLowStock = b.min_stock !== null && b.quantity <= b.min_stock
+    
+    if (aLowStock && !bLowStock) return -1
+    if (!aLowStock && bLowStock) return 1
+    
+    return a.name.localeCompare(b.name)
+  })
 
-  if (filteredItems.length === 0) {
+  if (sortedItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-warm-100">
@@ -49,20 +53,20 @@ export function InventoryList({ category, onEditItem }: InventoryListProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
           </svg>
         </div>
-        <p className="mt-4 text-sm font-medium text-foreground">Inventário Vazio</p>
-        <p className="mt-1 text-xs text-muted">Não existem itens nesta categoria.</p>
+        <p className="mt-4 text-sm font-medium text-foreground">Sem itens</p>
+        <p className="mt-1 text-xs text-muted">Ainda não existem itens nesta categoria.</p>
       </div>
     )
   }
 
   return (
     <div className="flex flex-col gap-3 py-4">
-      {filteredItems.map((item) => (
+      {sortedItems.map((item) => (
         <InventoryCard 
           key={item.id} 
           item={item} 
-          onEdit={onEditItem} 
-          onUpdateQuantity={handleUpdateQuantity} 
+          onEdit={onEditItem}
+          onTransaction={onTransaction}
         />
       ))}
     </div>

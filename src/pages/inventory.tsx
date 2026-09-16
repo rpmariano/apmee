@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { InventoryList } from '@/features/inventory/components/inventory-list'
 import { InventoryForm } from '@/features/inventory/components/inventory-form'
+import { TransactionForm } from '@/features/inventory/components/transaction-form'
 import { useCreateItem, useUpdateItem } from '@/features/inventory/api/use-inventory'
 import type { InventoryItem, InventoryCategory } from '@/types/database'
 import { cn } from '@/lib/utils'
@@ -19,6 +20,7 @@ export default function InventoryPage() {
   const [activeTab, setActiveTab] = useState<FilterValue>('all')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>()
+  const [transactionItem, setTransactionItem] = useState<InventoryItem | undefined>()
 
   const createMutation = useCreateItem()
   const updateMutation = useUpdateItem()
@@ -73,7 +75,7 @@ export default function InventoryPage() {
       </div>
 
       <div className="px-4">
-        <InventoryList category={activeTab} onEditItem={handleEditItem} />
+        <InventoryList filter={activeTab} onEditItem={handleEditItem} onTransaction={(item) => setTransactionItem(item)} />
       </div>
 
       <button
@@ -82,6 +84,13 @@ export default function InventoryPage() {
       >
         <Plus className="h-6 w-6" />
       </button>
+
+      {transactionItem && (
+        <TransactionForm
+          item={transactionItem}
+          onClose={() => setTransactionItem(undefined)}
+        />
+      )}
 
       {isFormOpen && (
         <InventoryForm

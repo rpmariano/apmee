@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useEvents } from '@/features/events/api/use-events'
 import { useMovements } from '@/features/treasury/api/use-treasury'
+import { useInventoryTransactions } from '@/features/inventory/api/use-inventory-transactions'
+import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
 import { CustomSelect } from '@/components/ui/custom-select'
 import { MovementCard } from '@/features/treasury/components/movement-card'
 import type { FinancialMovement } from '@/types/database'
@@ -13,8 +15,9 @@ export function EventFinances({ onEditMovement }: EventFinancesProps) {
   const [selectedEventId, setSelectedEventId] = useState<string>('')
   const { data: events, isLoading: isLoadingEvents } = useEvents()
   const { data: movements, isLoading: isLoadingMovements } = useMovements()
+  const { data: transactions, isLoading: isLoadingTransactions } = useInventoryTransactions()
 
-  if (isLoadingEvents || isLoadingMovements) {
+  if (isLoadingEvents || isLoadingMovements || isLoadingTransactions) {
     return (
       <div className="flex flex-col gap-3 py-4 animate-pulse">
         <div className="h-10 w-full rounded-md bg-warm-100" />
@@ -26,6 +29,7 @@ export function EventFinances({ onEditMovement }: EventFinancesProps) {
   const eventOptions = (events || []).map(e => ({ label: e.title, value: e.id }))
 
   const eventMovements = (movements || []).filter(m => m.event_id === selectedEventId)
+  const eventTransactions = (transactions || []).filter(t => t.event_id === selectedEventId)
   
   const totalIncome = eventMovements
     .filter(m => m.type === 'income')
@@ -79,6 +83,29 @@ export function EventFinances({ onEditMovement }: EventFinancesProps) {
                   movement={movement}
                   onEdit={onEditMovement}
                 />
+              ))
+            )}
+          </div>
+
+          <div className="flex flex-col gap-3 mt-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-secondary-600">
+              Material Movimentado
+            </h3>
+            {eventTransactions.length === 0 ? (
+              <p className="text-sm text-muted text-center py-4">Nenhum registo de inventário para este evento.</p>
+            ) : (
+              eventTransactions.map(t => (
+                <div key={t.id} className="flex gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-3">
+                  <div className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${t.type === 'in' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                    {t.type === 'in' ? <ArrowDownRight className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">
+                      {t.type === 'in' ? 'Entrada' : 'Saída'} de {t.quantity} {t.item?.name ? `(${t.item.name})` : ''}
+                    </p>
+                    {t.notes && <p className="text-xs text-muted mt-0.5">{t.notes}</p>}
+                  </div>
+                </div>
               ))
             )}
           </div>

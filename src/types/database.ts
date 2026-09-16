@@ -13,6 +13,7 @@ export type EventStatus = 'planned' | 'active' | 'completed' | 'cancelled'
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
 export type TaskStatus = 'todo' | 'in_progress' | 'done'
 export type InventoryCategory = 'consumivel' | 'alimento' | 'mobilizado'
+export type InventoryTransactionType = 'in' | 'out'
 export type FinancialType = 'income' | 'expense'
 
 export interface AllowedUser {
@@ -193,4 +194,15 @@ export interface Database {
       }
     }
   }
+}
+
+export interface InventoryTransaction {
+  id: string
+  item_id: string
+  type: InventoryTransactionType
+  quantity: number
+  event_id: string | null
+  notes: string | null
+  created_by: string | null
+  created_at: string
 }
