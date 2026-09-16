@@ -25,7 +25,13 @@ export function EventCard({ event, onEdit }: EventCardProps) {
   const status = statusConfig[event.status]
 
   return (
-    <div className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md">
+    <div 
+      className={cn(
+        "flex flex-col gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md",
+        onEdit && "cursor-pointer active:scale-[0.98]"
+      )}
+      onClick={() => onEdit && onEdit(event)}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2">
@@ -42,7 +48,7 @@ export function EventCard({ event, onEdit }: EventCardProps) {
 
         {onEdit && (
           <button
-            onClick={() => onEdit(event)}
+            
             className="ml-2 rounded-full p-2 text-muted transition-colors hover:bg-warm-50 hover:text-foreground"
           >
             <MoreVertical className="h-4 w-4" />

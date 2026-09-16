@@ -29,7 +29,11 @@ const dotColors: Record<EventStatus, string> = {
   [EVENT_STATUSES.CANCELLED]: 'bg-red-500',
 }
 
-export function MobileCalendar() {
+interface MobileCalendarProps {
+  onEditEvent?: (event: Event) => void
+}
+
+export function MobileCalendar({ onEditEvent }: MobileCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
   const { data: events, isLoading } = useEvents()
@@ -154,7 +158,7 @@ export function MobileCalendar() {
         ) : selectedEvents.length > 0 ? (
           <div className="flex flex-col gap-3">
             {selectedEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard key={event.id} event={event} onEdit={onEditEvent} />
             ))}
           </div>
         ) : (
