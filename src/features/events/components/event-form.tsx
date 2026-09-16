@@ -6,6 +6,7 @@ import { EVENT_STATUSES } from '@/lib/constants'
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
+import { EventInventoryManager } from './event-inventory-manager'
 
 interface EventFormProps {
   event?: Event
@@ -181,7 +182,17 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
           </div>
 
         
-<div className="border-t border-warm-200 bg-surface p-4">
+
+        {event?.id ? (
+          <EventInventoryManager eventId={event.id} eventStatus={status} />
+        ) : (
+          <div className="rounded-[var(--radius-card)] bg-warm-50 p-4 border border-warm-100 text-center mt-2">
+            <p className="text-sm text-secondary-600">Guarde o evento primeiro para poder associar material do inventário.</p>
+          </div>
+        )}
+
+
+        <div className="border-t border-warm-200 bg-surface p-4">
         <button
           type="submit"
           form="event-form"
