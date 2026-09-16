@@ -34,7 +34,7 @@ function toDateTimeLocal(isoString?: string | null) {
 
 export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProps) {
 
-  const [isDirty, setIsDirty] = useState(false)
+  
   const [showUnsaved, setShowUnsaved] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -59,6 +59,17 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
   const [endDate, setEndDate] = useState(toDateTimeLocal(event?.end_date))
   const [isAllDay, setIsAllDay] = useState(event?.is_all_day ?? false)
   const [status, setStatus] = useState<EventStatus>(event?.status ?? EVENT_STATUSES.PLANNED)
+
+  const isDirty = (
+    title !== (event?.title ?? '') ||
+    description !== (event?.description ?? '') ||
+    location !== (event?.location ?? '') ||
+    startDate !== toDateTimeLocal(event?.start_date) ||
+    endDate !== toDateTimeLocal(event?.end_date) ||
+    isAllDay !== (event?.is_all_day ?? false) ||
+    status !== (event?.status ?? EVENT_STATUSES.PLANNED)
+  )
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -92,7 +103,7 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
 
       {/* Form */}
       <div className="flex-1 overflow-y-auto p-4">
-        <form ref={formRef} onChange={() => setIsDirty(true)}  id="event-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form ref={formRef}   id="event-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Título <span className="text-primary-500">*</span></label>

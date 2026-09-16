@@ -42,7 +42,7 @@ function toDateString(isoString?: string | null) {
 
 export function MovementForm({ movement, onClose, onSubmit, isLoading }: MovementFormProps) {
 
-  const [isDirty, setIsDirty] = useState(false)
+  
   const [showUnsaved, setShowUnsaved] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -67,6 +67,17 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
   const { data: events } = useEvents()
   const [date, setDate] = useState(toDateString(movement?.date))
   const [file, setFile] = useState<File | null>(null)
+
+  const isDirty = (
+    type !== (movement?.type ?? 'expense') ||
+    amount !== (movement?.amount ?? '') ||
+    description !== (movement?.description ?? '') ||
+    category !== (movement?.category ?? '') ||
+    eventId !== (movement?.event_id ?? '') ||
+    date !== toDateString(movement?.date) ||
+    file !== null
+  )
+
   const [isUploading, setIsUploading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,7 +135,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        <form ref={formRef} onChange={() => setIsDirty(true)}  id="movement-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form ref={formRef}   id="movement-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           {/* Type Toggle */}
           <div className="flex rounded-[var(--radius-button)] bg-warm-100 p-1">

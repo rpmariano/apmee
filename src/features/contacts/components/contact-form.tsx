@@ -34,7 +34,7 @@ interface ContactFormProps {
 
 export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFormProps) {
 
-  const [isDirty, setIsDirty] = useState(false)
+  
   const [showUnsaved, setShowUnsaved] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -58,6 +58,17 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
   const [whatsapp, setWhatsapp] = useState(contact?.whatsapp ?? '')
   const [notes, setNotes] = useState(contact?.notes ?? '')
   const [isMember, setIsMember] = useState(contact?.is_member ?? false)
+
+  const isDirty = (
+    name !== (contact?.name ?? '') ||
+    category !== (contact?.category ?? 'pai') ||
+    email !== (contact?.email ?? '') ||
+    phone !== (contact?.phone ?? '') ||
+    whatsapp !== (contact?.whatsapp ?? '') ||
+    notes !== (contact?.notes ?? '') ||
+    isMember !== (contact?.is_member ?? false)
+  )
+
 
   // Metadata
   const initialMetadata = (contact?.metadata as Record<string, string>) ?? {}
@@ -112,7 +123,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
 
       {/* Form */}
       <div className="flex-1 overflow-y-auto p-4">
-        <form ref={formRef} onChange={() => setIsDirty(true)} id="contact-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form ref={formRef}  id="contact-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           <div className="flex items-center gap-3 rounded-[var(--radius-button)] border border-warm-200 bg-surface px-4 py-3 shadow-sm z-[100] mb-2">
             <input

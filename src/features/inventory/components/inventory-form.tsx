@@ -27,7 +27,7 @@ interface InventoryFormProps {
 }
 export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryFormProps) {
 
-  const [isDirty, setIsDirty] = useState(false)
+  
   const [showUnsaved, setShowUnsaved] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -51,6 +51,17 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
   const [minStock, setMinStock] = useState(item?.min_stock ?? 0)
   const [location, setLocation] = useState(item?.location ?? '')
   const [notes, setNotes] = useState(item?.notes ?? '')
+
+  const isDirty = (
+    name !== (item?.name ?? '') ||
+    category !== (item?.category ?? 'consumivel') ||
+    quantity !== (item?.quantity ?? 0) ||
+    unit !== (item?.unit ?? 'un') ||
+    minStock !== (item?.min_stock ?? 0) ||
+    location !== (item?.location ?? '') ||
+    notes !== (item?.notes ?? '')
+  )
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,7 +88,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        <form ref={formRef} onChange={() => setIsDirty(true)}  id="inventory-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form ref={formRef}   id="inventory-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           <div className="flex flex-col gap-1.5 z-[70]">
             <label className="text-sm font-medium text-secondary-700">Nome do Item <span className="text-primary-500">*</span></label>

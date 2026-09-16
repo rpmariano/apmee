@@ -37,7 +37,7 @@ import { useBoardMembers } from '@/features/board/api/use-board'
 
 export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) {
 
-  const [isDirty, setIsDirty] = useState(false)
+  
   const [showUnsaved, setShowUnsaved] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -60,6 +60,16 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
   const [status, setStatus] = useState<TaskStatus>(task?.status ?? TASK_STATUSES.TODO)
   const [dueDate, setDueDate] = useState(toDateString(task?.due_date))
   const [assignedTo, setAssignedTo] = useState(task?.assigned_to ?? '')
+
+  const isDirty = (
+    title !== (task?.title ?? '') ||
+    description !== (task?.description ?? '') ||
+    priority !== (task?.priority ?? TASK_PRIORITIES.MEDIUM) ||
+    status !== (task?.status ?? TASK_STATUSES.TODO) ||
+    dueDate !== toDateString(task?.due_date) ||
+    assignedTo !== (task?.assigned_to ?? '')
+  )
+
 
   const { data: boardMembers } = useBoardMembers()
 
@@ -91,7 +101,7 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        <form ref={formRef} onChange={() => setIsDirty(true)}  id="task-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form ref={formRef}   id="task-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Título <span className="text-primary-500">*</span></label>

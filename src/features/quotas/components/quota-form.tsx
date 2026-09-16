@@ -22,7 +22,7 @@ function toDateString(isoString?: string | null) {
 
 export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProps) {
 
-  const [isDirty, setIsDirty] = useState(false)
+  
   const [showUnsaved, setShowUnsaved] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -47,6 +47,17 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
   const [paymentMethod, setPaymentMethod] = useState(quota?.payment_method ?? '')
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+
+  const isDirty = (
+    contactId !== (quota?.contact_id ?? '') ||
+    year !== (quota?.year ?? new Date().getFullYear()) ||
+    amount !== (quota?.amount ?? '15') ||
+    paid !== (quota?.paid ?? false) ||
+    paidDate !== (quota?.paid_date ? toDateString(quota.paid_date) : '') ||
+    paymentMethod !== (quota?.payment_method ?? '') ||
+    file !== null
+  )
+
 
   // Fetch contacts to populate the dropdown
   const { data: contacts, isLoading: isLoadingContacts } = useContacts('members')
@@ -106,7 +117,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        <form ref={formRef} onChange={() => setIsDirty(true)}  id="quota-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form ref={formRef}   id="quota-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           <div className="flex flex-col gap-1.5 z-[60]">
             <label className="text-sm font-medium text-secondary-700">Associado <span className="text-primary-500">*</span></label>
