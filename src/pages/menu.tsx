@@ -31,6 +31,8 @@ const menuItems: MenuItem[] = [
   { to: '/board', label: 'Direção', icon: Shield, color: 'bg-secondary-200 text-secondary-700', superadminOnly: true },
 ]
 
+import { MenuAlerts } from '@/components/ui/menu-alerts'
+
 /**
  * Full-screen hamburger menu with a 2-column grid of pastel cards.
  * Shows a read-only indicator (eye icon) on financial modules for nivel_2 users.
@@ -41,7 +43,10 @@ export default function MenuPage() {
 
   return (
     <div className="px-4 pt-6 pb-24">
-      <h1 className="text-xl font-bold text-foreground">Menu</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold text-foreground">Menu</h1>
+        <MenuAlerts />
+      </div>
 
       {/* Search bar placeholder */}
       <div className="mt-4">
