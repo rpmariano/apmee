@@ -90,7 +90,7 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-background">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
           {task ? 'Editar Tarefa' : 'Nova Tarefa'}
