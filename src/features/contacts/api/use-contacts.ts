@@ -4,7 +4,7 @@ import type { Contact, ContactCategory } from '@/types/database'
 
 const CONTACTS_QUERY_KEY = 'contacts'
 
-export function useContacts(category?: ContactCategory | 'all') {
+export function useContacts(category?: ContactCategory | 'all' | 'members') {
   return useQuery({
     queryKey: [CONTACTS_QUERY_KEY, category],
     queryFn: async () => {
@@ -14,7 +14,11 @@ export function useContacts(category?: ContactCategory | 'all') {
         .order('name', { ascending: true })
 
       if (category && category !== 'all') {
-        query = query.eq('category', category)
+        if (category === 'members') {
+          query = query.eq('is_member', true)
+        } else {
+          query = query.eq('category', category)
+        }
       }
 
       const { data, error } = await query

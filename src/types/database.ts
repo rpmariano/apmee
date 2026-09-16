@@ -39,6 +39,7 @@ export interface Contact {
   avatar_url: string | null
   metadata: Record<string, unknown>
   notes: string | null
+  is_member: boolean
   created_by: string | null
   created_at: string
   updated_at: string

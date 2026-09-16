@@ -49,7 +49,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
   const [isUploading, setIsUploading] = useState(false)
 
   // Fetch contacts to populate the dropdown
-  const { data: contacts, isLoading: isLoadingContacts } = useContacts('associado')
+  const { data: contacts, isLoading: isLoadingContacts } = useContacts('members')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

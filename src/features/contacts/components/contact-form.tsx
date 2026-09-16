@@ -57,6 +57,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
   const [phone, setPhone] = useState(contact?.phone ?? '')
   const [whatsapp, setWhatsapp] = useState(contact?.whatsapp ?? '')
   const [notes, setNotes] = useState(contact?.notes ?? '')
+  const [isMember, setIsMember] = useState(contact?.is_member ?? false)
 
   // Metadata
   const initialMetadata = (contact?.metadata as Record<string, string>) ?? {}
@@ -92,6 +93,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
       phone: phone || null,
       whatsapp: whatsapp || null,
       notes: notes || null,
+      is_member: isMember,
       metadata,
     })
   }
@@ -111,12 +113,28 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
       {/* Form */}
       <div className="flex-1 overflow-y-auto p-4">
         <form ref={formRef} onChange={() => setIsDirty(true)} id="contact-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+          
+          <div className="flex items-center gap-3 rounded-[var(--radius-button)] border border-warm-200 bg-surface px-4 py-3 shadow-sm z-[100] mb-2">
+            <input
+              type="checkbox"
+              id="is_member"
+              checked={isMember}
+              onChange={(e) => setIsMember(e.target.checked)}
+              className="h-5 w-5 rounded border-warm-300 text-primary-500 focus:ring-primary-500"
+            />
+            <label htmlFor="is_member" className="flex flex-col">
+              <span className="text-sm font-bold text-foreground">É Associado?</span>
+              <span className="text-xs text-muted">Elegível para pagamento de quotas</span>
+            </label>
+          </div>
+
+
           <div className="flex flex-col gap-1.5 z-[60]">
             <label className="text-sm font-medium text-secondary-700">Categoria</label>
             <CustomSelect
               value={category}
               onChange={(val) => setCategory(val as ContactCategory)}
-              options={Object.values(CONTACT_CATEGORIES).map((cat) => ({
+              options={Object.values(CONTACT_CATEGORIES).filter(cat => cat !== 'associado').map((cat) => ({
                 label: CONTACT_CATEGORY_LABELS[cat],
                 value: cat,
               }))}
