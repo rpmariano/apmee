@@ -5,6 +5,26 @@ import { supabase } from '@/lib/supabase'
 
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
+import { CustomSelect } from '@/components/ui/custom-select'
+
+const INCOME_CATEGORIES = [
+  { label: 'Quotas de Sócios', value: 'Quotas de Sócios' },
+  { label: 'Eventos / Festas', value: 'Eventos / Festas' },
+  { label: 'Venda de Merchandising', value: 'Venda de Merchandising' },
+  { label: 'Donativos / Patrocínios', value: 'Donativos / Patrocínios' },
+  { label: 'Subsídios', value: 'Subsídios' },
+  { label: 'Outras Receitas', value: 'Outras Receitas' }
+]
+
+const EXPENSE_CATEGORIES = [
+  { label: 'Material Escolar / Didático', value: 'Material Escolar / Didático' },
+  { label: 'Eventos / Festas', value: 'Eventos / Festas' },
+  { label: 'Bens e Equipamentos', value: 'Bens e Equipamentos' },
+  { label: 'Serviços Administrativos', value: 'Serviços Administrativos' },
+  { label: 'Manutenção / Obras', value: 'Manutenção / Obras' },
+  { label: 'Comunicação / Marketing', value: 'Comunicação / Marketing' },
+  { label: 'Outras Despesas', value: 'Outras Despesas' }
+]
 
 interface MovementFormProps {
   movement?: FinancialMovement
@@ -107,7 +127,10 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
           <div className="flex rounded-[var(--radius-button)] bg-warm-100 p-1">
             <button
               type="button"
-              onClick={() => setType('expense')}
+              onClick={() => {
+                setType('expense')
+                setCategory('')
+              }}
               className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
                 type === 'expense' ? 'bg-white text-red-600 shadow-sm' : 'text-secondary-600 hover:text-foreground'
               }`}
@@ -116,7 +139,10 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
             </button>
             <button
               type="button"
-              onClick={() => setType('income')}
+              onClick={() => {
+                setType('income')
+                setCategory('')
+              }}
               className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
                 type === 'income' ? 'bg-white text-green-600 shadow-sm' : 'text-secondary-600 hover:text-foreground'
               }`}
@@ -152,14 +178,13 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 z-[60]">
               <label className="text-sm font-medium text-secondary-700">Categoria</label>
-              <input
-                type="text"
+              <CustomSelect
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-                placeholder="Ex: Material Escolar"
+                onChange={(val) => setCategory(val)}
+                options={type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES}
+                placeholder="Selecione..."
               />
             </div>
             
