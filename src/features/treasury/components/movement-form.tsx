@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
+import { useEvents } from '@/features/events/api/use-events'
 
 const INCOME_CATEGORIES = [
   { label: 'Quotas de Sócios', value: 'Quotas de Sócios' },
@@ -62,6 +63,8 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
   const [amount, setAmount] = useState(movement?.amount ?? '')
   const [description, setDescription] = useState(movement?.description ?? '')
   const [category, setCategory] = useState(movement?.category ?? '')
+  const [eventId, setEventId] = useState(movement?.event_id ?? '')
+  const { data: events } = useEvents()
   const [date, setDate] = useState(toDateString(movement?.date))
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -200,6 +203,16 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
               />
             </div>
           </div>
+
+          <div className="flex flex-col gap-1.5 z-[50]">
+              <label className="text-sm font-medium text-secondary-700">Evento (Opcional)</label>
+              <CustomSelect
+                value={eventId}
+                onChange={(val) => setEventId(val)}
+                options={(events || []).map(e => ({ label: e.title, value: e.id }))}
+                placeholder="Sem evento"
+              />
+            </div>
 
           <div className="my-2 border-t border-warm-200" />
 

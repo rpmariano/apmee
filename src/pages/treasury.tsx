@@ -2,18 +2,20 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { TreasurySummary } from '@/features/treasury/components/treasury-summary'
 import { MovementList } from '@/features/treasury/components/movement-list'
+import { EventFinances } from '@/features/treasury/components/event-finances'
 import { MovementForm } from '@/features/treasury/components/movement-form'
 import { useMovements, useCreateMovement, useUpdateMovement } from '@/features/treasury/api/use-treasury'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { FinancialMovement, FinancialType } from '@/types/database'
 import { cn } from '@/lib/utils'
 
-type FilterValue = FinancialType | 'all'
+type FilterValue = FinancialType | 'all' | 'events'
 
 const tabs: { value: FilterValue; label: string }[] = [
   { value: 'all', label: 'Todos' },
   { value: 'income', label: 'Receitas' },
   { value: 'expense', label: 'Despesas' },
+  { value: 'events', label: 'Eventos' },
 ]
 
 export default function TreasuryPage() {
@@ -78,19 +80,23 @@ export default function TreasuryPage() {
         </div>
       </div>
 
-      <div className="px-4 mt-2">
-        <TreasurySummary movements={movements} isLoading={isLoading} />
-        
-        <div className="mt-6">
-          <h3 className="font-bold text-foreground mb-2">Movimentos</h3>
-          <MovementList 
-            movements={movements} 
-            filter={activeTab} 
-            isLoading={isLoading} 
-            onEdit={canWriteTreasury ? handleEditMovement : undefined} 
-          />
+      {activeTab === 'events' ? (
+        <EventFinances onEditMovement={handleEditMovement} />
+      ) : (
+        <div className="px-4 mt-2">
+          <TreasurySummary movements={movements} isLoading={isLoading} />
+          
+          <div className="mt-6">
+            <h3 className="font-bold text-foreground mb-2">Movimentos</h3>
+            <MovementList 
+              movements={movements} 
+              filter={activeTab as any} 
+              isLoading={isLoading} 
+              onEdit={canWriteTreasury ? handleEditMovement : undefined} 
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {canWriteTreasury && (
         <button
