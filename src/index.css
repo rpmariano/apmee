@@ -102,3 +102,17 @@
 .animate-fuchsia-wave-3 {
   animation: fuchsia-ripple 2.4s cubic-bezier(0, 0, 0.2, 1) infinite 1.6s;
 }
+
+/* ============================================
+   WCAG 2.3.3 Motion Accessibility
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

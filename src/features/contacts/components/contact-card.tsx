@@ -99,7 +99,7 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
           className={cn(
             'flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-xs font-medium transition-colors',
             hasWhatsapp
-              ? 'bg-[#E8F5E9] text-[#2E7D32] hover:bg-[#C8E6C9]'
+              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
               : 'pointer-events-none text-muted opacity-50'
           )}
         >

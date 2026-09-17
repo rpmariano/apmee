@@ -15,7 +15,7 @@ interface EventCardProps {
 const statusConfig: Record<EventStatus, { label: string; className: string }> = {
   planned: { label: 'Planeado', className: 'bg-warm-200 text-secondary-700' },
   active: { label: 'Em Curso', className: 'bg-primary-100 text-primary-700' },
-  completed: { label: 'Concluído', className: 'bg-[#E8F5E9] text-[#2E7D32]' },
+  completed: { label: 'Concluído', className: 'bg-emerald-100 text-emerald-800' },
   cancelled: { label: 'Cancelado', className: 'bg-red-100 text-red-700' },
 }
 
