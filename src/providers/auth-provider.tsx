@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -54,6 +55,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     []
   )
 
+  const userRef = useRef<AuthUser | null>(null)
+
+  useEffect(() => {
+    userRef.current = user
+  }, [user])
+
   /**
    * Initializes the session on mount and subscribes to auth state changes.
    */
@@ -69,15 +76,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (session?.user?.email && mounted) {
           const profile = await fetchUserProfile(session.user.email)
           if (profile) {
-            setUser(buildAuthUser(session.user.id, profile))
+            const authUser = buildAuthUser(session.user.id, profile)
+            setUser(authUser)
+            userRef.current = authUser
           } else {
             // User exists in Google but NOT in allowed_users → sign out
             await supabase.auth.signOut()
             setUser(null)
+            userRef.current = null
           }
         }
       } catch {
         setUser(null)
+        userRef.current = null
       } finally {
         if (mounted) setIsLoading(false)
       }
@@ -92,20 +103,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (!mounted) return
 
       if (event === 'SIGNED_IN' && session?.user?.email) {
-        setIsLoading(true)
+        // If already authenticated as this user, do not toggle isLoading to avoid unmounting the app
+        const isCurrentSession = userRef.current?.email === session.user.email
+        if (!isCurrentSession) {
+          setIsLoading(true)
+        }
         const profile = await fetchUserProfile(session.user.email)
         if (profile) {
-          setUser(buildAuthUser(session.user.id, profile))
+          const authUser = buildAuthUser(session.user.id, profile)
+          setUser(authUser)
+          userRef.current = authUser
         } else {
           // Not in whitelist → reject
           await supabase.auth.signOut()
           setUser(null)
-          // TODO: Show a toast notification to the user
+          userRef.current = null
           console.warn('Acesso não autorizado: email não registado.')
         }
-        setIsLoading(false)
+        if (!isCurrentSession) {
+          setIsLoading(false)
+        }
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
+        userRef.current = null
         setIsLoading(false)
       }
     })

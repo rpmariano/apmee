@@ -1,31 +1,54 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { MobileCalendar } from '@/features/calendar/components/mobile-calendar'
 import { EventForm } from '@/features/events/components/event-form'
-import { useUpdateEvent } from '@/features/events/api/use-events'
+import { useEvents, useUpdateEvent } from '@/features/events/api/use-events'
 import type { Event } from '@/types/database'
 
 export default function CalendarPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const editId = searchParams.get('edit')
+  const { data: events } = useEvents()
+
   const [editingEvent, setEditingEvent] = useState<Event | undefined>()
   const updateMutation = useUpdateEvent()
 
+  // Sync with searchParams so if the browser is reloaded or tab is restored,
+  // the editing event remains open!
+  useEffect(() => {
+    if (editId && events) {
+      const found = events.find((e) => e.id === editId)
+      if (found) {
+        setEditingEvent(found)
+      }
+    } else if (!editId && editingEvent) {
+      setEditingEvent(undefined)
+    }
+  }, [editId, events])
+
   const handleEditEvent = (event: Event) => {
     setEditingEvent(event)
+    setSearchParams({ edit: event.id })
   }
 
   const handleCloseForm = () => {
     setEditingEvent(undefined)
+    setSearchParams({})
   }
 
   const handleSubmitForm = async (data: Partial<Event>) => {
-    if (!editingEvent) return
+    const current = editingEvent || (editId && events ? events.find((e) => e.id === editId) : undefined)
+    if (!current) return
     try {
-      await updateMutation.mutateAsync({ id: editingEvent.id, ...data })
+      await updateMutation.mutateAsync({ id: current.id, ...data })
       handleCloseForm()
     } catch (error) {
       console.error('Failed to save event:', error)
       alert('Erro ao guardar o evento. Tente novamente.')
     }
   }
+
+  const activeEvent = editingEvent || (editId && events ? events.find((e) => e.id === editId) : undefined)
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background">
@@ -39,9 +62,9 @@ export default function CalendarPage() {
         <MobileCalendar onEditEvent={handleEditEvent} />
       </div>
 
-      {editingEvent && (
+      {activeEvent && (
         <EventForm
-          event={editingEvent}
+          event={activeEvent}
           onClose={handleCloseForm}
           onSubmit={handleSubmitForm}
         />

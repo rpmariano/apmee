@@ -71,8 +71,8 @@ export function CustomSelect({
           disabled && "opacity-50 cursor-not-allowed"
         )}
       >
-        <span className={selectedOption ? 'text-foreground' : 'text-muted'}>
-          {selectedOption ? selectedOption.label : placeholder}
+        <span className={selectedOption || value ? 'text-foreground' : 'text-muted'}>
+          {selectedOption ? selectedOption.label : (value || placeholder)}
         </span>
         <ChevronDown className={cn("h-4 w-4 text-secondary-500 transition-transform", isOpen && "rotate-180")} />
       </button>

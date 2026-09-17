@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { EventList } from '@/features/events/components/event-list'
 import { EventForm } from '@/features/events/components/event-form'
-import { useCreateEvent, useUpdateEvent } from '@/features/events/api/use-events'
+import { useEvents, useCreateEvent, useUpdateEvent } from '@/features/events/api/use-events'
 import type { Event } from '@/types/database'
 import { cn } from '@/lib/utils'
 
@@ -15,6 +16,11 @@ const tabs: { value: FilterValue; label: string }[] = [
 ]
 
 export default function EventsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const editId = searchParams.get('edit')
+  const isNew = searchParams.get('new') === 'true'
+  const { data: events } = useEvents()
+
   const [activeTab, setActiveTab] = useState<FilterValue>('upcoming')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>()
@@ -22,20 +28,46 @@ export default function EventsPage() {
   const createMutation = useCreateEvent()
   const updateMutation = useUpdateEvent()
 
+  // Sync with searchParams
+  useEffect(() => {
+    if (editId && events) {
+      const found = events.find((e) => e.id === editId)
+      if (found) {
+        setEditingEvent(found)
+        setIsFormOpen(true)
+      }
+    } else if (isNew) {
+      setEditingEvent(undefined)
+      setIsFormOpen(true)
+    } else if (!editId && !isNew && isFormOpen) {
+      setIsFormOpen(false)
+      setEditingEvent(undefined)
+    }
+  }, [editId, isNew, events])
+
   const handleEditEvent = (event: Event) => {
     setEditingEvent(event)
     setIsFormOpen(true)
+    setSearchParams({ edit: event.id })
+  }
+
+  const handleCreateEvent = () => {
+    setEditingEvent(undefined)
+    setIsFormOpen(true)
+    setSearchParams({ new: 'true' })
   }
 
   const handleCloseForm = () => {
     setIsFormOpen(false)
     setEditingEvent(undefined)
+    setSearchParams({})
   }
 
   const handleSubmitForm = async (data: Partial<Event>) => {
     try {
-      if (editingEvent) {
-        await updateMutation.mutateAsync({ id: editingEvent.id, ...data })
+      const current = editingEvent || (editId && events ? events.find(e => e.id === editId) : undefined)
+      if (current) {
+        await updateMutation.mutateAsync({ id: current.id, ...data })
       } else {
         await createMutation.mutateAsync(data as any)
       }
@@ -81,7 +113,7 @@ export default function EventsPage() {
       {/* Floating Action Button (FAB) */}
       <button
         className="fixed bottom-24 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary-400 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-500 active:scale-95"
-        onClick={() => setIsFormOpen(true)}
+        onClick={handleCreateEvent}
       >
         <Plus className="h-6 w-6" />
       </button>
