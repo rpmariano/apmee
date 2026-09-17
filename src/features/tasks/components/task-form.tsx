@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react'
-import { X } from 'lucide-react'
+import { X, CheckCircle2, RotateCcw } from 'lucide-react'
 import type { Task, TaskPriority, TaskStatus } from '@/types/database'
 import { TASK_PRIORITIES, TASK_STATUSES } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
@@ -182,16 +183,48 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
           </div>
 
         
-<div className="border-t border-warm-200 bg-surface p-4">
+        <div className="border-t border-warm-200 bg-surface p-4 flex flex-col gap-2.5">
+          {task && (
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => {
+                const nextStatus = status === TASK_STATUSES.DONE ? TASK_STATUSES.TODO : TASK_STATUSES.DONE
+                setStatus(nextStatus)
+                if (!isEditing) {
+                  onSubmit({ status: nextStatus })
+                }
+              }}
+              className={cn(
+                "flex w-full items-center justify-center gap-2 rounded-[var(--radius-button)] py-2.5 text-xs font-bold transition-all border active:scale-95 disabled:opacity-50",
+                status === TASK_STATUSES.DONE
+                  ? "border-warm-300 bg-warm-100 text-secondary-700 hover:bg-warm-200"
+                  : "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
+              )}
+            >
+              {status === TASK_STATUSES.DONE ? (
+                <>
+                  <RotateCcw className="h-4 w-4" />
+                  Reabrir Tarefa (Marcar como A Fazer)
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  Marcar como Concluída
+                </>
+              )}
+            </button>
+          )}
+
           {isEditing ? (
             <button
-          type="submit"
-          form="task-form"
-          disabled={isLoading}
-          className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
-        >
-          {isLoading ? 'A Guardar...' : 'Guardar Tarefa'}
-        </button>
+              type="submit"
+              form="task-form"
+              disabled={isLoading}
+              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
+            >
+              {isLoading ? 'A Guardar...' : 'Guardar Tarefa'}
+            </button>
           ) : (
             <button
               type="button"
@@ -202,7 +235,7 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
             </button>
           )}
         </div>
-</form>
+      </form>
       </div>
 
       

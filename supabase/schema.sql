@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT,
-    assigned_to UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    assigned_to UUID REFERENCES allowed_users(id) ON DELETE SET NULL,
     priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
     status TEXT DEFAULT 'todo' CHECK (status IN ('todo', 'in_progress', 'done')),
     due_date TIMESTAMPTZ,
@@ -176,7 +176,7 @@ CREATE TABLE IF NOT EXISTS tasks (
 );
 
 COMMENT ON TABLE tasks IS 'Gestão global de tarefas internas (to-do list) para membros da direção da associação.';
-COMMENT ON COLUMN tasks.assigned_to IS 'Membro da direção responsável pela tarefa (referência a auth.users).';
+COMMENT ON COLUMN tasks.assigned_to IS 'Membro da direção responsável pela tarefa (referência a allowed_users).';
 COMMENT ON COLUMN tasks.priority IS 'Prioridade da tarefa: low, medium, high ou urgent.';
 COMMENT ON COLUMN tasks.status IS 'Estado da tarefa: todo (a fazer), in_progress (em curso) ou done (concluída).';
 COMMENT ON COLUMN tasks.deleted_at IS 'Data/hora de eliminação lógica (soft delete).';

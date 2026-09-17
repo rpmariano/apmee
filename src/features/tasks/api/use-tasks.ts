@@ -24,8 +24,15 @@ export function useCreateTask() {
 
   return useMutation({
     mutationFn: async (newTask: any) => {
+      const payload = {
+        ...newTask,
+        assigned_to: newTask.assigned_to ? newTask.assigned_to : null,
+        due_date: newTask.due_date ? newTask.due_date : null,
+        description: newTask.description ? newTask.description : null,
+      }
+
       const { data, error } = await (supabase as any).from('tasks')
-        .insert(newTask)
+        .insert(payload)
         .select()
         .single()
 
@@ -34,6 +41,7 @@ export function useCreateTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TASKS_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 }
@@ -43,8 +51,19 @@ export function useUpdateTask() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: any) => {
+      const payload: any = { ...updates }
+      if ('assigned_to' in updates) {
+        payload.assigned_to = updates.assigned_to ? updates.assigned_to : null
+      }
+      if ('due_date' in updates) {
+        payload.due_date = updates.due_date ? updates.due_date : null
+      }
+      if ('description' in updates) {
+        payload.description = updates.description ? updates.description : null
+      }
+
       const { data, error } = await (supabase as any).from('tasks')
-        .update(updates)
+        .update(payload)
         .eq('id', id)
         .select()
         .single()
@@ -54,6 +73,7 @@ export function useUpdateTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TASKS_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 }
@@ -73,6 +93,8 @@ export function useDeleteTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TASKS_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 }
+

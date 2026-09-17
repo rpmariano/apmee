@@ -4,6 +4,7 @@ import { TaskList } from '@/features/tasks/components/task-list'
 import { TaskForm } from '@/features/tasks/components/task-form'
 import { useCreateTask, useUpdateTask } from '@/features/tasks/api/use-tasks'
 import type { Task, TaskStatus } from '@/types/database'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 
 import { cn } from '@/lib/utils'
 
@@ -20,6 +21,7 @@ export default function TasksPage() {
   const [activeTab, setActiveTab] = useState<FilterValue>('todo')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const createMutation = useCreateTask()
   const updateMutation = useUpdateTask()
@@ -42,9 +44,9 @@ export default function TasksPage() {
         await createMutation.mutateAsync(data as any)
       }
       handleCloseForm()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save task:', error)
-      alert('Erro ao guardar a tarefa. Tente novamente.')
+      setErrorMessage(error?.message || 'Erro ao guardar a tarefa. Tente novamente.')
     }
   }
 
@@ -92,6 +94,15 @@ export default function TasksPage() {
           isLoading={createMutation.isPending || updateMutation.isPending}
         />
       )}
+
+      <CustomDialog
+        isOpen={!!errorMessage}
+        title="Erro ao guardar tarefa"
+        description={errorMessage || ''}
+        variant="danger"
+        confirmLabel="OK"
+        onConfirm={() => setErrorMessage(null)}
+      />
     </div>
   )
 }
