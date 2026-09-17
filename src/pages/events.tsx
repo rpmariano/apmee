@@ -5,6 +5,7 @@ import { EventList } from '@/features/events/components/event-list'
 import { EventForm } from '@/features/events/components/event-form'
 import { useEvents, useCreateEvent, useUpdateEvent } from '@/features/events/api/use-events'
 import type { Event } from '@/types/database'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 import { cn } from '@/lib/utils'
 
 type FilterValue = 'upcoming' | 'past' | 'all'
@@ -24,6 +25,7 @@ export default function EventsPage() {
   const [activeTab, setActiveTab] = useState<FilterValue>('upcoming')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const createMutation = useCreateEvent()
   const updateMutation = useUpdateEvent()
@@ -72,9 +74,9 @@ export default function EventsPage() {
         await createMutation.mutateAsync(data as any)
       }
       handleCloseForm()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save event:', error)
-      alert('Erro ao guardar o evento. Tente novamente.')
+      setErrorMessage(error?.message || 'Erro ao guardar o evento. Tente novamente.')
     }
   }
 
@@ -105,12 +107,12 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* List Content */}
+      {/* List */}
       <div className="px-4">
         <EventList filter={activeTab} onEditEvent={handleEditEvent} />
       </div>
 
-      {/* Floating Action Button (FAB) */}
+      {/* Floating Action Button */}
       <button
         className="fixed bottom-24 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary-400 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-500 active:scale-95"
         onClick={handleCreateEvent}
@@ -127,6 +129,15 @@ export default function EventsPage() {
           isLoading={createMutation.isPending || updateMutation.isPending}
         />
       )}
+
+      <CustomDialog
+        isOpen={!!errorMessage}
+        title="Erro ao guardar evento"
+        description={errorMessage || ''}
+        variant="danger"
+        confirmLabel="OK"
+        onConfirm={() => setErrorMessage(null)}
+      />
     </div>
   )
 }

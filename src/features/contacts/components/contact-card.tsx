@@ -73,15 +73,13 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
             )}
           </div>
         </div>
-
-        {/* Options Button */}
-        
       </div>
 
       {/* Action Buttons */}
       <div className="mt-2 flex items-center gap-2 border-t border-warm-100 pt-3">
         <a
           href={hasPhone ? `tel:${contact.phone}` : undefined}
+          onClick={(e) => e.stopPropagation()}
           className={cn(
             'flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-xs font-medium transition-colors',
             hasPhone
@@ -97,6 +95,7 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
           href={hasWhatsapp ? `https://wa.me/${contact.whatsapp?.replace(/\D/g, '')}` : undefined}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
           className={cn(
             'flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-xs font-medium transition-colors',
             hasWhatsapp
@@ -110,6 +109,7 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
 
         <a
           href={hasEmail ? `mailto:${contact.email}` : undefined}
+          onClick={(e) => e.stopPropagation()}
           className={cn(
             'flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-xs font-medium transition-colors',
             hasEmail

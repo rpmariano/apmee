@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 
 interface QuotaFormProps {
   quota?: Quota
@@ -21,10 +22,9 @@ function toDateString(isoString?: string | null) {
 }
 
 export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProps) {
-
-  
   const [showUnsaved, setShowUnsaved] = useState(false)
   const [isEditing, setIsEditing] = useState(!quota)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleCloseClick = () => {
@@ -85,9 +85,9 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
           .getPublicUrl(fileName)
 
         finalReceiptUrl = data.publicUrl
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error uploading receipt:', err)
-        alert('Erro ao fazer upload do recibo. Verifique se o bucket "receipts" foi criado no Supabase.')
+        setErrorMessage(err?.message || 'Erro ao fazer upload do recibo. Verifique se o bucket "receipts" foi criado no Supabase.')
         setIsUploading(false)
         return
       }
@@ -261,6 +261,15 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
           onClose()
         }}
         onSave={handleSaveAndClose}
+      />
+
+      <CustomDialog
+        isOpen={!!errorMessage}
+        title="Erro no comprovativo"
+        description={errorMessage || ''}
+        variant="danger"
+        confirmLabel="OK"
+        onConfirm={() => setErrorMessage(null)}
       />
 </div>
 </div>

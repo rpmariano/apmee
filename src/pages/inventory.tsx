@@ -5,6 +5,8 @@ import { InventoryForm } from '@/features/inventory/components/inventory-form'
 import { TransactionForm } from '@/features/inventory/components/transaction-form'
 import { useCreateItem, useUpdateItem } from '@/features/inventory/api/use-inventory'
 import type { InventoryItem, InventoryCategory } from '@/types/database'
+import { CustomDialog } from '@/components/ui/custom-dialog'
+
 import { cn } from '@/lib/utils'
 
 type FilterValue = InventoryCategory | 'all'
@@ -21,6 +23,7 @@ export default function InventoryPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>()
   const [transactionItem, setTransactionItem] = useState<InventoryItem | undefined>()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const createMutation = useCreateItem()
   const updateMutation = useUpdateItem()
@@ -43,9 +46,9 @@ export default function InventoryPage() {
         await createMutation.mutateAsync(data as any)
       }
       handleCloseForm()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save item:', error)
-      alert('Erro ao guardar o item. Tente novamente.')
+      setErrorMessage(error?.message || 'Erro ao guardar o item. Tente novamente.')
     }
   }
 
@@ -100,6 +103,15 @@ export default function InventoryPage() {
           isLoading={createMutation.isPending || updateMutation.isPending}
         />
       )}
+
+      <CustomDialog
+        isOpen={!!errorMessage}
+        title="Erro ao guardar item"
+        description={errorMessage || ''}
+        variant="danger"
+        confirmLabel="OK"
+        onConfirm={() => setErrorMessage(null)}
+      />
     </div>
   )
 }

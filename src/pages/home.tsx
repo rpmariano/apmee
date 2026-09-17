@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/providers/auth-provider'
 import { APP_NAME } from '@/lib/constants'
 import { MenuAlerts } from '@/components/ui/menu-alerts'
 import { useDashboardStats } from '@/features/dashboard/api/use-dashboard-stats'
+import { cn } from '@/lib/utils'
 
 /**
  * Dashboard / Home page
@@ -12,6 +13,7 @@ import { useDashboardStats } from '@/features/dashboard/api/use-dashboard-stats'
 export default function HomePage() {
   const { user } = useAuth()
   const { data: stats, isLoading } = useDashboardStats()
+  const navigate = useNavigate()
 
   return (
     <div className="px-4 pt-6 pb-24">
@@ -28,7 +30,18 @@ export default function HomePage() {
       </div>
 
       {/* Hero - Next Event */}
-      <div className="mt-6 rounded-[var(--radius-card)] bg-primary-400 p-6 text-white shadow-md">
+      <div 
+        onClick={() => {
+          if (stats?.nextEvent?.id) {
+            navigate(`/agenda?edit=${stats.nextEvent.id}`)
+          } else {
+            navigate('/agenda')
+          }
+        }}
+        className={cn(
+          "mt-6 rounded-[var(--radius-card)] bg-primary-400 p-6 text-white shadow-md transition-all cursor-pointer active:scale-[0.98] hover:shadow-lg"
+        )}
+      >
         <p className="text-xs font-medium uppercase tracking-wider opacity-80">
           Próximo Evento
         </p>

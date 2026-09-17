@@ -7,6 +7,7 @@ import { usePermissions } from '@/hooks/use-permissions'
 import type { QuotaWithContact } from '@/features/quotas/components/quota-card'
 import type { Quota } from '@/types/database'
 import { cn } from '@/lib/utils'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 
 type FilterValue = 'all' | 'paid' | 'unpaid'
 
@@ -19,7 +20,8 @@ const tabs: { value: FilterValue; label: string }[] = [
 export default function QuotasPage() {
   const [activeTab, setActiveTab] = useState<FilterValue>('all')
   const [isFormOpen, setIsFormOpen] = useState(false)
-  const [editingQuota, setEditingQuota] = useState<Quota | undefined>()
+  const [editingQuota, setEditingQuota] = useState<QuotaWithContact | undefined>()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const { data: quotas, isLoading } = useQuotas()
   const createMutation = useCreateQuota()
@@ -49,9 +51,9 @@ export default function QuotasPage() {
         await createMutation.mutateAsync(data as any)
       }
       handleCloseForm()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save quota:', error)
-      alert('Erro ao guardar quota. Tente novamente.')
+      setErrorMessage(error?.message || 'Erro ao guardar quota. Tente novamente.')
     }
   }
 
@@ -111,6 +113,15 @@ export default function QuotasPage() {
           isLoading={createMutation.isPending || updateMutation.isPending}
         />
       )}
+
+      <CustomDialog
+        isOpen={!!errorMessage}
+        title="Erro ao guardar quota"
+        description={errorMessage || ''}
+        variant="danger"
+        confirmLabel="OK"
+        onConfirm={() => setErrorMessage(null)}
+      />
     </div>
   )
 }

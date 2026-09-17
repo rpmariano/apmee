@@ -1,27 +1,29 @@
 import { useState } from 'react'
 import { Plus, Search } from 'lucide-react'
-import { CONTACT_CATEGORIES, CONTACT_CATEGORY_LABELS } from '@/lib/constants'
+import { CONTACT_CATEGORIES } from '@/lib/constants'
 import { ContactList } from '@/features/contacts/components/contact-list'
 import { ContactForm } from '@/features/contacts/components/contact-form'
 import { useCreateContact, useUpdateContact } from '@/features/contacts/api/use-contacts'
-import type { ContactCategory, Contact } from '@/types/database'
+import type { Contact, ContactCategory } from '@/types/database'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 import { cn } from '@/lib/utils'
 
-type TabValue = ContactCategory | 'all'
+type FilterValue = ContactCategory | 'all'
 
-const tabs: { value: TabValue; label: string }[] = [
+const tabs: { value: FilterValue; label: string }[] = [
   { value: 'all', label: 'Todos' },
   ...Object.values(CONTACT_CATEGORIES).map((cat) => ({
     value: cat as ContactCategory,
-    label: CONTACT_CATEGORY_LABELS[cat],
+    label: cat.charAt(0).toUpperCase() + cat.slice(1) + 's',
   })),
 ]
 
 export default function ContactsPage() {
-  const [activeTab, setActiveTab] = useState<TabValue>('all')
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<FilterValue>('all')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingContact, setEditingContact] = useState<Contact | undefined>()
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const createMutation = useCreateContact()
   const updateMutation = useUpdateContact()
@@ -44,9 +46,9 @@ export default function ContactsPage() {
         await createMutation.mutateAsync(data as any)
       }
       handleCloseForm()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save contact:', error)
-      alert('Erro ao guardar o contacto. Tente novamente.')
+      setErrorMessage(error?.message || 'Erro ao guardar o contacto. Tente novamente.')
     }
   }
 
@@ -118,6 +120,15 @@ export default function ContactsPage() {
           isLoading={createMutation.isPending || updateMutation.isPending}
         />
       )}
+
+      <CustomDialog
+        isOpen={!!errorMessage}
+        title="Erro ao guardar contacto"
+        description={errorMessage || ''}
+        variant="danger"
+        confirmLabel="OK"
+        onConfirm={() => setErrorMessage(null)}
+      />
     </div>
   )
 }

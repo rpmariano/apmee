@@ -8,6 +8,7 @@ import { useMovements, useCreateMovement, useUpdateMovement } from '@/features/t
 import { usePermissions } from '@/hooks/use-permissions'
 import type { FinancialMovement, FinancialType } from '@/types/database'
 import { cn } from '@/lib/utils'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 
 type FilterValue = FinancialType | 'all' | 'events'
 
@@ -22,6 +23,7 @@ export default function TreasuryPage() {
   const [activeTab, setActiveTab] = useState<FilterValue>('all')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingMovement, setEditingMovement] = useState<FinancialMovement | undefined>()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const { data: movements, isLoading } = useMovements()
   const createMutation = useCreateMovement()
@@ -49,9 +51,9 @@ export default function TreasuryPage() {
         await createMutation.mutateAsync(data as any)
       }
       handleCloseForm()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save movement:', error)
-      alert('Erro ao guardar o movimento. Tente novamente.')
+      setErrorMessage(error?.message || 'Erro ao guardar o movimento. Tente novamente.')
     }
   }
 
@@ -115,6 +117,15 @@ export default function TreasuryPage() {
           isLoading={createMutation.isPending || updateMutation.isPending}
         />
       )}
+
+      <CustomDialog
+        isOpen={!!errorMessage}
+        title="Erro ao guardar movimento"
+        description={errorMessage || ''}
+        variant="danger"
+        confirmLabel="OK"
+        onConfirm={() => setErrorMessage(null)}
+      />
     </div>
   )
 }

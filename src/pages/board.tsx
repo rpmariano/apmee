@@ -5,10 +5,12 @@ import { BoardForm } from '@/features/board/components/board-form'
 import { useBoardMembers, useCreateMember, useUpdateMember } from '@/features/board/api/use-board'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { AllowedUser } from '@/types/database'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 
 export default function BoardPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingMember, setEditingMember] = useState<AllowedUser | undefined>()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const { data: members, isLoading } = useBoardMembers()
   const createMutation = useCreateMember()
@@ -36,9 +38,9 @@ export default function BoardPage() {
         await createMutation.mutateAsync(data as any)
       }
       handleCloseForm()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save member:', error)
-      alert('Erro ao guardar membro. Tente novamente.')
+      setErrorMessage(error?.message || 'Erro ao guardar membro. Tente novamente.')
     }
   }
 
@@ -81,6 +83,15 @@ export default function BoardPage() {
           isLoading={createMutation.isPending || updateMutation.isPending}
         />
       )}
+
+      <CustomDialog
+        isOpen={!!errorMessage}
+        title="Erro ao guardar membro"
+        description={errorMessage || ''}
+        variant="danger"
+        confirmLabel="OK"
+        onConfirm={() => setErrorMessage(null)}
+      />
     </div>
   )
 }

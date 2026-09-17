@@ -4,18 +4,19 @@ import { MobileCalendar } from '@/features/calendar/components/mobile-calendar'
 import { EventForm } from '@/features/events/components/event-form'
 import { useEvents, useUpdateEvent } from '@/features/events/api/use-events'
 import type { Event } from '@/types/database'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 
 export default function CalendarPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const editId = searchParams.get('edit')
-  const { data: events } = useEvents()
-
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [editingEvent, setEditingEvent] = useState<Event | undefined>()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const editId = searchParams.get('edit')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const { data: events } = useEvents()
   const updateMutation = useUpdateEvent()
 
-  // Sync with searchParams so if the browser is reloaded or tab is restored,
-  // the editing event remains open!
+  // Sync with searchParams
   useEffect(() => {
     if (editId && events) {
       const found = events.find((e) => e.id === editId)
@@ -23,8 +24,6 @@ export default function CalendarPage() {
         setEditingEvent(found)
         setSelectedDate(new Date(found.start_date))
       }
-    } else if (!editId && editingEvent) {
-      setEditingEvent(undefined)
     }
   }, [editId, events])
 
@@ -48,9 +47,9 @@ export default function CalendarPage() {
       }
       await updateMutation.mutateAsync({ id: current.id, ...data })
       handleCloseForm()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save event:', error)
-      alert('Erro ao guardar o evento. Tente novamente.')
+      setErrorMessage(error?.message || 'Erro ao guardar o evento. Tente novamente.')
     }
   }
 
@@ -79,6 +78,15 @@ export default function CalendarPage() {
           onSubmit={handleSubmitForm}
         />
       )}
+
+      <CustomDialog
+        isOpen={!!errorMessage}
+        title="Erro ao guardar evento"
+        description={errorMessage || ''}
+        variant="danger"
+        confirmLabel="OK"
+        onConfirm={() => setErrorMessage(null)}
+      />
     </div>
   )
 }

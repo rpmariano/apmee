@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { X, ArrowDownRight, ArrowUpRight } from 'lucide-react'
 import type { InventoryItem } from '@/types/database'
+import { useCreateInventoryTransaction } from '../api/use-inventory-transactions'
 import { useEvents } from '@/features/events/api/use-events'
 import { CustomSelect } from '@/components/ui/custom-select'
-import { useCreateInventoryTransaction } from '../api/use-inventory-transactions'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 
 interface TransactionFormProps {
   item: InventoryItem
@@ -15,6 +16,7 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
   const [quantity, setQuantity] = useState(1)
   const [eventId, setEventId] = useState('')
   const [notes, setNotes] = useState('')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const { data: events } = useEvents()
   const createMutation = useCreateInventoryTransaction()
@@ -32,9 +34,9 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
         notes: notes || null
       })
       onClose()
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
-      alert('Erro ao registar movimento.')
+      setErrorMessage(err?.message || 'Erro ao registar movimento.')
     }
   }
 
@@ -132,6 +134,15 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
           </div>
         </div>
       </div>
+
+      <CustomDialog
+        isOpen={!!errorMessage}
+        title="Erro no movimento"
+        description={errorMessage || ''}
+        variant="danger"
+        confirmLabel="OK"
+        onConfirm={() => setErrorMessage(null)}
+      />
     </div>
   )
 }

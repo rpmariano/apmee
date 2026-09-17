@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useEvents } from '@/features/events/api/use-events'
 
 const INCOME_CATEGORIES = [
@@ -41,10 +42,9 @@ function toDateString(isoString?: string | null) {
 }
 
 export function MovementForm({ movement, onClose, onSubmit, isLoading }: MovementFormProps) {
-
-  
   const [showUnsaved, setShowUnsaved] = useState(false)
   const [isEditing, setIsEditing] = useState(!movement)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleCloseClick = () => {
@@ -106,9 +106,9 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
           .getPublicUrl(fileName)
 
         finalReceiptUrl = data.publicUrl
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error uploading file:', err)
-        alert('Erro ao fazer upload da fatura. Verifique se o bucket "receipts" foi criado no Supabase.')
+        setErrorMessage(err?.message || 'Erro ao fazer upload da fatura. Verifique se o bucket "receipts" foi criado no Supabase.')
         setIsUploading(false)
         return // Stop submission if upload fails
       }
@@ -284,6 +284,15 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
           onClose()
         }}
         onSave={handleSaveAndClose}
+      />
+
+      <CustomDialog
+        isOpen={!!errorMessage}
+        title="Erro no comprovativo"
+        description={errorMessage || ''}
+        variant="danger"
+        confirmLabel="OK"
+        onConfirm={() => setErrorMessage(null)}
       />
 </div>
 </div>
