@@ -6,6 +6,8 @@ import { TransactionForm } from '@/features/inventory/components/transaction-for
 import { useCreateItem, useUpdateItem } from '@/features/inventory/api/use-inventory'
 import type { InventoryItem, InventoryCategory } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { useToast } from '@/components/ui/toast'
+import { getFriendlyErrorMessage } from '@/lib/error-utils'
 import { MenuAlerts } from '@/components/ui/menu-alerts'
 import { cn } from '@/lib/utils'
 
@@ -27,6 +29,7 @@ export default function InventoryPage() {
 
   const createMutation = useCreateItem()
   const updateMutation = useUpdateItem()
+  const { toast } = useToast()
 
   const handleEditItem = (item: InventoryItem) => {
     setEditingItem(item)
@@ -42,13 +45,15 @@ export default function InventoryPage() {
     try {
       if (editingItem) {
         await updateMutation.mutateAsync({ id: editingItem.id, ...data })
+        toast.success('Item de inventário atualizado!')
       } else {
         await createMutation.mutateAsync(data as any)
+        toast.success('Item adicionado ao inventário!')
       }
       handleCloseForm()
     } catch (error: any) {
       console.error('Failed to save item:', error)
-      setErrorMessage(error?.message || 'Erro ao guardar o item. Tente novamente.')
+      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar o item. Tente novamente.'))
     }
   }
 

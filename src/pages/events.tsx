@@ -11,6 +11,8 @@ import { useBoardMembers } from '@/features/board/api/use-board'
 import { useAuth } from '@/providers/auth-provider'
 import type { Event } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { useToast } from '@/components/ui/toast'
+import { getFriendlyErrorMessage } from '@/lib/error-utils'
 import { MenuAlerts } from '@/components/ui/menu-alerts'
 import { cn, getInitials } from '@/lib/utils'
 
@@ -31,6 +33,7 @@ export default function EventsPage() {
 
   const createMutation = useCreateEvent()
   const updateMutation = useUpdateEvent()
+  const { toast } = useToast()
 
   // Map user IDs to display names or emails
   const creatorMap = useMemo(() => {
@@ -186,10 +189,11 @@ export default function EventsPage() {
           // ignore
         }
       }
+      toast.success(activeEvent ? 'Evento atualizado com sucesso!' : 'Evento criado com sucesso!')
       handleCloseForm()
     } catch (error: any) {
       console.error('Failed to save event:', error)
-      setErrorMessage(error?.message || 'Erro ao guardar o evento. Tente novamente.')
+      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar o evento. Tente novamente.'))
     }
   }
 

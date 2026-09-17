@@ -6,6 +6,8 @@ import { useBoardMembers, useCreateMember, useUpdateMember } from '@/features/bo
 import { usePermissions } from '@/hooks/use-permissions'
 import type { AllowedUser } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { useToast } from '@/components/ui/toast'
+import { getFriendlyErrorMessage } from '@/lib/error-utils'
 import { MenuAlerts } from '@/components/ui/menu-alerts'
 
 export default function BoardPage() {
@@ -16,6 +18,7 @@ export default function BoardPage() {
   const { data: members, isLoading } = useBoardMembers()
   const createMutation = useCreateMember()
   const updateMutation = useUpdateMember()
+  const { toast } = useToast()
   
   const { isSuperAdmin } = usePermissions()
   
@@ -35,13 +38,15 @@ export default function BoardPage() {
     try {
       if (editingMember) {
         await updateMutation.mutateAsync({ id: editingMember.id, ...data } as any)
+        toast.success('Membro da direção atualizado!')
       } else {
         await createMutation.mutateAsync(data as any)
+        toast.success('Membro adicionado à direção!')
       }
       handleCloseForm()
     } catch (error: any) {
       console.error('Failed to save member:', error)
-      setErrorMessage(error?.message || 'Erro ao guardar membro. Tente novamente.')
+      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar membro. Tente novamente.'))
     }
   }
 

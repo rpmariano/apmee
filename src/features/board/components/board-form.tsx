@@ -121,11 +121,22 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
               value={permissionLevel}
               onChange={(val) => setPermissionLevel(val as any)}
               options={[
-                { label: 'Admin', value: 'superadmin' },
-                { label: 'Nível 1', value: 'nivel_1' },
-                { label: 'Nível 2', value: 'nivel_2' },
+                { label: 'Admin (Acesso Total)', value: 'superadmin' },
+                { label: 'Nível 1 (Gestão e Finanças)', value: 'nivel_1' },
+                { label: 'Nível 2 (Operacional / Geral)', value: 'nivel_2' },
               ]}
             />
+            <div className="mt-1 rounded-lg bg-warm-50 p-2.5 text-xs text-secondary-600 border border-warm-200 space-y-1">
+              {permissionLevel === 'superadmin' && (
+                <p><strong>Admin:</strong> Acesso total à plataforma, incluindo gestão de utilizadores e configurações.</p>
+              )}
+              {permissionLevel === 'nivel_1' && (
+                <p><strong>Nível 1:</strong> Acesso de gestão a Tesouraria, Quotas, Eventos, Inventário e Tarefas.</p>
+              )}
+              {permissionLevel === 'nivel_2' && (
+                <p><strong>Nível 2:</strong> Gestão de Tarefas, Contactos e Eventos (leitura financeira apenas).</p>
+              )}
+            </div>
           </div>
 
           <div className="my-2 border-t border-warm-200" />

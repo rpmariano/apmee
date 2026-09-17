@@ -9,6 +9,8 @@ import { usePermissions } from '@/hooks/use-permissions'
 import type { FinancialMovement, FinancialType } from '@/types/database'
 import { cn } from '@/lib/utils'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { useToast } from '@/components/ui/toast'
+import { getFriendlyErrorMessage } from '@/lib/error-utils'
 import { MenuAlerts } from '@/components/ui/menu-alerts'
 
 type FilterValue = FinancialType | 'all' | 'events'
@@ -29,6 +31,7 @@ export default function TreasuryPage() {
   const { data: movements, isLoading } = useMovements()
   const createMutation = useCreateMovement()
   const updateMutation = useUpdateMovement()
+  const { toast } = useToast()
   
   const { canWrite } = usePermissions()
   const canWriteTreasury = canWrite('treasury')
@@ -48,13 +51,15 @@ export default function TreasuryPage() {
     try {
       if (editingMovement) {
         await updateMutation.mutateAsync({ id: editingMovement.id, ...data })
+        toast.success('Movimento atualizado com sucesso!')
       } else {
         await createMutation.mutateAsync(data as any)
+        toast.success('Movimento financeiro registado com sucesso!')
       }
       handleCloseForm()
     } catch (error: any) {
       console.error('Failed to save movement:', error)
-      setErrorMessage(error?.message || 'Erro ao guardar o movimento. Tente novamente.')
+      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar o movimento. Tente novamente.'))
     }
   }
 

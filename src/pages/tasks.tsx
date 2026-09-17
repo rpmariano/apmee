@@ -5,6 +5,8 @@ import { TaskForm } from '@/features/tasks/components/task-form'
 import { useCreateTask, useUpdateTask } from '@/features/tasks/api/use-tasks'
 import type { Task, TaskStatus } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { useToast } from '@/components/ui/toast'
+import { getFriendlyErrorMessage } from '@/lib/error-utils'
 import { MenuAlerts } from '@/components/ui/menu-alerts'
 import { cn } from '@/lib/utils'
 
@@ -25,14 +27,16 @@ export default function TasksPage() {
 
   const createMutation = useCreateTask()
   const updateMutation = useUpdateTask()
+  const { toast } = useToast()
 
   const handleToggleStatus = async (task: Task) => {
     const nextStatus: TaskStatus = task.status === 'done' ? 'todo' : 'done'
     try {
       await updateMutation.mutateAsync({ id: task.id, status: nextStatus })
+      toast.success(nextStatus === 'done' ? 'Tarefa concluída!' : 'Tarefa marcada como a fazer.')
     } catch (error: any) {
       console.error('Failed to toggle task status:', error)
-      setErrorMessage('Erro ao atualizar estado da tarefa.')
+      toast.error(getFriendlyErrorMessage(error, 'Erro ao atualizar estado da tarefa.'))
     }
   }
 
@@ -50,13 +54,15 @@ export default function TasksPage() {
     try {
       if (editingTask) {
         await updateMutation.mutateAsync({ id: editingTask.id, ...data })
+        toast.success('Tarefa atualizada com sucesso!')
       } else {
         await createMutation.mutateAsync(data as any)
+        toast.success('Tarefa criada com sucesso!')
       }
       handleCloseForm()
     } catch (error: any) {
       console.error('Failed to save task:', error)
-      setErrorMessage(error?.message || 'Erro ao guardar a tarefa. Tente novamente.')
+      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar a tarefa. Tente novamente.'))
     }
   }
 

@@ -6,6 +6,8 @@ import { ContactForm } from '@/features/contacts/components/contact-form'
 import { useCreateContact, useUpdateContact } from '@/features/contacts/api/use-contacts'
 import type { Contact, ContactCategory } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { useToast } from '@/components/ui/toast'
+import { getFriendlyErrorMessage } from '@/lib/error-utils'
 import { MenuAlerts } from '@/components/ui/menu-alerts'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +31,7 @@ export default function ContactsPage() {
 
   const createMutation = useCreateContact()
   const updateMutation = useUpdateContact()
+  const { toast } = useToast()
 
   const handleEditContact = (contact: Contact) => {
     setEditingContact(contact)
@@ -44,13 +47,15 @@ export default function ContactsPage() {
     try {
       if (editingContact) {
         await updateMutation.mutateAsync({ id: editingContact.id, ...data })
+        toast.success('Contacto atualizado com sucesso!')
       } else {
         await createMutation.mutateAsync(data as any)
+        toast.success('Contacto criado com sucesso!')
       }
       handleCloseForm()
     } catch (error: any) {
       console.error('Failed to save contact:', error)
-      setErrorMessage(error?.message || 'Erro ao guardar o contacto. Tente novamente.')
+      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar o contacto. Tente novamente.'))
     }
   }
 

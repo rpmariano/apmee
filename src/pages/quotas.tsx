@@ -8,6 +8,8 @@ import type { QuotaWithContact } from '@/features/quotas/components/quota-card'
 import type { Quota } from '@/types/database'
 import { cn } from '@/lib/utils'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { useToast } from '@/components/ui/toast'
+import { getFriendlyErrorMessage } from '@/lib/error-utils'
 import { MenuAlerts } from '@/components/ui/menu-alerts'
 
 type FilterValue = 'all' | 'paid' | 'unpaid'
@@ -27,6 +29,7 @@ export default function QuotasPage() {
   const { data: quotas, isLoading } = useQuotas()
   const createMutation = useCreateQuota()
   const updateMutation = useUpdateQuota()
+  const { toast } = useToast()
   
   const { canWrite, isFinancialReadOnly } = usePermissions()
   const canWriteQuotas = canWrite('quotas')
@@ -47,14 +50,16 @@ export default function QuotasPage() {
       if (editingQuota) {
         // @ts-ignore
         await updateMutation.mutateAsync({ id: editingQuota.id, ...data } as any)
+        toast.success('Quota atualizada com sucesso!')
       } else {
         // @ts-ignore
         await createMutation.mutateAsync(data as any)
+        toast.success('Quota registada com sucesso!')
       }
       handleCloseForm()
     } catch (error: any) {
       console.error('Failed to save quota:', error)
-      setErrorMessage(error?.message || 'Erro ao guardar quota. Tente novamente.')
+      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar quota. Tente novamente.'))
     }
   }
 

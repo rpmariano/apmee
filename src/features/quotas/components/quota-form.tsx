@@ -61,7 +61,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
 
 
   // Fetch contacts to populate the dropdown
-  const { data: contacts, isLoading: isLoadingContacts } = useContacts('members')
+  const { data: contacts, isLoading: isLoadingContacts } = useContacts('all')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -125,10 +125,16 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
             <CustomSelect disabled={!isEditing || !!quota} 
               value={contactId}
               onChange={(val) => setContactId(val)}
-              options={(contacts || []).map(c => ({ label: c.name, value: c.id }))}
-              placeholder={isLoadingContacts ? 'A carregar associados...' : 'Selecione o associado'}
+              options={(contacts || []).map(c => ({ 
+                label: `${c.name}${c.metadata?.educando ? ` (${c.metadata.educando})` : ''}${c.is_member ? ' [Sócio]' : ''}`, 
+                value: c.id 
+              }))}
+              placeholder={isLoadingContacts ? 'A carregar contactos...' : 'Selecione o encarregado / associado'}
               required
             />
+            <span className="text-xs text-muted">
+              Pode selecionar qualquer encarregado de educação ou associado registado.
+            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
