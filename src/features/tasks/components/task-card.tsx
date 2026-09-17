@@ -73,7 +73,7 @@ export function TaskCard({ task, onEdit, onToggleStatus }: TaskCardProps) {
             : "border-secondary-300 bg-white hover:border-green-500 hover:text-green-500 text-transparent"
         )}
       >
-        <CheckCircle2 className={cn("h-4 w-4 transition-transform", isDone ? "scale-100" : "scale-75")} />
+        <CheckCircle2 className={cn("h-4 w-4 transition-all", isDone ? "scale-100 animate-[pop_300ms_ease-out]" : "scale-75")} />
       </button>
 
       {/* Main Content */}
