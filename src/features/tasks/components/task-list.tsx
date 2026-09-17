@@ -5,11 +5,12 @@ import { useBoardMembers } from '@/features/board/api/use-board'
 
 interface TaskListProps {
   filter: TaskStatus | 'all'
+  assigneeFilter?: string | 'all'
   onEditTask?: (task: Task) => void
   onToggleStatus?: (task: Task) => void
 }
 
-export function TaskList({ filter, onEditTask, onToggleStatus }: TaskListProps) {
+export function TaskList({ filter, assigneeFilter = 'all', onEditTask, onToggleStatus }: TaskListProps) {
   const { data: tasks, isLoading, error } = useTasks()
 
   const { data: boardMembers, isLoading: isLoadingBoard } = useBoardMembers()
@@ -34,11 +35,13 @@ export function TaskList({ filter, onEditTask, onToggleStatus }: TaskListProps) 
 
   // Filter tasks
   const filteredTasks = (tasks || []).filter((task) => {
-    if (filter === 'all') return true
-    return task.status === filter
+    if (filter !== 'all' && task.status !== filter) return false
+    if (assigneeFilter && assigneeFilter !== 'all' && task.assigned_to !== assigneeFilter) return false
+    return true
   })
 
   if (filteredTasks.length === 0) {
+    const isMyTasksEmpty = assigneeFilter && assigneeFilter !== 'all'
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-warm-100">
@@ -46,8 +49,12 @@ export function TaskList({ filter, onEditTask, onToggleStatus }: TaskListProps) 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
           </svg>
         </div>
-        <p className="mt-4 text-sm font-medium text-foreground">Sem tarefas</p>
-        <p className="mt-1 text-xs text-muted">A caixa de tarefas está vazia.</p>
+        <p className="mt-4 text-sm font-medium text-foreground">
+          {isMyTasksEmpty ? 'Sem tarefas atribuídas' : 'Sem tarefas'}
+        </p>
+        <p className="mt-1 text-xs text-muted">
+          {isMyTasksEmpty ? 'Não tem tarefas pendentes atribuídas a si neste filtro.' : 'A caixa de tarefas está vazia.'}
+        </p>
       </div>
     )
   }

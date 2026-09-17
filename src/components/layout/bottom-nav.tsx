@@ -18,7 +18,7 @@ export function BottomNav() {
   const location = useLocation()
 
   return (
-    <nav className="sticky bottom-0 z-50 border-t border-warm-200 bg-surface shadow-lg" aria-label="Navegação Principal">
+    <nav className="sticky bottom-0 z-50 border-t border-warm-200 bg-surface shadow-lg pb-[max(0.625rem,env(safe-area-inset-bottom))] pt-1" aria-label="Navegação Principal">
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const isActive = item.matchPaths.includes(location.pathname)

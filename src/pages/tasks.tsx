@@ -3,6 +3,8 @@ import { Plus } from 'lucide-react'
 import { TaskList } from '@/features/tasks/components/task-list'
 import { TaskForm } from '@/features/tasks/components/task-form'
 import { useCreateTask, useUpdateTask } from '@/features/tasks/api/use-tasks'
+import { useAuth } from '@/providers/auth-provider'
+import { useBoardMembers } from '@/features/board/api/use-board'
 import type { Task, TaskStatus } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
@@ -21,9 +23,15 @@ const tabs: { value: FilterValue; label: string }[] = [
 
 export default function TasksPage() {
   const [activeTab, setActiveTab] = useState<FilterValue>('todo')
+  const [scopeFilter, setScopeFilter] = useState<'all' | 'my'>('all')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const { user } = useAuth()
+  const { data: boardMembers } = useBoardMembers()
+  const currentMember = boardMembers?.find(m => m.email === user?.email)
+  const currentMemberId = currentMember?.id
 
   const createMutation = useCreateTask()
   const updateMutation = useUpdateTask()
@@ -90,10 +98,40 @@ export default function TasksPage() {
             </button>
           ))}
         </div>
+
+        {/* Assignee Scope Filter (Todas vs As Minhas) */}
+        {currentMemberId && (
+          <div className="mt-1 flex items-center gap-1.5 px-4 pb-2">
+            <button
+              type="button"
+              onClick={() => setScopeFilter('all')}
+              className={cn(
+                'rounded-lg px-2.5 py-1 text-xs font-semibold transition-all active:scale-95',
+                scopeFilter === 'all'
+                  ? 'bg-secondary-800 text-white shadow-xs'
+                  : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
+              )}
+            >
+              Todas
+            </button>
+            <button
+              type="button"
+              onClick={() => setScopeFilter('my')}
+              className={cn(
+                'rounded-lg px-2.5 py-1 text-xs font-semibold transition-all active:scale-95',
+                scopeFilter === 'my'
+                  ? 'bg-primary-500 text-white shadow-xs'
+                  : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
+              )}
+            >
+              As Minhas
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="px-4">
-        <TaskList filter={activeTab} onEditTask={handleEditTask} onToggleStatus={handleToggleStatus} />
+        <TaskList filter={activeTab} assigneeFilter={scopeFilter === 'my' && currentMemberId ? currentMemberId : 'all'} onEditTask={handleEditTask} onToggleStatus={handleToggleStatus} />
       </div>
 
       <button

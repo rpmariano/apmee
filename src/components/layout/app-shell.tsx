@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '@/providers/auth-provider'
 import { BottomNav } from './bottom-nav'
+import { NetworkStatus } from '@/components/ui/network-status'
 
 /**
  * Main application shell — wraps authenticated routes with
@@ -31,6 +32,7 @@ export function AppShell() {
     <div className="flex min-h-screen justify-center bg-warm-100">
       {/* Phone-width container */}
       <div className="relative flex w-full max-w-[430px] flex-col min-h-screen bg-background shadow-xl">
+        <NetworkStatus />
         {/* Main content area — scrollable, with bottom padding for nav bar */}
         <main className="flex-1 overflow-y-auto pb-20">
           <Outlet />
