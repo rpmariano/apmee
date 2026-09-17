@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Plus, SlidersHorizontal, X, RotateCcw } from 'lucide-react'
 import { format, isToday, isSameDay, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import { MobileCalendar } from '@/features/calendar/components/mobile-calendar'
@@ -27,6 +27,7 @@ export default function EventsPage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [activeTab, setActiveTab] = useState<EventFilterType>('day')
   const [typeFilter, setTypeFilter] = useState<'all' | 'festa' | 'reuniao'>('all')
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -198,7 +199,7 @@ export default function EventsPage() {
   }
 
   // Calculate dynamic counts for filter tabs & types
-  const { dayCount, upcomingCount, pastCount, allCount, festaCount, reuniaoCount } = useMemo(() => {
+  const { dayCount, upcomingCount, pastCount, allCount, festaCount, reuniaoCount, filteredTotal } = useMemo(() => {
     let dayC = 0
     let upC = 0
     let pastC = 0
@@ -239,19 +240,26 @@ export default function EventsPage() {
       allCount: filteredTotal,
       festaCount: fCount,
       reuniaoCount: rCount,
+      filteredTotal,
     }
   }, [events, selectedDate, typeFilter])
 
-  const tabs: { value: EventFilterType; label: string; count: number }[] = [
-    {
-      value: 'day',
-      label: isToday(selectedDate) ? 'Hoje' : format(selectedDate, "d 'de' MMM", { locale: pt }),
-      count: dayCount,
-    },
-    { value: 'upcoming', label: 'Próximos', count: upcomingCount },
-    { value: 'past', label: 'Terminados', count: pastCount },
-    { value: 'all', label: 'Todos', count: allCount },
-  ]
+  const activeTabCount =
+    activeTab === 'day'
+      ? dayCount
+      : activeTab === 'upcoming'
+      ? upcomingCount
+      : activeTab === 'past'
+      ? pastCount
+      : allCount
+
+  const isFilterActive = activeTab !== 'day' || typeFilter !== 'all'
+
+  const handleResetFilter = () => {
+    setActiveTab('day')
+    setTypeFilter('all')
+    setSelectedDate(new Date())
+  }
 
   const activeEvent = editingEvent || (editId && events ? events.find((e) => e.id === editId) : undefined)
 
@@ -286,107 +294,113 @@ export default function EventsPage() {
           events={events}
         />
 
-        {/* Type Filter Selector (Todos / Festas / Reuniões) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
-          <button
-            type="button"
-            onClick={() => setTypeFilter('all')}
-            className={cn(
-              'rounded-full px-3 py-1 text-xs font-semibold transition-all active:scale-95',
-              typeFilter === 'all'
-                ? 'bg-secondary-800 text-white shadow-sm'
-                : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
-            )}
-          >
-            Todos ({events.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setTypeFilter('festa')}
-            className={cn(
-              'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all active:scale-95',
-              typeFilter === 'festa'
-                ? 'bg-amber-700 text-white shadow-sm'
-                : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
-            )}
-          >
-            <span>🎉</span>
-            <span>Festas ({festaCount})</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setTypeFilter('reuniao')}
-            className={cn(
-              'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all active:scale-95',
-              typeFilter === 'reuniao'
-                ? 'bg-blue-700 text-white shadow-sm'
-                : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
-            )}
-          >
-            <span>📋</span>
-            <span>Reuniões ({reuniaoCount})</span>
-          </button>
-        </div>
+        {/* Clean Section Header & Filter Trigger */}
+        <div className="flex items-center justify-between pt-1">
+          <div>
+            <h2 className="text-sm font-bold text-foreground">
+              {activeTab === 'day'
+                ? isToday(selectedDate)
+                  ? 'Hoje'
+                  : format(selectedDate, "d 'de' MMMM", { locale: pt })
+                : activeTab === 'upcoming'
+                ? 'Próximos Eventos'
+                : activeTab === 'past'
+                ? 'Eventos Terminados'
+                : 'Todos os Eventos'}
+            </h2>
+            <p className="text-xs text-muted">
+              {typeFilter === 'all'
+                ? `${activeTabCount} evento(s)`
+                : typeFilter === 'festa'
+                ? `${activeTabCount} festa(s)`
+                : `${activeTabCount} reunião(ões)`}
+            </p>
+          </div>
 
-        {/* Filter Pills with Counters */}
-        <div className="flex gap-2 overflow-x-auto pb-1 pt-0.5 scrollbar-hide">
-          {tabs.map((tab) => (
+          <div className="flex items-center gap-2">
+            {!isToday(selectedDate) && activeTab === 'day' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDate(new Date())
+                  setActiveTab('day')
+                }}
+                className="rounded-full bg-warm-100 px-2.5 py-1 text-xs font-semibold text-secondary-700 hover:bg-warm-200 transition-colors active:scale-95"
+              >
+                Voltar a Hoje
+              </button>
+            )}
+
+            {/* Filter Menu Trigger */}
             <button
-              key={tab.value}
               type="button"
-              onClick={() => setActiveTab(tab.value)}
+              onClick={() => setIsFilterOpen(true)}
+              aria-label="Abrir filtros da agenda"
               className={cn(
-                'flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-95',
-                activeTab === tab.value
-                  ? 'bg-secondary-900 text-white shadow-sm'
-                  : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
+                "relative flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all active:scale-95",
+                isFilterActive
+                  ? "border-primary-500 bg-primary-50 text-primary-700 shadow-xs"
+                  : "border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50 shadow-xs"
               )}
             >
-              <span>{tab.label}</span>
-              <span
-                className={cn(
-                  'rounded-full px-1.5 py-0.2 text-xs font-bold',
-                  activeTab === tab.value
-                    ? 'bg-white/20 text-white'
-                    : 'bg-warm-200 text-secondary-700'
-                )}
-              >
-                {tab.count}
-              </span>
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span>Filtros</span>
+              {isFilterActive && (
+                <span className="flex h-2 w-2 rounded-full bg-primary-500 ring-2 ring-white" />
+              )}
             </button>
-          ))}
+          </div>
         </div>
 
-        {/* Section Heading */}
-        <div className="flex items-center justify-between pt-1">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-secondary-600">
-            {activeTab === 'day'
-              ? isToday(selectedDate)
-                ? typeFilter === 'reuniao'
-                  ? 'Reuniões de Hoje'
-                  : typeFilter === 'festa'
-                  ? 'Festas de Hoje'
-                  : 'Eventos de Hoje'
-                : `${typeFilter === 'reuniao' ? 'Reuniões' : typeFilter === 'festa' ? 'Festas' : 'Eventos'} de ${format(selectedDate, "d 'de' MMMM", { locale: pt })}`
-              : activeTab === 'upcoming'
-              ? typeFilter === 'reuniao'
-                ? 'Próximas Reuniões'
-                : typeFilter === 'festa'
-                ? 'Próximas Festas'
-                : 'Próximos Eventos'
-              : activeTab === 'past'
-              ? typeFilter === 'reuniao'
-                ? 'Reuniões Terminadas'
-                : typeFilter === 'festa'
-                ? 'Festas Terminadas'
-                : 'Eventos Terminados'
-              : typeFilter === 'reuniao'
-              ? 'Todas as Reuniões'
-              : typeFilter === 'festa'
-              ? 'Todas as Festas'
-              : 'Todos os Eventos'}
-          </h2>
-        </div>
+        {/* Active Filter Chips (if non-standard view) */}
+        {isFilterActive && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {activeTab !== 'day' && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-secondary-100 px-2.5 py-0.5 text-xs font-semibold text-secondary-800">
+                <span>
+                  {activeTab === 'upcoming'
+                    ? 'Próximos'
+                    : activeTab === 'past'
+                    ? 'Terminados'
+                    : 'Todos os Dias'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('day')
+                    setSelectedDate(new Date())
+                  }}
+                  aria-label="Remover filtro de data"
+                  className="rounded-full p-0.5 hover:bg-secondary-200"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+
+            {typeFilter !== 'all' && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-secondary-100 px-2.5 py-0.5 text-xs font-semibold text-secondary-800">
+                <span>{typeFilter === 'festa' ? 'Festas 🎉' : 'Reuniões 📋'}</span>
+                <button
+                  type="button"
+                  onClick={() => setTypeFilter('all')}
+                  aria-label="Remover filtro de tipo"
+                  className="rounded-full p-0.5 hover:bg-secondary-200"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+
+            <button
+              type="button"
+              onClick={handleResetFilter}
+              className="text-xs text-primary-600 font-semibold hover:underline px-1"
+            >
+              Limpar tudo
+            </button>
+          </div>
+        )}
 
         {/* Detail Cards */}
         <EventList
@@ -410,6 +424,158 @@ export default function EventsPage() {
       >
         <Plus className="h-6 w-6" />
       </button>
+
+      {/* Dedicated Filter Menu Sheet */}
+      {isFilterOpen && (
+        <div className="fixed inset-0 z-[100] flex justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
+          <div className="flex w-full max-w-[430px] flex-col justify-end">
+            <div className="flex max-h-[85vh] flex-col rounded-t-3xl bg-surface shadow-2xl animate-in slide-in-from-bottom-6 duration-200 ease-out border-t border-warm-200">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-warm-200 px-5 py-4">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="h-5 w-5 text-primary-500" />
+                  <h3 className="text-base font-bold text-foreground">Filtros da Agenda</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsFilterOpen(false)}
+                  aria-label="Fechar menu de filtros"
+                  className="rounded-full p-1.5 text-muted hover:bg-warm-100 active:scale-95 transition-all"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
+                {/* Section: Período */}
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-secondary-500 mb-2.5">
+                    Período / Data
+                  </h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      {
+                        value: 'day',
+                        label: isToday(selectedDate) ? 'Hoje' : `Dia Selecionado (${format(selectedDate, "d 'de' MMM", { locale: pt })})`,
+                        desc: isToday(selectedDate) ? 'Apresenta a agenda do dia de hoje (predefinição)' : `Apresenta os eventos de ${format(selectedDate, "d 'de' MMMM", { locale: pt })}`,
+                        count: dayCount,
+                      },
+                      {
+                        value: 'upcoming',
+                        label: 'Próximos Eventos',
+                        desc: 'Eventos futuros a partir de hoje',
+                        count: upcomingCount,
+                      },
+                      {
+                        value: 'past',
+                        label: 'Eventos Terminados',
+                        desc: 'Histórico de celebrações e reuniões já realizadas',
+                        count: pastCount,
+                      },
+                      {
+                        value: 'all',
+                        label: 'Todos os Eventos',
+                        desc: 'Visão integral de todo o ano letivo',
+                        count: allCount,
+                      },
+                    ].map((opt) => {
+                      const isSelected = activeTab === opt.value
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            setActiveTab(opt.value as EventFilterType)
+                            if (opt.value === 'day' && !isToday(selectedDate)) {
+                              setSelectedDate(new Date())
+                            }
+                          }}
+                          className={cn(
+                            "flex items-center justify-between rounded-xl border p-3 text-left transition-all active:scale-[0.99]",
+                            isSelected
+                              ? "border-primary-500 bg-primary-50/50 shadow-xs"
+                              : "border-warm-200 bg-surface hover:bg-warm-50"
+                          )}
+                        >
+                          <div>
+                            <p className={cn("text-sm font-semibold", isSelected ? "text-primary-800" : "text-foreground")}>
+                              {opt.label}
+                            </p>
+                            <p className="text-xs text-muted">{opt.desc}</p>
+                          </div>
+                          <span className={cn(
+                            "rounded-full px-2 py-0.5 text-xs font-bold shrink-0",
+                            isSelected ? "bg-primary-500 text-white" : "bg-warm-100 text-secondary-600"
+                          )}>
+                            {opt.count}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Section: Tipo de Evento */}
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-secondary-500 mb-2.5">
+                    Tipo de Evento
+                  </h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { value: 'all', label: 'Todos', count: events.length },
+                      { value: 'festa', label: '🎉 Festas', count: festaCount },
+                      { value: 'reuniao', label: '📋 Reuniões', count: reuniaoCount },
+                    ].map((t) => {
+                      const isSelected = typeFilter === t.value
+                      return (
+                        <button
+                          key={t.value}
+                          type="button"
+                          onClick={() => setTypeFilter(t.value as any)}
+                          className={cn(
+                            "flex flex-col items-center justify-center gap-1 rounded-xl border p-2.5 text-center transition-all active:scale-95",
+                            isSelected
+                              ? "border-secondary-900 bg-secondary-900 text-white shadow-xs"
+                              : "border-warm-200 bg-surface text-secondary-700 hover:bg-warm-50"
+                          )}
+                        >
+                          <span className="text-xs font-semibold">{t.label}</span>
+                          <span className={cn(
+                            "rounded-full px-1.5 py-0.2 text-xs font-bold",
+                            isSelected ? "bg-white/20 text-white" : "bg-warm-100 text-secondary-600"
+                          )}>
+                            {t.count}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="border-t border-warm-200 bg-surface p-4 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={handleResetFilter}
+                  className="flex items-center gap-1.5 rounded-[var(--radius-button)] px-3.5 py-2.5 text-xs font-semibold text-secondary-600 hover:bg-warm-100 transition-colors active:scale-95"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  <span>Repor (Hoje)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsFilterOpen(false)}
+                  className="flex-1 rounded-[var(--radius-button)] bg-primary-500 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-primary-600 transition-all active:scale-95 text-center"
+                >
+                  Ver Resultados ({filteredTotal})
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Form Modal */}
       {isFormOpen && (
