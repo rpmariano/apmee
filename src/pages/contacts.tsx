@@ -123,7 +123,9 @@ export default function ContactsPage() {
 
       {/* Floating Action Button (FAB) */}
       <button
-        className="fixed bottom-24 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary-400 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-500 active:scale-95"
+        type="button"
+        aria-label="Criar novo contacto"
+        className="fixed bottom-24 right-6 min-[430px]:right-[calc(50%-215px+1.5rem)] z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary-400 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-500 active:scale-95"
         onClick={() => setIsFormOpen(true)}
       >
         <Plus className="h-6 w-6" />
