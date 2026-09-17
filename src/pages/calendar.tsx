@@ -10,6 +10,7 @@ export default function CalendarPage() {
   const editId = searchParams.get('edit')
   const { data: events } = useEvents()
 
+  const [selectedDate, setSelectedDate] = useState(new Date())
   const [editingEvent, setEditingEvent] = useState<Event | undefined>()
   const updateMutation = useUpdateEvent()
 
@@ -20,6 +21,7 @@ export default function CalendarPage() {
       const found = events.find((e) => e.id === editId)
       if (found) {
         setEditingEvent(found)
+        setSelectedDate(new Date(found.start_date))
       }
     } else if (!editId && editingEvent) {
       setEditingEvent(undefined)
@@ -28,6 +30,7 @@ export default function CalendarPage() {
 
   const handleEditEvent = (event: Event) => {
     setEditingEvent(event)
+    setSelectedDate(new Date(event.start_date))
     setSearchParams({ edit: event.id })
   }
 
@@ -40,6 +43,9 @@ export default function CalendarPage() {
     const current = editingEvent || (editId && events ? events.find((e) => e.id === editId) : undefined)
     if (!current) return
     try {
+      if (data.start_date) {
+        setSelectedDate(new Date(data.start_date))
+      }
       await updateMutation.mutateAsync({ id: current.id, ...data })
       handleCloseForm()
     } catch (error) {
@@ -59,7 +65,11 @@ export default function CalendarPage() {
       </div>
 
       <div className="px-4 pb-8 pt-4">
-        <MobileCalendar onEditEvent={handleEditEvent} />
+        <MobileCalendar
+          onEditEvent={handleEditEvent}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
       </div>
 
       {activeEvent && (

@@ -70,8 +70,19 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
     isAllDay !== (event?.is_all_day ?? false) ||
     status !== (event?.status ?? EVENT_STATUSES.PLANNED)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const pendingInventoryHandlerRef = useRef<(() => Promise<void>) | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // If there is any pending material chosen in the inventory inputs, save it!
+    if (pendingInventoryHandlerRef.current) {
+      try {
+        await pendingInventoryHandlerRef.current()
+      } catch (err) {
+        console.error('Failed to save pending inventory:', err)
+      }
+    }
 
     // Block completion if there are shortages
     if (status === EVENT_STATUSES.COMPLETED && hasShortages) {
@@ -246,6 +257,9 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
             eventId={event.id}
             eventStatus={status}
             isEditing={isEditing}
+            onRegisterPendingHandler={(handler) => {
+              pendingInventoryHandlerRef.current = handler
+            }}
           />
         ) : (
           <div className="rounded-[var(--radius-card)] bg-warm-50 p-4 border border-warm-100 text-center mt-2">

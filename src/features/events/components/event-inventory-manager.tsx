@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Trash2, Package, AlertTriangle } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
@@ -25,9 +25,15 @@ interface EventInventoryManagerProps {
   eventId: string
   eventStatus: string
   isEditing: boolean
+  onRegisterPendingHandler?: (handler: (() => Promise<void>) | null) => void
 }
 
-export function EventInventoryManager({ eventId, eventStatus, isEditing }: EventInventoryManagerProps) {
+export function EventInventoryManager({
+  eventId,
+  eventStatus,
+  isEditing,
+  onRegisterPendingHandler,
+}: EventInventoryManagerProps) {
   const queryClient = useQueryClient()
   const { data: inventory } = useInventory()
   const createItemMutation = useCreateItem()
@@ -109,6 +115,19 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
       }
     }
   }
+
+  // Register pending handler with parent form so submitting the event also saves pending items
+  useEffect(() => {
+    if (onRegisterPendingHandler) {
+      if (selectedItemValue.trim()) {
+        onRegisterPendingHandler(async () => {
+          await handleAdd()
+        })
+      } else {
+        onRegisterPendingHandler(null)
+      }
+    }
+  }, [onRegisterPendingHandler, selectedItemValue, activeCategory, quantity, inventory])
 
   const isCompleted = eventStatus === 'completed'
   const isCancelled = eventStatus === 'cancelled'
@@ -234,9 +253,10 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
                 createItemMutation.isPending ||
                 !selectedItemValue.trim()
               }
-              className="rounded-md bg-secondary-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-secondary-700 disabled:opacity-50"
+              className="flex items-center justify-center gap-1.5 rounded-md bg-secondary-900 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-secondary-800 disabled:opacity-50 h-[38px]"
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-4 w-4" />
+              <span>Adicionar</span>
             </button>
           </div>
         </div>

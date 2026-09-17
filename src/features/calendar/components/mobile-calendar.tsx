@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   format,
   addMonths,
@@ -31,11 +31,31 @@ const dotColors: Record<EventStatus, string> = {
 
 interface MobileCalendarProps {
   onEditEvent?: (event: Event) => void
+  selectedDate?: Date
+  onSelectDate?: (date: Date) => void
 }
 
-export function MobileCalendar({ onEditEvent }: MobileCalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [selectedDate, setSelectedDate] = useState(new Date())
+export function MobileCalendar({
+  onEditEvent,
+  selectedDate: externalSelectedDate,
+  onSelectDate: externalOnSelectDate,
+}: MobileCalendarProps) {
+  const [internalSelectedDate, setInternalSelectedDate] = useState(new Date())
+  const selectedDate = externalSelectedDate ?? internalSelectedDate
+  const setSelectedDate = (d: Date) => {
+    setInternalSelectedDate(d)
+    externalOnSelectDate?.(d)
+  }
+
+  const [currentMonth, setCurrentMonth] = useState(selectedDate)
+
+  // Keep month view synchronized when selectedDate is changed externally
+  useEffect(() => {
+    if (!isSameMonth(currentMonth, selectedDate)) {
+      setCurrentMonth(startOfMonth(selectedDate))
+    }
+  }, [selectedDate])
+
   const { data: events, isLoading } = useEvents()
 
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
@@ -95,76 +115,78 @@ export function MobileCalendar({ onEditEvent }: MobileCalendarProps) {
           </div>
         </div>
 
-        {/* Days of week */}
-        <div className="grid grid-cols-7 gap-1 text-center mb-2">
-          {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((d) => (
-            <div key={d} className="text-[10px] font-bold uppercase tracking-wider text-muted">
-              {d}
+        {/* Weekday headers */}
+        <div className="mb-2 grid grid-cols-7 text-center">
+          {['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map((dayName, index) => (
+            <div key={index} className="text-xs font-semibold text-secondary-500">
+              {dayName}
             </div>
           ))}
         </div>
 
-        {/* Days Grid */}
-        <div className="grid grid-cols-7 gap-1">
-          {days.map((dayItem, i) => {
-            const dateStr = format(dayItem, 'yyyy-MM-dd')
-            const dayEvents = eventsByDay[dateStr] || []
+        {/* Days grid */}
+        <div className="grid grid-cols-7 gap-y-2">
+          {days.map((dayItem, index) => {
             const isSelected = isSameDay(dayItem, selectedDate)
             const isCurrentMonth = isSameMonth(dayItem, currentMonth)
-            const isTodayDate = isToday(dayItem)
+            const isCurrentDay = isToday(dayItem)
+            const dateKey = format(dayItem, 'yyyy-MM-dd')
+            const dayEvents = eventsByDay[dateKey] || []
 
             return (
-              <button
-                key={i}
+              <div
+                key={index}
                 onClick={() => onDateClick(dayItem)}
                 className={cn(
-                  'relative flex h-10 w-full flex-col items-center justify-center rounded-lg text-sm transition-all active:scale-90',
-                  !isCurrentMonth && 'text-muted opacity-40',
-                  isSelected && 'bg-primary-500 font-bold text-white shadow-sm',
-                  !isSelected && isTodayDate && 'bg-warm-100 font-bold text-primary-700',
-                  !isSelected && !isTodayDate && 'hover:bg-warm-50 text-foreground'
+                  'flex flex-col items-center justify-center p-2 rounded-full cursor-pointer transition-all aspect-square relative',
+                  isSelected && 'bg-primary-400 text-white font-bold',
+                  !isSelected && isCurrentDay && 'border border-primary-400 font-semibold',
+                  !isSelected && !isCurrentMonth && 'text-muted opacity-40',
+                  !isSelected && isCurrentMonth && 'hover:bg-warm-50 text-foreground'
                 )}
               >
-                <span>{format(dayItem, 'd')}</span>
-                
-                {/* Event dots container */}
+                <span className="text-sm">{format(dayItem, 'd')}</span>
+
+                {/* Event indicator dots */}
                 {dayEvents.length > 0 && (
-                  <div className="absolute bottom-1 flex gap-0.5">
-                    {dayEvents.slice(0, 3).map((e, idx) => (
+                  <div className="flex gap-0.5 mt-1 absolute bottom-1.5">
+                    {dayEvents.slice(0, 3).map((event, dotIndex) => (
                       <span
-                        key={idx}
+                        key={dotIndex}
                         className={cn(
-                          'h-1 w-1 rounded-full',
-                          isSelected ? 'bg-white' : dotColors[e.status]
+                          'h-1.5 w-1.5 rounded-full',
+                          isSelected ? 'bg-white' : dotColors[event.status as EventStatus] || 'bg-secondary-400'
                         )}
                       />
                     ))}
                   </div>
                 )}
-              </button>
+              </div>
             )
           })}
         </div>
       </div>
 
-      {/* Selected Day Events List */}
-      <div>
-        <h3 className="mb-3 text-sm font-semibold text-secondary-700">
+      {/* Events List for Selected Day */}
+      <div className="flex flex-col gap-3">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-secondary-600">
           Eventos de {format(selectedDate, "d 'de' MMMM", { locale: pt })}
         </h3>
-        
+
         {isLoading ? (
-          <div className="h-32 w-full animate-pulse rounded-[var(--radius-card)] bg-warm-100" />
-        ) : selectedEvents.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            {selectedEvents.map((event) => (
-              <EventCard key={event.id} event={event} onEdit={onEditEvent} />
+          <div className="flex flex-col gap-2">
+            {[1, 2].map((n) => (
+              <div key={n} className="h-24 w-full animate-pulse rounded-[var(--radius-card)] bg-warm-100" />
             ))}
           </div>
-        ) : (
-          <div className="rounded-[var(--radius-card)] border border-dashed border-warm-200 p-6 text-center text-sm text-muted">
-            Sem eventos marcados para este dia.
+        ) : selectedEvents.length === 0 ? (
+          <div className="rounded-[var(--radius-card)] border border-dashed border-warm-200 bg-surface/50 p-6 text-center">
+            <p className="text-sm text-muted">Sem eventos marcados para este dia.</p>
           </div>
+        ) : (
+          selectedEvents.map((event) => (
+            <EventCard key={event.id} event={event} onEdit={onEditEvent} />
+          ))
         )}
       </div>
     </div>
