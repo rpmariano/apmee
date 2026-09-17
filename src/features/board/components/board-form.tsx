@@ -1,22 +1,27 @@
 import { useState, useRef } from 'react'
-import { X } from 'lucide-react'
+import { X, Trash2 } from 'lucide-react'
 import type { AllowedUser } from '@/types/database'
 
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 
 interface BoardFormProps {
   member?: AllowedUser
   onClose: () => void
   onSubmit: (data: Partial<AllowedUser>) => void
   isLoading?: boolean
+  onDelete?: (id: string) => Promise<void>
 }
 
-export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormProps) {
+export function BoardForm({ member, onClose, onSubmit, isLoading, onDelete }: BoardFormProps) {
 
+  const isExistingMember = !!member
   const [isDirty, setIsDirty] = useState(false)
   const [showUnsaved, setShowUnsaved] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const isEditing = true
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -52,15 +57,39 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
     })
   }
 
+  const handleConfirmDelete = async () => {
+    if (!member || !onDelete) return
+    setIsDeleting(true)
+    try {
+      await onDelete(member.id)
+      onClose()
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[100] flex justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">{/* Phone container */}<div className="flex w-full max-w-[430px] flex-col bg-background shadow-2xl animate-in slide-in-from-bottom-6 duration-200 ease-out">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
           {member ? 'Editar Membro' : 'Novo Membro da Direção'}
         </h2>
-        <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          {isExistingMember && onDelete && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              aria-label="Desativar membro"
+              className="rounded-full p-2 text-red-400 hover:bg-red-50"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          )}
+          <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
@@ -155,7 +184,18 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
           </label>
 
           {/* Moved Submit Button INSIDE the form to prevent silent HTML5 validation failures on mobile */}
-          <div className="mt-4 pt-4 border-t border-warm-200">
+          <div className="mt-4 pt-4 border-t border-warm-200 flex flex-col gap-2">
+            {isExistingMember && onDelete && (
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isDeleting}
+                className="flex w-full items-center justify-center rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-sm font-medium text-red-600 transition-all hover:bg-red-100 active:scale-95 disabled:opacity-50"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Desativar Membro
+              </button>
+            )}
             <button
               type="submit"
               disabled={isLoading}
@@ -175,6 +215,18 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
           onClose()
         }}
         onSave={handleSaveAndClose}
+      />
+
+      <CustomDialog
+        isOpen={showDeleteConfirm}
+        title="Desativar Membro?"
+        description={`Tem a certeza que pretende desativar "${member?.display_name || member?.email}"? O acesso à app será revogado imediatamente.`}
+        variant="danger"
+        confirmLabel="Sim, Desativar"
+        cancelLabel="Cancelar"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
       />
 </div>
 </div>

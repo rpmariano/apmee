@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { BoardList } from '@/features/board/components/board-list'
 import { BoardForm } from '@/features/board/components/board-form'
-import { useBoardMembers, useCreateMember, useUpdateMember } from '@/features/board/api/use-board'
+import { useBoardMembers, useCreateMember, useUpdateMember, useDeleteMember } from '@/features/board/api/use-board'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { AllowedUser } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
@@ -18,6 +18,7 @@ export default function BoardPage() {
   const { data: members, isLoading } = useBoardMembers()
   const createMutation = useCreateMember()
   const updateMutation = useUpdateMember()
+  const deleteMutation = useDeleteMember()
   const { toast } = useToast()
   
   const { isSuperAdmin } = usePermissions()
@@ -48,6 +49,11 @@ export default function BoardPage() {
       console.error('Failed to save member:', error)
       setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar membro. Tente novamente.'))
     }
+  }
+
+  const handleDeleteMember = async (id: string) => {
+    await deleteMutation.mutateAsync(id)
+    toast.success('Membro desativado com sucesso!')
   }
 
   return (
@@ -91,7 +97,8 @@ export default function BoardPage() {
           member={editingMember}
           onClose={handleCloseForm}
           onSubmit={handleSubmitForm}
-          isLoading={createMutation.isPending || updateMutation.isPending}
+          isLoading={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
+          onDelete={isSuperAdmin ? handleDeleteMember : undefined}
         />
       )}
 

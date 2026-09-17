@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { QuotaList } from '@/features/quotas/components/quota-list'
 import { QuotaForm } from '@/features/quotas/components/quota-form'
-import { useQuotas, useCreateQuota, useUpdateQuota } from '@/features/quotas/api/use-quotas'
+import { useQuotas, useCreateQuota, useUpdateQuota, useDeleteQuota } from '@/features/quotas/api/use-quotas'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { QuotaWithContact } from '@/features/quotas/components/quota-card'
 import type { Quota } from '@/types/database'
@@ -29,6 +29,7 @@ export default function QuotasPage() {
   const { data: quotas, isLoading } = useQuotas()
   const createMutation = useCreateQuota()
   const updateMutation = useUpdateQuota()
+  const deleteMutation = useDeleteQuota()
   const { toast } = useToast()
   
   const { canWrite, isFinancialReadOnly } = usePermissions()
@@ -61,6 +62,11 @@ export default function QuotasPage() {
       console.error('Failed to save quota:', error)
       setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar quota. Tente novamente.'))
     }
+  }
+
+  const handleDeleteQuota = async (id: string) => {
+    await deleteMutation.mutateAsync(id)
+    toast.success('Quota eliminada com sucesso!')
   }
 
   return (
@@ -121,7 +127,8 @@ export default function QuotasPage() {
           quota={editingQuota}
           onClose={handleCloseForm}
           onSubmit={handleSubmitForm}
-          isLoading={createMutation.isPending || updateMutation.isPending}
+          isLoading={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
+          onDelete={canWriteQuotas ? handleDeleteQuota : undefined}
         />
       )}
 

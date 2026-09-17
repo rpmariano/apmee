@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, Upload } from 'lucide-react'
+import { X, Upload, Trash2 } from 'lucide-react'
 import type { Quota } from '@/types/database'
 import { useContacts } from '@/features/contacts/api/use-contacts'
 import { supabase } from '@/lib/supabase'
@@ -14,6 +14,7 @@ interface QuotaFormProps {
   onClose: () => void
   onSubmit: (data: Partial<Quota>) => void
   isLoading?: boolean
+  onDelete?: (id: string) => Promise<void>
 }
 
 function toDateString(isoString?: string | null) {
@@ -21,10 +22,13 @@ function toDateString(isoString?: string | null) {
   return isoString.split('T')[0]
 }
 
-export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProps) {
+export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: QuotaFormProps) {
+  const isExistingQuota = !!quota
   const [showUnsaved, setShowUnsaved] = useState(false)
-  const isEditing = true
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const isEditing = true
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleCloseClick = () => {
@@ -38,6 +42,18 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
   const handleSaveAndClose = () => {
     setShowUnsaved(false)
     formRef.current?.requestSubmit()
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!quota || !onDelete) return
+    setIsDeleting(true)
+    try {
+      await onDelete(quota.id)
+      onClose()
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
+    }
   }
 
   const [contactId, setContactId] = useState(quota?.contact_id ?? '')
@@ -112,9 +128,21 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
         <h2 className="text-lg font-bold text-foreground">
           {quota ? 'Editar Quota' : 'Nova Quota'}
         </h2>
-        <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          {isExistingQuota && onDelete && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              aria-label="Eliminar quota"
+              className="rounded-full p-2 text-red-400 hover:bg-red-50"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          )}
+          <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
@@ -234,7 +262,18 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
           )}
 
         
-<div className="border-t border-warm-200 bg-surface p-4">
+<div className="border-t border-warm-200 bg-surface p-4 flex flex-col gap-2">
+          {isExistingQuota && onDelete && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={isDeleting}
+              className="flex w-full items-center justify-center rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-sm font-medium text-red-600 transition-all hover:bg-red-100 active:scale-95 disabled:opacity-50"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Eliminar Quota
+            </button>
+          )}
           <button
             type="submit"
             form="quota-form"
@@ -266,6 +305,18 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
         variant="danger"
         confirmLabel="OK"
         onConfirm={() => setErrorMessage(null)}
+      />
+
+      <CustomDialog
+        isOpen={showDeleteConfirm}
+        title="Eliminar Quota?"
+        description="Tem a certeza que pretende eliminar esta quota? Esta ação não pode ser revertida."
+        variant="danger"
+        confirmLabel="Sim, Eliminar"
+        cancelLabel="Cancelar"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
       />
 </div>
 </div>

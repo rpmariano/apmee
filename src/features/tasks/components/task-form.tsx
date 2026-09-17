@@ -1,17 +1,20 @@
 import { useState, useRef } from 'react'
-import { X, CheckCircle2, RotateCcw } from 'lucide-react'
+import { X, CheckCircle2, RotateCcw, Trash2 } from 'lucide-react'
 import type { Task, TaskPriority, TaskStatus } from '@/types/database'
 import { TASK_PRIORITIES, TASK_STATUSES } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
+import { useBoardMembers } from '@/features/board/api/use-board'
 
 interface TaskFormProps {
   task?: Task
   onClose: () => void
   onSubmit: (data: Partial<Task>) => void
+  onDelete?: (id: string) => Promise<void>
   isLoading?: boolean
 }
 
@@ -34,12 +37,10 @@ function toDateString(isoString?: string | null) {
   return isoString.split('T')[0]
 }
 
-import { useBoardMembers } from '@/features/board/api/use-board'
-
-export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) {
-
-  
+export function TaskForm({ task, onClose, onSubmit, onDelete, isLoading }: TaskFormProps) {
   const [showUnsaved, setShowUnsaved] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const isEditing = true
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -91,15 +92,41 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
     })
   }
 
+  const handleConfirmDelete = async () => {
+    if (!task?.id || !onDelete) return
+    try {
+      setIsDeleting(true)
+      await onDelete(task.id)
+      setShowDeleteConfirm(false)
+    } catch (err: any) {
+      console.error('Failed to delete task:', err)
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[100] flex justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">{/* Phone container */}<div className="flex w-full max-w-[430px] flex-col bg-background shadow-2xl animate-in slide-in-from-bottom-6 duration-200 ease-out">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
           {task ? 'Editar Tarefa' : 'Nova Tarefa'}
         </h2>
-        <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          {task && onDelete && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              aria-label="Eliminar tarefa"
+              title="Eliminar tarefa"
+              className="rounded-full p-2 text-muted hover:bg-red-50 hover:text-red-600 active:scale-95 transition-all"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          )}
+          <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
@@ -216,10 +243,22 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
             </button>
           )}
 
+          {task && onDelete && (
+            <button
+              type="button"
+              disabled={isLoading || isDeleting}
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-xs font-bold text-red-600 transition-all hover:bg-red-100 hover:border-red-300 active:scale-95 disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+              <span>Eliminar Tarefa</span>
+            </button>
+          )}
+
           <button
             type="submit"
             form="task-form"
-            disabled={isLoading}
+            disabled={isLoading || isDeleting}
             className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
           >
             {isLoading ? 'A Guardar...' : (task ? 'Guardar Alterações' : 'Criar Tarefa')}
@@ -228,8 +267,6 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
       </form>
       </div>
 
-      
-    
       <UnsavedDialog
         isOpen={showUnsaved}
         onCancel={() => setShowUnsaved(false)}
@@ -239,7 +276,20 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
         }}
         onSave={handleSaveAndClose}
       />
-</div>
-</div>
+
+      {/* Delete Confirmation Dialog */}
+      <CustomDialog
+        isOpen={showDeleteConfirm}
+        title="Eliminar Tarefa?"
+        description="Tem a certeza de que pretende eliminar esta tarefa? Esta ação pode ser revertida por um administrador."
+        variant="danger"
+        confirmLabel="Sim, Eliminar"
+        cancelLabel="Cancelar"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+    </div>
+  </div>
   )
 }

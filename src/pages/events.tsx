@@ -6,11 +6,12 @@ import { pt } from 'date-fns/locale'
 import { MobileCalendar } from '@/features/calendar/components/mobile-calendar'
 import { EventList, type EventFilterType } from '@/features/events/components/event-list'
 import { EventForm } from '@/features/events/components/event-form'
-import { useEvents, useCreateEvent, useUpdateEvent } from '@/features/events/api/use-events'
+import { useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent } from '@/features/events/api/use-events'
 import { useMovements } from '@/features/treasury/api/use-treasury'
 import type { EventFinanceSummary } from '@/features/events/components/event-card'
 import { useBoardMembers } from '@/features/board/api/use-board'
 import { useAuth } from '@/providers/auth-provider'
+import { usePermissions } from '@/hooks/use-permissions'
 import type { Event } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
@@ -37,7 +38,10 @@ export default function EventsPage() {
   const { data: movements = [] } = useMovements()
   const createMutation = useCreateEvent()
   const updateMutation = useUpdateEvent()
+  const deleteMutation = useDeleteEvent()
   const { toast } = useToast()
+  const { canWrite } = usePermissions()
+  const canWriteEvents = canWrite('events')
 
   // Map user IDs to display names or emails
   const creatorMap = useMemo(() => {
@@ -220,6 +224,17 @@ export default function EventsPage() {
     } catch (error: any) {
       console.error('Failed to save event:', error)
       setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar o evento. Tente novamente.'))
+    }
+  }
+
+  const handleDeleteEvent = async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync(id)
+      toast.success('Evento eliminado com sucesso!')
+      handleCloseForm()
+    } catch (error: any) {
+      console.error('Failed to delete event:', error)
+      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao eliminar o evento. Tente novamente.'))
     }
   }
 
@@ -610,7 +625,8 @@ export default function EventsPage() {
           initialDate={selectedDate}
           onClose={handleCloseForm}
           onSubmit={handleSubmitForm}
-          isLoading={createMutation.isPending || updateMutation.isPending}
+          onDelete={canWriteEvents ? handleDeleteEvent : undefined}
+          isLoading={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
         />
       )}
 

@@ -3,13 +3,14 @@ import { Plus } from 'lucide-react'
 import { InventoryList } from '@/features/inventory/components/inventory-list'
 import { InventoryForm } from '@/features/inventory/components/inventory-form'
 import { TransactionForm } from '@/features/inventory/components/transaction-form'
-import { useCreateItem, useUpdateItem } from '@/features/inventory/api/use-inventory'
+import { useCreateItem, useUpdateItem, useDeleteItem } from '@/features/inventory/api/use-inventory'
 import type { InventoryItem, InventoryCategory } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
 import { getFriendlyErrorMessage } from '@/lib/error-utils'
 import { MenuAlerts } from '@/components/ui/menu-alerts'
 import { cn } from '@/lib/utils'
+import { usePermissions } from '@/hooks/use-permissions'
 
 type FilterValue = InventoryCategory | 'all'
 
@@ -29,7 +30,10 @@ export default function InventoryPage() {
 
   const createMutation = useCreateItem()
   const updateMutation = useUpdateItem()
+  const deleteMutation = useDeleteItem()
   const { toast } = useToast()
+  const { canWrite } = usePermissions()
+  const canWriteInventory = canWrite('inventory')
 
   const handleEditItem = (item: InventoryItem) => {
     setEditingItem(item)
@@ -55,6 +59,11 @@ export default function InventoryPage() {
       console.error('Failed to save item:', error)
       setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar o item. Tente novamente.'))
     }
+  }
+
+  const handleDeleteItem = async (id: string) => {
+    await deleteMutation.mutateAsync(id)
+    toast.success('Item eliminado do inventário!')
   }
 
   return (
@@ -104,11 +113,12 @@ export default function InventoryPage() {
       )}
 
       {isFormOpen && (
-        <InventoryForm
+      <InventoryForm
           item={editingItem}
           onClose={handleCloseForm}
           onSubmit={handleSubmitForm}
-          isLoading={createMutation.isPending || updateMutation.isPending}
+          isLoading={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
+          onDelete={canWriteInventory ? handleDeleteItem : undefined}
         />
       )}
 

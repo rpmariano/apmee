@@ -3,7 +3,8 @@ import { Plus, Search } from 'lucide-react'
 import { CONTACT_CATEGORIES } from '@/lib/constants'
 import { ContactList } from '@/features/contacts/components/contact-list'
 import { ContactForm } from '@/features/contacts/components/contact-form'
-import { useCreateContact, useUpdateContact } from '@/features/contacts/api/use-contacts'
+import { useCreateContact, useUpdateContact, useDeleteContact } from '@/features/contacts/api/use-contacts'
+import { usePermissions } from '@/hooks/use-permissions'
 import type { Contact, ContactCategory } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
@@ -31,7 +32,10 @@ export default function ContactsPage() {
 
   const createMutation = useCreateContact()
   const updateMutation = useUpdateContact()
+  const deleteMutation = useDeleteContact()
   const { toast } = useToast()
+  const { canWrite } = usePermissions()
+  const canWriteContacts = canWrite('contacts')
 
   const handleEditContact = (contact: Contact) => {
     setEditingContact(contact)
@@ -56,6 +60,17 @@ export default function ContactsPage() {
     } catch (error: any) {
       console.error('Failed to save contact:', error)
       setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar o contacto. Tente novamente.'))
+    }
+  }
+
+  const handleDeleteContact = async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync(id)
+      toast.success('Contacto eliminado com sucesso!')
+      handleCloseForm()
+    } catch (error: any) {
+      console.error('Failed to delete contact:', error)
+      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao eliminar o contacto. Tente novamente.'))
     }
   }
 
@@ -142,7 +157,8 @@ export default function ContactsPage() {
           contact={editingContact}
           onClose={handleCloseForm}
           onSubmit={handleSubmitForm}
-          isLoading={createMutation.isPending || updateMutation.isPending}
+          onDelete={canWriteContacts ? handleDeleteContact : undefined}
+          isLoading={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
         />
       )}
 

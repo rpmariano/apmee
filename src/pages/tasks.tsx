@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { TaskList } from '@/features/tasks/components/task-list'
 import { TaskForm } from '@/features/tasks/components/task-form'
-import { useCreateTask, useUpdateTask } from '@/features/tasks/api/use-tasks'
+import { useCreateTask, useUpdateTask, useDeleteTask } from '@/features/tasks/api/use-tasks'
 import { useAuth } from '@/providers/auth-provider'
 import { useBoardMembers } from '@/features/board/api/use-board'
+import { usePermissions } from '@/hooks/use-permissions'
 import type { Task, TaskStatus } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
@@ -35,7 +36,10 @@ export default function TasksPage() {
 
   const createMutation = useCreateTask()
   const updateMutation = useUpdateTask()
+  const deleteMutation = useDeleteTask()
   const { toast } = useToast()
+  const { canWrite } = usePermissions()
+  const canWriteTasks = canWrite('tasks')
 
   const handleToggleStatus = async (task: Task) => {
     const nextStatus: TaskStatus = task.status === 'done' ? 'todo' : 'done'
@@ -71,6 +75,17 @@ export default function TasksPage() {
     } catch (error: any) {
       console.error('Failed to save task:', error)
       setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar a tarefa. Tente novamente.'))
+    }
+  }
+
+  const handleDeleteTask = async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync(id)
+      toast.success('Tarefa eliminada com sucesso!')
+      handleCloseForm()
+    } catch (error: any) {
+      console.error('Failed to delete task:', error)
+      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao eliminar a tarefa. Tente novamente.'))
     }
   }
 
@@ -148,7 +163,8 @@ export default function TasksPage() {
           task={editingTask}
           onClose={handleCloseForm}
           onSubmit={handleSubmitForm}
-          isLoading={createMutation.isPending || updateMutation.isPending}
+          onDelete={canWriteTasks ? handleDeleteTask : undefined}
+          isLoading={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
         />
       )}
 

@@ -13,7 +13,7 @@ import {
   filterMovements,
   isFilterCustom,
 } from '@/features/treasury/components/movement-filters-sheet'
-import { useMovements, useCreateMovement, useUpdateMovement } from '@/features/treasury/api/use-treasury'
+import { useMovements, useCreateMovement, useUpdateMovement, useDeleteMovement } from '@/features/treasury/api/use-treasury'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { FinancialMovement } from '@/types/database'
 import { cn } from '@/lib/utils'
@@ -49,6 +49,7 @@ export default function TreasuryPage() {
   const { data: movements = [], isLoading } = useMovements()
   const createMutation = useCreateMovement()
   const updateMutation = useUpdateMovement()
+  const deleteMutation = useDeleteMovement()
   const { toast } = useToast()
 
   const { canWrite } = usePermissions()
@@ -114,6 +115,17 @@ export default function TreasuryPage() {
     } catch (error: any) {
       console.error('Failed to save movement:', error)
       setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar o movimento. Tente novamente.'))
+    }
+  }
+
+  const handleDeleteMovement = async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync(id)
+      toast.success('Movimento financeiro eliminado!')
+      handleCloseForm()
+    } catch (error: any) {
+      console.error('Failed to delete movement:', error)
+      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao eliminar o movimento. Tente novamente.'))
     }
   }
 
@@ -322,7 +334,8 @@ export default function TreasuryPage() {
           initialEventId={filters.eventId !== 'all' ? filters.eventId : undefined}
           onClose={handleCloseForm}
           onSubmit={handleSubmitForm}
-          isLoading={createMutation.isPending || updateMutation.isPending}
+          onDelete={canWriteTreasury ? handleDeleteMovement : undefined}
+          isLoading={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
           readOnly={!canWriteTreasury}
         />
       )}

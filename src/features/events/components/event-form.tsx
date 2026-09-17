@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, MapPin, Target, FileText, Lock } from 'lucide-react'
+import { X, MapPin, Target, FileText, Lock, Trash2 } from 'lucide-react'
 import type { Event, EventStatus, EventType, MeetingType, EventDocument } from '@/types/database'
 import {
   EVENT_STATUSES,
@@ -23,6 +23,7 @@ interface EventFormProps {
   initialDate?: Date
   onClose: () => void
   onSubmit: (data: Partial<Event>) => void
+  onDelete?: (id: string) => Promise<void>
   isLoading?: boolean
 }
 
@@ -35,8 +36,7 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 // Utility to convert ISO string to datetime-local format (YYYY-MM-DDThh:mm)
-function toDateTimeLocal(isoString?: string | null) {
-  if (!isoString) return ''
+function toDateTimeLocal(isoString: string) {
   const date = new Date(isoString)
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
     .toISOString()
@@ -55,10 +55,12 @@ function getDefaultDates(initialDate?: Date) {
   }
 }
 
-export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: EventFormProps) {
+export function EventForm({ event, initialDate, onClose, onSubmit, onDelete, isLoading }: EventFormProps) {
   const [showUnsaved, setShowUnsaved] = useState(false)
   const [showShortageWarning, setShowShortageWarning] = useState(false)
   const [showCompletionBlocked, setShowCompletionBlocked] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const isEditing = true
   const isExistingEvent = Boolean(event?.id || event)
   const formRef = useRef<HTMLFormElement>(null)
@@ -84,8 +86,8 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
   }
 
   const defaultDates = getDefaultDates(initialDate)
-  const initialStartDate = toDateTimeLocal(event?.start_date) || defaultDates.start
-  const initialEndDate = toDateTimeLocal(event?.end_date) || defaultDates.end
+  const initialStartDate = (event?.start_date ? toDateTimeLocal(event.start_date) : '') || defaultDates.start
+  const initialEndDate = (event?.end_date ? toDateTimeLocal(event.end_date) : '') || defaultDates.end
 
   // Shared fields
   const [title, setTitle] = useState(event?.title ?? '')
@@ -178,6 +180,19 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
     setStatus(val as EventStatus)
   }
 
+  const handleConfirmDelete = async () => {
+    if (!event?.id || !onDelete) return
+    try {
+      setIsDeleting(true)
+      await onDelete(event.id)
+      setShowDeleteConfirm(false)
+    } catch (err: any) {
+      console.error('Failed to delete event:', err)
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[100] flex justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
       <div className="flex w-full max-w-[430px] flex-col bg-background shadow-2xl animate-in slide-in-from-bottom-6 duration-200 ease-out">
@@ -197,14 +212,27 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
               {eventType === EVENT_TYPES.REUNIAO ? 'Reunião & Atas' : 'Celebração & Materiais'}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleCloseClick}
-            aria-label="Fechar formulário"
-            className="rounded-full p-2 text-muted hover:bg-warm-100 active:scale-95 transition-all"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            {isExistingEvent && onDelete && (
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                aria-label="Eliminar evento"
+                title="Eliminar evento"
+                className="rounded-full p-2 text-muted hover:bg-red-50 hover:text-red-600 active:scale-95 transition-all"
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleCloseClick}
+              aria-label="Fechar formulário"
+              className="rounded-full p-2 text-muted hover:bg-warm-100 active:scale-95 transition-all"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Form Body */}
@@ -471,11 +499,23 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
         </div>
 
         {/* Footer Action Button */}
-        <div className="border-t border-warm-200 bg-surface p-4">
+        <div className="border-t border-warm-200 bg-surface p-4 flex flex-col gap-2.5">
+          {isExistingEvent && onDelete && (
+            <button
+              type="button"
+              disabled={isLoading || isDeleting}
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-xs font-bold text-red-600 transition-all hover:bg-red-100 hover:border-red-300 active:scale-95 disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+              <span>Eliminar {eventType === EVENT_TYPES.REUNIAO ? 'Reunião' : 'Festa / Evento'}</span>
+            </button>
+          )}
+
           <button
             type="submit"
             form="event-form"
-            disabled={isLoading}
+            disabled={isLoading || isDeleting}
             className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
           >
             {isLoading
@@ -495,6 +535,19 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
             onClose()
           }}
           onSave={handleSaveAndClose}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <CustomDialog
+          isOpen={showDeleteConfirm}
+          title={`Eliminar ${eventType === EVENT_TYPES.REUNIAO ? 'Reunião' : 'Festa'}?`}
+          description="Tem a certeza de que pretende eliminar este evento? Os registos associados serão mantidos e esta ação pode ser revertida por um administrador."
+          variant="danger"
+          confirmLabel="Sim, Eliminar"
+          cancelLabel="Cancelar"
+          isLoading={isDeleting}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
         />
 
         {/* Custom Dialog for shortage warning on save */}

@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from 'react'
-import { X, Upload, Landmark, Coins, ExternalLink } from 'lucide-react'
+import { X, Upload, Landmark, Coins, ExternalLink, Lock, Trash2 } from 'lucide-react'
 import type { FinancialMovement, FinancialType, FinancialAccount } from '@/types/database'
 import { supabase } from '@/lib/supabase'
 
@@ -33,6 +33,7 @@ interface MovementFormProps {
   initialEventId?: string
   onClose: () => void
   onSubmit: (data: Partial<FinancialMovement>) => void
+  onDelete?: (id: string) => Promise<void>
   isLoading?: boolean
   readOnly?: boolean
 }
@@ -43,8 +44,11 @@ function toDateString(isoString?: string | null) {
   return isoString.split('T')[0]
 }
 
-export function MovementForm({ movement, initialEventId, onClose, onSubmit, isLoading, readOnly = false }: MovementFormProps) {
+export function MovementForm({ movement, initialEventId, onClose, onSubmit, onDelete, isLoading, readOnly = false }: MovementFormProps) {
+  const isExistingMovement = Boolean(movement?.id || movement)
   const [showUnsaved, setShowUnsaved] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const isEditing = !readOnly
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
@@ -143,46 +147,88 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, isLo
     })
   }
 
+  const handleConfirmDelete = async () => {
+    if (!movement?.id || !onDelete) return
+    try {
+      setIsDeleting(true)
+      await onDelete(movement.id)
+      setShowDeleteConfirm(false)
+    } catch (err: any) {
+      console.error('Failed to delete movement:', err)
+      setErrorMessage(err.message || 'Erro ao eliminar movimento.')
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[100] flex justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">{/* Phone container */}<div className="flex w-full max-w-[430px] flex-col bg-background shadow-2xl animate-in slide-in-from-bottom-6 duration-200 ease-out">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
           {readOnly ? 'Detalhes do Movimento' : movement ? 'Editar Movimento' : 'Novo Movimento'}
         </h2>
-        <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          {isExistingMovement && isEditing && onDelete && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              aria-label="Eliminar movimento"
+              title="Eliminar movimento"
+              className="rounded-full p-2 text-muted hover:bg-red-50 hover:text-red-600 active:scale-95 transition-all"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          )}
+          <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
         <form ref={formRef}   id="movement-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           {/* Type Toggle */}
-          <div className="flex rounded-[var(--radius-button)] bg-warm-100 p-1">
-            <button
-              type="button"
-              onClick={() => {
-                setType('expense')
-                setCategory('')
-              }}
-              className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
-                type === 'expense' ? 'bg-white text-red-600 shadow-sm' : 'text-secondary-600 hover:text-foreground'
-              }`}
-            >
-              Despesa
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setType('income')
-                setCategory('')
-              }}
-              className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
-                type === 'income' ? 'bg-white text-green-600 shadow-sm' : 'text-secondary-600 hover:text-foreground'
-              }`}
-            >
-              Receita
-            </button>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold uppercase tracking-wider text-secondary-600">
+                Tipo de Movimento
+              </label>
+              {isExistingMovement && (
+                <span className="flex items-center gap-1 text-xs font-medium text-muted">
+                  <Lock className="h-3 w-3 text-secondary-400" />
+                  Não alterável após criação
+                </span>
+              )}
+            </div>
+            <div className="flex rounded-[var(--radius-button)] bg-warm-100 p-1">
+              <button
+                type="button"
+                disabled={isExistingMovement || !isEditing}
+                onClick={() => {
+                  setType('expense')
+                  setCategory('')
+                }}
+                className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
+                  type === 'expense' ? 'bg-white text-red-600 shadow-sm' : 'text-secondary-600 hover:text-foreground'
+                } ${isExistingMovement ? 'cursor-not-allowed opacity-60' : ''}`}
+              >
+                Despesa
+              </button>
+              <button
+                type="button"
+                disabled={isExistingMovement || !isEditing}
+                onClick={() => {
+                  setType('income')
+                  setCategory('')
+                }}
+                className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
+                  type === 'income' ? 'bg-white text-green-600 shadow-sm' : 'text-secondary-600 hover:text-foreground'
+                } ${isExistingMovement ? 'cursor-not-allowed opacity-60' : ''}`}
+              >
+                Receita
+              </button>
+            </div>
           </div>
 
           {/* Account Toggle */}
@@ -314,7 +360,19 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, isLo
           </div>
 
         
-<div className="border-t border-warm-200 bg-surface p-4">
+        <div className="border-t border-warm-200 bg-surface p-4 flex flex-col gap-2.5">
+          {isExistingMovement && isEditing && onDelete && (
+            <button
+              type="button"
+              disabled={isLoading || isUploading || isDeleting}
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-xs font-bold text-red-600 transition-all hover:bg-red-100 hover:border-red-300 active:scale-95 disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+              <span>Eliminar Movimento</span>
+            </button>
+          )}
+
           {readOnly ? (
             <button
               type="button"
@@ -327,18 +385,16 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, isLo
             <button
               type="submit"
               form="movement-form"
-              disabled={isLoading || isUploading}
+              disabled={isLoading || isUploading || isDeleting}
               className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
             >
               {isUploading ? 'A enviar documento...' : isLoading ? 'A Guardar...' : (movement ? 'Guardar Movimento' : 'Registar Movimento')}
             </button>
           )}
         </div>
-</form>
+      </form>
       </div>
 
-      
-    
       <UnsavedDialog
         isOpen={showUnsaved}
         onCancel={() => setShowUnsaved(false)}
@@ -349,15 +405,29 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, isLo
         onSave={handleSaveAndClose}
       />
 
+      {/* Delete Confirmation Dialog */}
+      <CustomDialog
+        isOpen={showDeleteConfirm}
+        title="Eliminar Movimento?"
+        description="Tem a certeza de que pretende eliminar este movimento financeiro? Esta ação pode ser revertida por um administrador."
+        variant="danger"
+        confirmLabel="Sim, Eliminar"
+        cancelLabel="Cancelar"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+
+      {/* Error Dialog */}
       <CustomDialog
         isOpen={!!errorMessage}
-        title="Erro no comprovativo"
+        title="Erro no movimento"
         description={errorMessage || ''}
         variant="danger"
         confirmLabel="OK"
         onConfirm={() => setErrorMessage(null)}
       />
-</div>
-</div>
+    </div>
+  </div>
   )
 }

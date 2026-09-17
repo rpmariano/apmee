@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react'
-import { X } from 'lucide-react'
+import { X, Trash2 } from 'lucide-react'
 import type { Contact, ContactCategory } from '@/types/database'
 import { CONTACT_CATEGORIES, CONTACT_CATEGORY_LABELS } from '@/lib/constants'
 
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
 
 const TURMA_OPTIONS = [
@@ -29,13 +30,15 @@ interface ContactFormProps {
   contact?: Contact
   onClose: () => void
   onSubmit: (data: Partial<Contact>) => void
+  onDelete?: (id: string) => Promise<void>
   isLoading?: boolean
 }
 
-export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFormProps) {
-
-  
+export function ContactForm({ contact, onClose, onSubmit, onDelete, isLoading }: ContactFormProps) {
   const [showUnsaved, setShowUnsaved] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const isEditing = true
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleCloseClick = () => {
@@ -58,7 +61,6 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
   const [whatsapp, setWhatsapp] = useState(contact?.whatsapp ?? '')
   const [notes, setNotes] = useState(contact?.notes ?? '')
   const [isMember, setIsMember] = useState(contact?.is_member ?? false)
-  const isEditing = true
 
   const isDirty = (
     name !== (contact?.name ?? '') ||
@@ -110,6 +112,19 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
     })
   }
 
+  const handleConfirmDelete = async () => {
+    if (!contact?.id || !onDelete) return
+    try {
+      setIsDeleting(true)
+      await onDelete(contact.id)
+      setShowDeleteConfirm(false)
+    } catch (err: any) {
+      console.error('Failed to delete contact:', err)
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[100] flex justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">{/* Phone container */}<div className="flex w-full max-w-[430px] flex-col bg-background shadow-2xl animate-in slide-in-from-bottom-6 duration-200 ease-out">
       {/* Header */}
@@ -117,9 +132,22 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
         <h2 className="text-lg font-bold text-foreground">
           {contact ? 'Editar Contacto' : 'Novo Contacto'}
         </h2>
-        <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          {contact && onDelete && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              aria-label="Eliminar contacto"
+              title="Eliminar contacto"
+              className="rounded-full p-2 text-muted hover:bg-red-50 hover:text-red-600 active:scale-95 transition-all"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          )}
+          <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* Form */}
@@ -255,22 +283,31 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
             />
           </div>
         
-<div className="border-t border-warm-200 bg-surface p-4">
+        <div className="border-t border-warm-200 bg-surface p-4 flex flex-col gap-2.5">
+          {contact && onDelete && (
+            <button
+              type="button"
+              disabled={isLoading || isDeleting}
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-xs font-bold text-red-600 transition-all hover:bg-red-100 hover:border-red-300 active:scale-95 disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+              <span>Eliminar Contacto</span>
+            </button>
+          )}
+
           <button
             type="submit"
             form="contact-form"
-            disabled={isLoading}
+            disabled={isLoading || isDeleting}
             className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
           >
             {isLoading ? 'A Guardar...' : (contact ? 'Guardar Contacto' : 'Criar Contacto')}
           </button>
         </div>
-</form>
+      </form>
       </div>
 
-      {/* Footer / Submit Button */}
-      
-    
       <UnsavedDialog
         isOpen={showUnsaved}
         onCancel={() => setShowUnsaved(false)}
@@ -280,7 +317,20 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
         }}
         onSave={handleSaveAndClose}
       />
-</div>
-</div>
+
+      {/* Delete Confirmation Dialog */}
+      <CustomDialog
+        isOpen={showDeleteConfirm}
+        title="Eliminar Contacto?"
+        description="Tem a certeza de que pretende eliminar este contacto? Esta ação pode ser revertida por um administrador."
+        variant="danger"
+        confirmLabel="Sim, Eliminar"
+        cancelLabel="Cancelar"
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+    </div>
+  </div>
   )
 }
