@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-17T21:31:23.714500+00:00",
+  "title": "Design System: APMEE EB Cobre",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Terracota Coral",
+        "canonical": "#e06b4d",
+        "tonalRamp": [
+          "#712f24",
+          "#8a3425",
+          "#ab3d28",
+          "#cc4f33",
+          "#e06b4d",
+          "#e8856c",
+          "#f89a80",
+          "#fef2ee"
+        ]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Ardósia Escura",
+        "canonical": "#424d59",
+        "tonalRamp": [
+          "#2d3748",
+          "#3b434c",
+          "#424d59",
+          "#4c5a6a",
+          "#596b7d",
+          "#a1afbc",
+          "#c8d1d9",
+          "#f4f6f7"
+        ]
+      },
+      "warm-bg": {
+        "role": "neutral",
+        "displayName": "Bege Quente",
+        "canonical": "#faf7f0",
+        "tonalRamp": [
+          "#c2ab83",
+          "#d4c4a3",
+          "#e8ddc8",
+          "#f3ede0",
+          "#faf7f0",
+          "#fdfcf9",
+          "#ffffff",
+          "#ffffff"
+        ]
+      },
+      "accent-meeting": {
+        "role": "accent",
+        "displayName": "Azul Reunião",
+        "canonical": "#2563eb",
+        "tonalRamp": [
+          "#1e3a8a",
+          "#1d4ed8",
+          "#2563eb",
+          "#3b82f6",
+          "#60a5fa",
+          "#93c5fd",
+          "#bfdbfe",
+          "#eff6ff"
+        ]
+      },
+      "accent-party": {
+        "role": "accent",
+        "displayName": "Âmbar Festa",
+        "canonical": "#f59e0b",
+        "tonalRamp": [
+          "#78350f",
+          "#b45309",
+          "#d97706",
+          "#f59e0b",
+          "#fbbf24",
+          "#fcd34d",
+          "#fef3c7",
+          "#fffbeb"
+        ]
+      },
+      "accent-bell": {
+        "role": "accent",
+        "displayName": "Fúcsia Alerta",
+        "canonical": "#d946ef",
+        "tonalRamp": [
+          "#701a75",
+          "#86198f",
+          "#a21caf",
+          "#c026d3",
+          "#d946ef",
+          "#e879f9",
+          "#f0abfc",
+          "#fdf4ff"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Títulos globais de aplicação e ecrãs de topo."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Títulos de cartões de eventos, associados e modais."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Rótulos de campos e secções."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Corpo de texto descritivo e dados operacionais."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Metadados, badges de estado e datas."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-ambient",
+        "value": "0 4px 15px -2px rgba(66, 77, 89, 0.08), 0 1px 3px -1px rgba(66, 77, 89, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.9)",
+        "purpose": "Sombra tátil para cartões de eventos, tarefas e listas em repouso."
+      },
+      {
+        "name": "modal-elevation",
+        "value": "0 20px 40px -5px rgba(66, 77, 89, 0.18)",
+        "purpose": "Elevação de gavetas modais e caixas de diálogo."
+      }
+    ],
+    "motion": [
+      {
+        "name": "fuchsia-ripple",
+        "value": "cubic-bezier(0, 0, 0.2, 1) 2.4s infinite",
+        "purpose": "Onda expansiva concêntrica no sino de notificações quando ativo."
+      },
+      {
+        "name": "tap-active",
+        "value": "scale(0.95) transition 0.15s ease",
+        "purpose": "Feedback tátil imediato em botões e seletores."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile-max",
+        "value": "430px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Botão de ação principal, usado em formulários de submissão e ações críticas.",
+      "html": "<button class=\"ds-btn-primary\">Guardar Alterações</button>",
+      "css": ".ds-btn-primary { background: #e06b4d; color: #ffffff; padding: 12px 16px; border-radius: 12px; font-weight: 600; font-size: 14px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: background 0.2s, transform 0.1s; } .ds-btn-primary:hover { background: #ab3d28; } .ds-btn-primary:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Event Card",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Cartão de evento táctil na Agenda, com indicador visual de tipo (Festa/Reunião).",
+      "html": "<div class=\"ds-event-card\"><div class=\"ds-event-header\"><span class=\"ds-event-badge ds-badge-meeting\">Reunião</span><div class=\"ds-creator-stamp\">RP</div></div><h3 class=\"ds-event-title\">Reunião de Direção</h3><p class=\"ds-event-meta\">19:30 • Sala dos Professores</p></div>",
+      "css": ".ds-event-card { background: #ffffff; border: 1px solid #f3ede0; border-radius: 16px; padding: 16px; box-shadow: 0 4px 15px -2px rgba(66,77,89,0.08); display: flex; flex-direction: column; gap: 8px; font-family: 'Inter', sans-serif; cursor: pointer; } .ds-event-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; } .ds-event-badge { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 9999px; } .ds-badge-meeting { background: #eff6ff; color: #2563eb; } .ds-badge-party { background: #fef3c7; color: #d97706; } .ds-creator-stamp { width: 26px; height: 26px; border-radius: 9999px; border: 2px solid #2563eb; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; } .ds-event-title { font-size: 15px; font-weight: 700; color: #1a1a1a; margin: 0; } .ds-event-meta { font-size: 12px; color: #6b7280; margin: 4px 0 0 0; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Campo de introdução de texto e valores numéricos dos formulários.",
+      "html": "<div class=\"ds-input-wrapper\"><label class=\"ds-input-label\">Título do Registo</label><input type=\"text\" class=\"ds-input\" placeholder=\"Ex: Feira de Outono\" value=\"Feira de Outono\" /></div>",
+      "css": ".ds-input-wrapper { display: flex; flex-direction: column; gap: 6px; width: 100%; font-family: 'Inter', sans-serif; } .ds-input-label { font-size: 13px; font-weight: 600; color: #424d59; } .ds-input { border: 1px solid #f3ede0; border-radius: 12px; padding: 10px 12px; font-size: 14px; background: #ffffff; color: #1a1a1a; outline: none; } .ds-input:focus { border-color: #e06b4d; box-shadow: 0 0 0 2px rgba(224,107,77,0.2); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Aldeia Escolar Acolhedora",
+    "overview": "O sistema de design da APMEE inspira-se no calor, proximidade e vitalidade de uma comunidade escolar onde todos se conhecem e colaboram. Afasta-se da frieza corporativa e do SaaS genérico azul/cinza em favor de uma estética térrea, calorosa e tátil, enraizada na identidade visual da Escola Básica do Cobre em Cascais.",
+    "keyCharacteristics": [
+      "Calor Terroso e Acolhedor: Tons de terracota/coral e areia quente que abraçam o utilizador.",
+      "Tátil e Confiante: Cantos suaves e generosos (16px em cartões, 12px em botões).",
+      "Cores Semânticas Funcionais: Azul real para Reuniões, âmbar para Festas e fúcsia para alertas.",
+      "Fricção Mínima: Entrada imediata em modo de edição e ausência de diálogos nativos do browser."
+    ],
+    "rules": [
+      {
+        "name": "The Event Color Sovereignty Rule",
+        "body": "Reuniões são sempre azuis (#2563eb) e Festas são sempre âmbar (#f59e0b). Nenhuma outra entidade na aplicação pode adotar estas duas cores como destaque primário de cartão.",
+        "section": "colors"
+      },
+      {
+        "name": "The Warm Base Rule",
+        "body": "O fundo da aplicação e das superfícies secundárias nunca usa cinzento frio ou azulado; utiliza sempre a gama bege acolhedora (#fafaf8 / #faf7f0).",
+        "section": "colors"
+      },
+      {
+        "name": "The Immediate Legibility Rule",
+        "body": "Nenhum texto com papel informativo ou interativo pode descer abaixo dos 12px. Toda a legenda auxiliar tem contraste mínimo de 4.5:1 sobre a sua superfície.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tonal Depth Rule",
+        "body": "A hierarquia entre camadas é resolvida primeiro pela cor da superfície e apenas complementada por sombras difusas de tom ardósia, nunca preto puro.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do abrir qualquer registo e formulário diretamente em modo de edição imediata.",
+      "Do usar azul (#2563eb) para Reuniões e âmbar (#f59e0b) para Festas de forma consistente.",
+      "Do desenhar todas as telas a pensar no formato de 430px de largura com áreas de toque >= 44px.",
+      "Do usar os componentes de diálogo customizados (CustomDialog e UnsavedDialog).",
+      "Do manter o selo de agenda/cartão como um círculo transparente apenas com contorno e iniciais."
+    ],
+    "donts": [
+      "Don't invocar window.alert() ou window.confirm() nativos do navegador em circunstância alguma.",
+      "Don't aninhar cartões dentro de cartões gerando caixas dentro de caixas cinzentas.",
+      "Don't usar cinzentos frios azulados para fundos; manter sempre a paleta bege quente.",
+      "Don't permitir que um utilizador altere o tipo de evento (Festa vs. Reunião) durante a edição de um evento já criado.",
+      "Don't colocar menus de três pontos escondidos em cartões quando um toque direto no cartão abre a edição completa."
+    ]
+  }
+}
