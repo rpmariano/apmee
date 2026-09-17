@@ -74,9 +74,9 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
     },
   })
 
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handleAdd = async (e?: React.MouseEvent | React.FormEvent) => {
+    e?.preventDefault()
+    e?.stopPropagation()
 
     if (isCreatingNew) {
       if (!newItemName.trim()) return
@@ -160,8 +160,7 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
 
       {/* Add form — only when editing and not locked by status */}
       {isEditing && !isCompleted && !isCancelled && (
-        <form
-          onSubmit={handleAdd}
+        <div
           className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-warm-50 p-4 border border-warm-200"
         >
           {/* Toggle between existing / new item */}
@@ -240,7 +239,8 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
               />
             </div>
             <button
-              type="submit"
+              type="button"
+              onClick={handleAdd}
               disabled={
                 addMutation.isPending ||
                 createItemMutation.isPending ||
@@ -251,7 +251,7 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
               <Plus className="h-5 w-5" />
             </button>
           </div>
-        </form>
+        </div>
       )}
 
       {/* Requirements list grouped by category */}
