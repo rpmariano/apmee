@@ -6,6 +6,7 @@ import { ContactForm } from '@/features/contacts/components/contact-form'
 import { useCreateContact, useUpdateContact } from '@/features/contacts/api/use-contacts'
 import type { Contact, ContactCategory } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { MenuAlerts } from '@/components/ui/menu-alerts'
 import { cn } from '@/lib/utils'
 
 type FilterValue = ContactCategory | 'all'
@@ -59,12 +60,15 @@ export default function ContactsPage() {
         <div className="px-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-foreground">Contactos</h1>
-            <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="rounded-full p-2 text-muted transition-colors hover:bg-warm-100 hover:text-foreground"
-            >
-              <Search className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                className="rounded-full p-2 text-muted transition-colors hover:bg-warm-100 hover:text-foreground"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+              <MenuAlerts />
+            </div>
           </div>
 
           {/* Search Bar (Expandable) */}

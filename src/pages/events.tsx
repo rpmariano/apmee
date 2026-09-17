@@ -11,6 +11,7 @@ import { useBoardMembers } from '@/features/board/api/use-board'
 import { useAuth } from '@/providers/auth-provider'
 import type { Event } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { MenuAlerts } from '@/components/ui/menu-alerts'
 import { cn, getInitials } from '@/lib/utils'
 
 export default function EventsPage() {
@@ -264,9 +265,12 @@ export default function EventsPage() {
             </div>
             <h1 className="text-xl font-bold text-foreground">Agenda</h1>
           </div>
-          <span className="text-xs font-medium text-secondary-500 capitalize">
-            {format(selectedDate, "EEEE, d 'de' MMMM", { locale: pt })}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-medium text-secondary-500 capitalize">
+              {format(selectedDate, "EEEE, d 'de' MMMM", { locale: pt })}
+            </span>
+            <MenuAlerts />
+          </div>
         </div>
       </div>
 

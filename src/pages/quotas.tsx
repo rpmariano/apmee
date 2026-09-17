@@ -8,6 +8,7 @@ import type { QuotaWithContact } from '@/features/quotas/components/quota-card'
 import type { Quota } from '@/types/database'
 import { cn } from '@/lib/utils'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { MenuAlerts } from '@/components/ui/menu-alerts'
 
 type FilterValue = 'all' | 'paid' | 'unpaid'
 
@@ -60,13 +61,16 @@ export default function QuotasPage() {
   return (
     <div className="relative min-h-[calc(100vh-4rem)] bg-background pb-20">
       <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="px-4 flex items-center gap-2">
-          <h1 className="text-xl font-bold text-foreground">Quotas</h1>
-          {isFinancialReadOnly() && (
-            <span className="rounded-full bg-warm-200 px-2 py-0.5 text-xs font-medium text-secondary-600">
-              Apenas leitura
-            </span>
-          )}
+        <div className="px-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-foreground">Quotas</h1>
+            {isFinancialReadOnly() && (
+              <span className="rounded-full bg-warm-200 px-2 py-0.5 text-xs font-medium text-secondary-600">
+                Apenas leitura
+              </span>
+            )}
+          </div>
+          <MenuAlerts />
         </div>
 
         <div className="mt-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide">

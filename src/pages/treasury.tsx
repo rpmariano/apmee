@@ -9,6 +9,7 @@ import { usePermissions } from '@/hooks/use-permissions'
 import type { FinancialMovement, FinancialType } from '@/types/database'
 import { cn } from '@/lib/utils'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { MenuAlerts } from '@/components/ui/menu-alerts'
 
 type FilterValue = FinancialType | 'all' | 'events'
 
@@ -60,8 +61,9 @@ export default function TreasuryPage() {
   return (
     <div className="relative min-h-[calc(100vh-4rem)] bg-background pb-20">
       <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="px-4">
+        <div className="px-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-foreground">Tesouraria</h1>
+          <MenuAlerts />
         </div>
 
         <div className="mt-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide">

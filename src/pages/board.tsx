@@ -6,6 +6,7 @@ import { useBoardMembers, useCreateMember, useUpdateMember } from '@/features/bo
 import { usePermissions } from '@/hooks/use-permissions'
 import type { AllowedUser } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { MenuAlerts } from '@/components/ui/menu-alerts'
 
 export default function BoardPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -47,13 +48,16 @@ export default function BoardPage() {
   return (
     <div className="relative min-h-[calc(100vh-4rem)] bg-background pb-20">
       <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="px-4 flex items-center gap-2">
-          <h1 className="text-xl font-bold text-foreground">Direção</h1>
-          {!isSuperAdmin && (
-            <span className="rounded-full bg-warm-200 px-2 py-0.5 text-xs font-medium text-secondary-600">
-              Apenas leitura
-            </span>
-          )}
+        <div className="px-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-foreground">Direção</h1>
+            {!isSuperAdmin && (
+              <span className="rounded-full bg-warm-200 px-2 py-0.5 text-xs font-medium text-secondary-600">
+                Apenas leitura
+              </span>
+            )}
+          </div>
+          <MenuAlerts />
         </div>
         <p className="px-4 mt-2 text-sm text-muted">Gestão de acessos à plataforma.</p>
       </div>
