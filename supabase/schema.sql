@@ -193,7 +193,7 @@ CREATE TRIGGER trg_tasks_updated_at
 CREATE TABLE IF NOT EXISTS inventory_items (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL,
-    category TEXT NOT NULL CHECK (category IN ('duravel', 'consumivel')),
+    category TEXT NOT NULL CHECK (category IN ('consumivel', 'alimento', 'mobilizado', 'duravel')),
     quantity INTEGER DEFAULT 0,
     unit TEXT DEFAULT 'un',
     location TEXT,
