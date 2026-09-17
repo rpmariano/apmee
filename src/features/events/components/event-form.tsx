@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, AlertTriangle } from 'lucide-react'
+import { X } from 'lucide-react'
 import type { Event, EventStatus } from '@/types/database'
 import { EVENT_STATUSES } from '@/lib/constants'
 
@@ -137,16 +137,6 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
           <X className="h-5 w-5" />
         </button>
       </div>
-
-      {/* Shortage banner at top of event detail */}
-      {event && hasShortages && (
-        <div className="flex items-center gap-2 border-b border-orange-200 bg-orange-50 px-4 py-3">
-          <AlertTriangle className="h-5 w-5 shrink-0 text-orange-600" />
-          <p className="text-xs font-bold text-orange-800">
-            Provisão insuficiente — {shortages.length} item(ns) sem stock
-          </p>
-        </div>
-      )}
 
       {/* Form */}
       <div className="flex-1 overflow-y-auto p-4">
