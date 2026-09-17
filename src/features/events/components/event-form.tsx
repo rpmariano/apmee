@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, MapPin, Target, FileText } from 'lucide-react'
+import { X, MapPin, Target, FileText, Lock } from 'lucide-react'
 import type { Event, EventStatus, EventType, MeetingType, EventDocument } from '@/types/database'
 import {
   EVENT_STATUSES,
@@ -59,6 +59,7 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
   const [showShortageWarning, setShowShortageWarning] = useState(false)
   const [showCompletionBlocked, setShowCompletionBlocked] = useState(false)
   const [isEditing, setIsEditing] = useState(!event)
+  const isExistingEvent = Boolean(event?.id || event)
   const formRef = useRef<HTMLFormElement>(null)
 
   // Event Type
@@ -214,19 +215,28 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
             
             {/* Event Type Segmented Toggle */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-secondary-600">
-                Tipo de Evento
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-secondary-600">
+                  Tipo de Evento
+                </label>
+                {isExistingEvent && (
+                  <span className="flex items-center gap-1 text-[11px] font-medium text-muted">
+                    <Lock className="h-3 w-3 text-secondary-400" />
+                    Não alterável após criação
+                  </span>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-1.5 rounded-[var(--radius-button)] bg-warm-100 p-1">
                 <button
                   type="button"
-                  disabled={!isEditing}
+                  disabled={isExistingEvent || !isEditing}
                   onClick={() => setEventType(EVENT_TYPES.FESTA)}
                   className={cn(
                     'flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-[calc(var(--radius-button)-4px)] transition-all',
                     eventType === EVENT_TYPES.FESTA
                       ? 'bg-surface text-primary-700 shadow-sm'
-                      : 'text-secondary-600 hover:text-foreground opacity-75'
+                      : 'text-secondary-600 hover:text-foreground opacity-75',
+                    isExistingEvent && 'cursor-not-allowed opacity-60'
                   )}
                 >
                   <span>🎉</span>
@@ -234,13 +244,14 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
                 </button>
                 <button
                   type="button"
-                  disabled={!isEditing}
+                  disabled={isExistingEvent || !isEditing}
                   onClick={() => setEventType(EVENT_TYPES.REUNIAO)}
                   className={cn(
                     'flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-[calc(var(--radius-button)-4px)] transition-all',
                     eventType === EVENT_TYPES.REUNIAO
                       ? 'bg-surface text-primary-700 shadow-sm'
-                      : 'text-secondary-600 hover:text-foreground opacity-75'
+                      : 'text-secondary-600 hover:text-foreground opacity-75',
+                    isExistingEvent && 'cursor-not-allowed opacity-60'
                   )}
                 >
                   <span>📋</span>
