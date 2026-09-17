@@ -1,4 +1,4 @@
-import { Phone, Mail, MessageCircle, MoreVertical } from 'lucide-react'
+import { Phone, Mail, MessageCircle } from 'lucide-react'
 import type { Contact } from '@/types/database'
 import { cn } from '@/lib/utils'
 
@@ -38,7 +38,13 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md">
+    <div 
+      className={cn(
+        "flex flex-col gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md",
+        onEdit && "cursor-pointer active:scale-[0.98]"
+      )}
+      onClick={() => onEdit && onEdit(contact)}
+    >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           {/* Avatar / Initials */}
@@ -69,14 +75,7 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
         </div>
 
         {/* Options Button */}
-        {onEdit && (
-          <button
-            onClick={() => onEdit(contact)}
-            className="rounded-full p-2 text-muted transition-colors hover:bg-warm-50 hover:text-foreground"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
-        )}
+        
       </div>
 
       {/* Action Buttons */}

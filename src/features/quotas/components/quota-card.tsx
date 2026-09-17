@@ -18,7 +18,7 @@ export function QuotaCard({ quota, onEdit }: QuotaCardProps) {
     <div 
       className={cn(
         "flex flex-col gap-2 rounded-[var(--radius-card)] border bg-surface p-4 shadow-sm transition-all",
-        onEdit && "cursor-pointer hover:shadow-md"
+        onEdit && "cursor-pointer active:scale-[0.98] hover:shadow-md"
       )}
       onClick={() => onEdit && onEdit(quota)}
     >

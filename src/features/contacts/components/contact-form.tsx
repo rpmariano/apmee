@@ -58,6 +58,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
   const [whatsapp, setWhatsapp] = useState(contact?.whatsapp ?? '')
   const [notes, setNotes] = useState(contact?.notes ?? '')
   const [isMember, setIsMember] = useState(contact?.is_member ?? false)
+  const [isEditing, setIsEditing] = useState(!contact)
 
   const isDirty = (
     name !== (contact?.name ?? '') ||
@@ -114,7 +115,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
       {/* Header */}
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
-          {contact ? 'Editar Contacto' : 'Novo Contacto'}
+          {!isEditing ? 'Detalhes do Contacto' : (contact ? 'Editar Contacto' : 'Novo Contacto')}
         </h2>
         <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
@@ -126,7 +127,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
         <form ref={formRef}  id="contact-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           <div className="flex items-center gap-3 rounded-[var(--radius-button)] border border-warm-200 bg-surface px-4 py-3 shadow-sm z-[100] mb-2">
-            <input
+            <input disabled={!isEditing} 
               type="checkbox"
               id="is_member"
               checked={isMember}
@@ -142,7 +143,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
 
           <div className="flex flex-col gap-1.5 z-[60]">
             <label className="text-sm font-medium text-secondary-700">Categoria</label>
-            <CustomSelect
+            <CustomSelect disabled={!isEditing} 
               value={category}
               onChange={(val) => setCategory(val as ContactCategory)}
               options={Object.values(CONTACT_CATEGORIES).filter(cat => cat !== 'associado').map((cat) => ({
@@ -155,7 +156,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Nome <span className="text-primary-500">*</span></label>
-            <input
+            <input disabled={!isEditing} 
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -168,7 +169,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-secondary-700">Telemóvel</label>
-              <input
+              <input disabled={!isEditing} 
                 type="tel"
                 value={phone}
                 onChange={(e) => handlePhoneChange(e.target.value)}
@@ -178,7 +179,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-secondary-700">WhatsApp</label>
-              <input
+              <input disabled={!isEditing} 
                 type="tel"
                 value={whatsapp}
                 onChange={(e) => handleWhatsappChange(e.target.value)}
@@ -190,7 +191,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Email</label>
-            <input
+            <input disabled={!isEditing} 
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -206,7 +207,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
               
               <div className="flex flex-col gap-1.5 z-[50]">
                 <label className="text-sm font-medium text-secondary-700">Turma(s)</label>
-                <CustomSelect
+                <CustomSelect disabled={!isEditing} 
                   value={turma}
                   onChange={(val) => setTurma(val)}
                   options={TURMA_OPTIONS}
@@ -219,7 +220,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
           {category === 'pai' && (
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-secondary-700">Nome do Educando</label>
-              <input
+              <input disabled={!isEditing} 
                 type="text"
                 value={educando}
                 onChange={(e) => setEducando(e.target.value)}
@@ -232,7 +233,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
           {category === 'professor' && (
             <div className="flex flex-col gap-1.5 z-[40]">
               <label className="text-sm font-medium text-secondary-700">Disciplina(s)</label>
-              <CustomSelect
+              <CustomSelect disabled={!isEditing} 
                 value={disciplina}
                 onChange={(val) => setDisciplina(val)}
                 options={DISCIPLINA_OPTIONS}
@@ -245,7 +246,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Notas / Observações</label>
-            <textarea
+            <textarea disabled={!isEditing} 
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
@@ -255,6 +256,8 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
           </div>
         
 <div className="border-t border-warm-200 bg-surface p-4">
+          {isEditing ? (
+            
         <button
           type="submit"
           form="contact-form"
@@ -263,7 +266,16 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
         >
           {isLoading ? 'A Guardar...' : 'Guardar Contacto'}
         </button>
-      </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
+            >
+              Editar Contacto
+            </button>
+          )}
+        </div>
 </form>
       </div>
 

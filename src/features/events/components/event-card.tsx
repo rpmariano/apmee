@@ -1,4 +1,4 @@
-import { MapPin, Calendar, Clock, MoreVertical } from 'lucide-react'
+import { MapPin, Calendar, Clock } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import type { Event, EventStatus } from '@/types/database'
@@ -46,14 +46,7 @@ export function EventCard({ event, onEdit }: EventCardProps) {
           )}
         </div>
 
-        {onEdit && (
-          <button
-            
-            className="ml-2 rounded-full p-2 text-muted transition-colors hover:bg-warm-50 hover:text-foreground"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
-        )}
+        
       </div>
 
       <div className="mt-1 flex flex-col gap-1.5 border-t border-warm-100 pt-3">

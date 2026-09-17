@@ -1,4 +1,4 @@
-import { MoreVertical,  AlertTriangle, MapPin, Package, ArrowRightLeft } from 'lucide-react'
+import {   AlertTriangle, MapPin, Package, ArrowRightLeft } from 'lucide-react'
 import type { InventoryItem, InventoryCategory } from '@/types/database'
 import { cn } from '@/lib/utils'
 
@@ -21,8 +21,10 @@ export function InventoryCard({ item, onEdit, onTransaction }: InventoryCardProp
   return (
     <div className={cn(
       "flex flex-col gap-2 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md",
-      isLowStock && "border-orange-200 bg-orange-50"
-    )}>
+      isLowStock && "border-orange-200 bg-orange-50",
+      onEdit && "cursor-pointer active:scale-[0.98]"
+    )}
+    onClick={() => onEdit && onEdit(item)}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-1 items-start gap-3">
           <div className={cn(
@@ -62,14 +64,7 @@ export function InventoryCard({ item, onEdit, onTransaction }: InventoryCardProp
           </div>
         </div>
 
-        {onEdit && (
-          <button 
-            onClick={() => onEdit(item)}
-            className="shrink-0 rounded-full p-2 text-muted transition-colors hover:bg-warm-100 hover:text-foreground active:scale-95"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
-        )}
+        
       </div>
 
       <div className="mt-2 flex items-center justify-between border-t border-warm-200 pt-3">
@@ -85,7 +80,7 @@ export function InventoryCard({ item, onEdit, onTransaction }: InventoryCardProp
         <div className="flex items-center gap-2">
           {onTransaction && (
             <button
-              onClick={() => onTransaction(item)}
+              onClick={(e) => { e.stopPropagation(); onTransaction(item); }}
               className="flex items-center justify-center gap-1.5 rounded-[var(--radius-button)] border border-primary-200 bg-primary-50 px-3 py-1.5 text-xs font-bold text-primary-700 transition-colors hover:bg-primary-100 active:scale-95"
             >
               <ArrowRightLeft className="h-3.5 w-3.5" />

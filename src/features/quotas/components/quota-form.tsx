@@ -24,6 +24,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
 
   
   const [showUnsaved, setShowUnsaved] = useState(false)
+  const [isEditing, setIsEditing] = useState(!quota)
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleCloseClick = () => {
@@ -109,7 +110,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
     <div className="fixed inset-0 z-[100] flex flex-col bg-background">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
-          {quota ? 'Editar Quota' : 'Registar Quota'}
+          {!isEditing ? 'Detalhes' : (quota ? 'Editar' : 'Novo')}
         </h2>
         <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
@@ -121,12 +122,11 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
           
           <div className="flex flex-col gap-1.5 z-[60]">
             <label className="text-sm font-medium text-secondary-700">Associado <span className="text-primary-500">*</span></label>
-            <CustomSelect
+            <CustomSelect disabled={!isEditing || !!quota} 
               value={contactId}
               onChange={(val) => setContactId(val)}
               options={(contacts || []).map(c => ({ label: c.name, value: c.id }))}
               placeholder={isLoadingContacts ? 'A carregar associados...' : 'Selecione o associado'}
-              disabled={!!quota}
               required
             />
           </div>
@@ -134,7 +134,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-secondary-700">Ano Letivo / Civil <span className="text-primary-500">*</span></label>
-              <input
+              <input disabled={!isEditing} 
                 type="number"
                 min="2000"
                 max="2100"
@@ -147,7 +147,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
             
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-secondary-700">Valor (€) <span className="text-primary-500">*</span></label>
-              <input
+              <input disabled={!isEditing} 
                 type="number"
                 step="0.01"
                 min="0"
@@ -162,7 +162,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
           <div className="my-2 border-t border-warm-200" />
 
           <label className="flex items-center gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4">
-            <input
+            <input disabled={!isEditing} 
               type="checkbox"
               checked={paid}
               onChange={(e) => setPaid(e.target.checked)}
@@ -178,7 +178,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
             <div className="grid grid-cols-2 gap-4 rounded-[var(--radius-card)] bg-warm-50 p-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-secondary-700">Data de Pagamento</label>
-                <input
+                <input disabled={!isEditing} 
                   type="date"
                   value={paidDate}
                   onChange={(e) => setPaidDate(e.target.value)}
@@ -188,7 +188,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
               </div>
               <div className="flex flex-col gap-1.5 z-[50]">
                 <label className="text-xs font-medium text-secondary-700">Método</label>
-                <CustomSelect
+                <CustomSelect disabled={!isEditing} 
                   value={paymentMethod}
                   onChange={(val) => setPaymentMethod(val)}
                   options={[
@@ -213,7 +213,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
                   {file ? file.name : 'Tocar para anexar recibo'}
                 </span>
                 <span className="mt-1 text-xs text-muted">PDF ou Imagem</span>
-                <input
+                <input disabled={!isEditing} 
                   type="file"
                   accept="image/*,.pdf"
                   className="hidden"
@@ -229,7 +229,8 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
 
         
 <div className="border-t border-warm-200 bg-surface p-4">
-        <button
+          {isEditing ? (
+            <button
           type="submit"
           form="quota-form"
           disabled={isLoading || isUploading || isLoadingContacts}
@@ -237,7 +238,16 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
         >
           {isUploading ? 'A anexar recibo...' : isLoading ? 'A Guardar...' : 'Guardar Quota'}
         </button>
-      </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
+            >
+              Editar Quota
+            </button>
+          )}
+        </div>
 </form>
       </div>
 

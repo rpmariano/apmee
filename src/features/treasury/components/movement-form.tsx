@@ -44,6 +44,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
 
   
   const [showUnsaved, setShowUnsaved] = useState(false)
+  const [isEditing, setIsEditing] = useState(!movement)
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleCloseClick = () => {
@@ -127,7 +128,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
     <div className="fixed inset-0 z-[100] flex flex-col bg-background">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
-          {movement ? 'Editar Movimento' : 'Novo Movimento'}
+          {!isEditing ? 'Detalhes' : (movement ? 'Editar Movimento' : 'Novo Movimento')}
         </h2>
         <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
@@ -167,7 +168,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Valor (€) <span className="text-primary-500">*</span></label>
-            <input
+            <input disabled={!isEditing} 
               type="number"
               step="0.01"
               min="0"
@@ -181,7 +182,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Descrição <span className="text-primary-500">*</span></label>
-            <input
+            <input disabled={!isEditing} 
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -194,7 +195,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5 z-[60]">
               <label className="text-sm font-medium text-secondary-700">Categoria</label>
-              <CustomSelect
+              <CustomSelect disabled={!isEditing} 
                 value={category}
                 onChange={(val) => setCategory(val)}
                 options={type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES}
@@ -205,7 +206,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
             
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-secondary-700">Data <span className="text-primary-500">*</span></label>
-              <input
+              <input disabled={!isEditing} 
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
@@ -217,7 +218,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
 
           <div className="flex flex-col gap-1.5 z-[50]">
               <label className="text-sm font-medium text-secondary-700">Evento (Opcional)</label>
-              <CustomSelect
+              <CustomSelect disabled={!isEditing} 
                 value={eventId}
                 onChange={(val) => setEventId(val)}
                 options={(events || []).map(e => ({ label: e.title, value: e.id }))}
@@ -236,7 +237,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
                 {file ? file.name : 'Tocar para enviar documento'}
               </span>
               <span className="mt-1 text-xs text-muted">Imagens ou PDF</span>
-              <input
+              <input disabled={!isEditing} 
                 type="file"
                 accept="image/*,.pdf"
                 className="hidden"
@@ -251,7 +252,8 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
 
         
 <div className="border-t border-warm-200 bg-surface p-4">
-        <button
+          {isEditing ? (
+            <button
           type="submit"
           form="movement-form"
           disabled={isLoading || isUploading}
@@ -259,7 +261,16 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
         >
           {isUploading ? 'A enviar documento...' : isLoading ? 'A Guardar...' : 'Guardar Movimento'}
         </button>
-      </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
+            >
+              Editar Movimento
+            </button>
+          )}
+        </div>
 </form>
       </div>
 

@@ -36,6 +36,7 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
 
   
   const [showUnsaved, setShowUnsaved] = useState(false)
+  const [isEditing, setIsEditing] = useState(!event)
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleCloseClick = () => {
@@ -94,7 +95,7 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
       {/* Header */}
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
-          {event ? 'Editar Evento' : 'Novo Evento'}
+          {!isEditing ? 'Detalhes' : (event ? 'Editar Evento' : 'Novo Evento')}
         </h2>
         <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
@@ -107,7 +108,7 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
           
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Título <span className="text-primary-500">*</span></label>
-            <input
+            <input disabled={!isEditing} 
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -119,7 +120,7 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Localização</label>
-            <input
+            <input disabled={!isEditing} 
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
@@ -130,7 +131,7 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Descrição</label>
-            <textarea
+            <textarea disabled={!isEditing} 
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -142,7 +143,7 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
           <div className="my-2 border-t border-warm-200" />
           
           <div className="flex items-center gap-2">
-            <input
+            <input disabled={!isEditing} 
               type="checkbox"
               id="all-day"
               checked={isAllDay}
@@ -157,7 +158,7 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-secondary-700">Início <span className="text-primary-500">*</span></label>
-              <input
+              <input disabled={!isEditing} 
                 type={isAllDay ? 'date' : 'datetime-local'}
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
@@ -167,7 +168,7 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-secondary-700">Fim</label>
-              <input
+              <input disabled={!isEditing} 
                 type={isAllDay ? 'date' : 'datetime-local'}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
@@ -181,7 +182,7 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
           <div className="flex flex-col gap-1.5 z-[60]">
             <label className="text-sm font-medium text-secondary-700">Estado</label>
             
-            <CustomSelect
+            <CustomSelect disabled={!isEditing} 
               value={status}
               onChange={(val) => setStatus(val as EventStatus)}
               options={Object.values(EVENT_STATUSES).map((s) => ({
@@ -204,7 +205,8 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
 
 
         <div className="border-t border-warm-200 bg-surface p-4">
-        <button
+          {isEditing ? (
+            <button
           type="submit"
           form="event-form"
           disabled={isLoading}
@@ -212,7 +214,16 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
         >
           {isLoading ? 'A Guardar...' : 'Guardar Evento'}
         </button>
-      </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
+            >
+              Editar Evento
+            </button>
+          )}
+        </div>
 </form>
       </div>
 

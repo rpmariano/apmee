@@ -39,6 +39,7 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
 
   
   const [showUnsaved, setShowUnsaved] = useState(false)
+  const [isEditing, setIsEditing] = useState(!task)
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleCloseClick = () => {
@@ -93,7 +94,7 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
     <div className="fixed inset-0 z-[100] flex flex-col bg-background">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
-          {task ? 'Editar Tarefa' : 'Nova Tarefa'}
+          {!isEditing ? 'Detalhes' : (task ? 'Editar' : 'Novo')}
         </h2>
         <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
@@ -105,7 +106,7 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
           
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Título <span className="text-primary-500">*</span></label>
-            <input
+            <input disabled={!isEditing} 
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -117,7 +118,7 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Descrição</label>
-            <textarea
+            <textarea disabled={!isEditing} 
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -129,7 +130,7 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5 z-[60]">
               <label className="text-sm font-medium text-secondary-700">Prioridade</label>
-              <CustomSelect
+              <CustomSelect disabled={!isEditing} 
                 value={priority}
                 onChange={(val) => setPriority(val as TaskPriority)}
                 options={Object.values(TASK_PRIORITIES).map((p) => ({
@@ -141,7 +142,7 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
             
             <div className="flex flex-col gap-1.5 z-[60]">
               <label className="text-sm font-medium text-secondary-700">Estado</label>
-              <CustomSelect
+              <CustomSelect disabled={!isEditing} 
                 value={status}
                 onChange={(val) => setStatus(val as TaskStatus)}
                 options={Object.values(TASK_STATUSES).map((s) => ({
@@ -155,7 +156,7 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5 z-[50]">
               <label className="text-sm font-medium text-secondary-700">Data Limite</label>
-              <input
+              <input disabled={!isEditing} 
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
@@ -165,7 +166,7 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
             
             <div className="flex flex-col gap-1.5 z-[50]">
               <label className="text-sm font-medium text-secondary-700">Responsável</label>
-              <CustomSelect
+              <CustomSelect disabled={!isEditing} 
                 value={assignedTo}
                 onChange={(val) => setAssignedTo(val)}
                 options={[
@@ -182,7 +183,8 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
 
         
 <div className="border-t border-warm-200 bg-surface p-4">
-        <button
+          {isEditing ? (
+            <button
           type="submit"
           form="task-form"
           disabled={isLoading}
@@ -190,7 +192,16 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
         >
           {isLoading ? 'A Guardar...' : 'Guardar Tarefa'}
         </button>
-      </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
+            >
+              Editar Tarefa
+            </button>
+          )}
+        </div>
 </form>
       </div>
 

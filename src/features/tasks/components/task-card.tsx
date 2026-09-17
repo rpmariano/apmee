@@ -1,4 +1,4 @@
-import { Calendar, MoreVertical, AlertCircle, CheckCircle2, Clock } from 'lucide-react'
+import { Calendar, AlertCircle, CheckCircle2, Clock } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import type { Task, TaskPriority, TaskStatus } from '@/types/database'
@@ -34,14 +34,16 @@ export function TaskCard({ task, onEdit, onToggleStatus }: TaskCardProps) {
   return (
     <div className={cn(
       "flex flex-col gap-2 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md",
-      isDone && "opacity-75 bg-warm-50"
-    )}>
+      isDone && "opacity-75 bg-warm-50",
+      onEdit && "cursor-pointer active:scale-[0.98]"
+    )}
+    onClick={() => onEdit && onEdit(task)}>
       <div className="flex items-start justify-between gap-3">
         
         {/* Toggle Status Button */}
         {onToggleStatus && (
           <button 
-            onClick={() => onToggleStatus(task)}
+            onClick={(e) => { e.stopPropagation(); onToggleStatus(task); }}
             className={cn("mt-1 shrink-0 rounded-full transition-transform active:scale-90", status.color)}
           >
             <StatusIcon className="h-6 w-6" />
@@ -78,14 +80,7 @@ export function TaskCard({ task, onEdit, onToggleStatus }: TaskCardProps) {
         </div>
 
         {/* Options */}
-        {onEdit && (
-          <button
-            onClick={() => onEdit(task)}
-            className="shrink-0 rounded-full p-2 text-muted transition-colors hover:bg-warm-100 hover:text-foreground"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
-        )}
+        
       </div>
     </div>
   )

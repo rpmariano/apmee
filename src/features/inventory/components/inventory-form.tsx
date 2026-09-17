@@ -29,6 +29,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
 
   
   const [showUnsaved, setShowUnsaved] = useState(false)
+  const [isEditing, setIsEditing] = useState(!item)
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleCloseClick = () => {
@@ -80,7 +81,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
     <div className="fixed inset-0 z-[100] flex flex-col bg-background">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
-          {item ? 'Editar Item' : 'Novo Item'}
+          {!isEditing ? 'Detalhes' : (item ? 'Editar Item' : 'Novo Item')}
         </h2>
         <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
@@ -92,7 +93,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
           
           <div className="flex flex-col gap-1.5 z-[70]">
             <label className="text-sm font-medium text-secondary-700">Nome do Item <span className="text-primary-500">*</span></label>
-            <CustomSelect
+            <CustomSelect disabled={!isEditing} 
               value={name}
               onChange={(val) => setName(val)}
               options={(ITEMS_BY_CATEGORY[category] || []).map(i => ({ label: i, value: i }))}
@@ -104,7 +105,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Categoria</label>
-            <CustomSelect
+            <CustomSelect disabled={!isEditing} 
               value={category}
               onChange={(val) => {
                 setCategory(val as InventoryCategory)
@@ -118,7 +119,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-secondary-700">Quantidade <span className="text-primary-500">*</span></label>
-              <input
+              <input disabled={!isEditing} 
                 type="number"
                 min="0"
                 value={quantity}
@@ -130,7 +131,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
             
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-secondary-700">Unidade</label>
-              <input
+              <input disabled={!isEditing} 
                 type="text"
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
@@ -142,7 +143,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Stock Mínimo (Alerta)</label>
-            <input
+            <input disabled={!isEditing} 
               type="number"
               min="0"
               value={minStock}
@@ -156,7 +157,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Localização</label>
-            <input
+            <input disabled={!isEditing} 
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
@@ -167,7 +168,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Observações</label>
-            <textarea
+            <textarea disabled={!isEditing} 
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
@@ -178,7 +179,8 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
 
         
 <div className="border-t border-warm-200 bg-surface p-4">
-        <button
+          {isEditing ? (
+            <button
           type="submit"
           form="inventory-form"
           disabled={isLoading}
@@ -186,7 +188,16 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
         >
           {isLoading ? 'A Guardar...' : 'Guardar Item'}
         </button>
-      </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
+            >
+              Editar Item
+            </button>
+          )}
+        </div>
 </form>
       </div>
 
