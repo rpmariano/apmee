@@ -5,6 +5,7 @@ import { EVENT_STATUSES } from '@/lib/constants'
 
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
 import { EventInventoryManager } from './event-inventory-manager'
 import { useEventInventoryStatus } from '../api/use-event-inventory-status'
@@ -35,6 +36,8 @@ function toDateTimeLocal(isoString?: string | null) {
 
 export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProps) {
   const [showUnsaved, setShowUnsaved] = useState(false)
+  const [showShortageWarning, setShowShortageWarning] = useState(false)
+  const [showCompletionBlocked, setShowCompletionBlocked] = useState(false)
   const [isEditing, setIsEditing] = useState(!event)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -72,6 +75,21 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
 
   const pendingInventoryHandlerRef = useRef<(() => Promise<void>) | null>(null)
 
+  const doSubmit = () => {
+    const startIso = new Date(startDate).toISOString()
+    const endIso = endDate ? new Date(endDate).toISOString() : null
+
+    onSubmit({
+      title,
+      description: description || null,
+      location: location || null,
+      start_date: startIso,
+      end_date: endIso,
+      is_all_day: isAllDay,
+      status,
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -86,44 +104,23 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
 
     // Block completion if there are shortages
     if (status === EVENT_STATUSES.COMPLETED && hasShortages) {
-      alert(
-        `Não é possível concluir o evento.\n\n` +
-          `Existem ${shortages.length} item(ns) sem provisão suficiente no inventário. ` +
-          `Adquira o material em falta antes de alterar o estado para "Concluído".`
-      )
+      setShowCompletionBlocked(true)
       return
     }
 
-    // Convert local datetime back to UTC ISO for the database
-    const startIso = new Date(startDate).toISOString()
-    const endIso = endDate ? new Date(endDate).toISOString() : null
-
     // Warn about shortages on save (even if not completing)
     if (hasShortages && (status === EVENT_STATUSES.PLANNED || status === EVENT_STATUSES.ACTIVE)) {
-      const proceed = window.confirm(
-        `Atenção: Este evento tem ${shortages.length} item(ns) sem a provisão necessária no inventário.\n\n` +
-          `Deseja guardar na mesma?`
-      )
-      if (!proceed) return
+      setShowShortageWarning(true)
+      return
     }
 
-    onSubmit({
-      title,
-      description: description || null,
-      location: location || null,
-      start_date: startIso,
-      end_date: endIso,
-      is_all_day: isAllDay,
-      status,
-    })
+    doSubmit()
   }
 
   // Handle status change — block completing if shortages exist
   const handleStatusChange = (val: string) => {
     if (val === EVENT_STATUSES.COMPLETED && hasShortages) {
-      alert(
-        `Não é possível passar a "Concluído" enquanto existirem items sem provisão suficiente no inventário.`
-      )
+      setShowCompletionBlocked(true)
       return
     }
     setStatus(val as EventStatus)
@@ -302,6 +299,31 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
           onClose()
         }}
         onSave={handleSaveAndClose}
+      />
+
+      {/* Custom Dialog for shortage warning on save */}
+      <CustomDialog
+        isOpen={showShortageWarning}
+        title="Provisão Insuficiente"
+        description={`Atenção: Este evento tem ${shortages.length} item(ns) sem a provisão necessária no inventário.\n\nDeseja guardar na mesma?`}
+        variant="warning"
+        confirmLabel="Guardar na Mesma"
+        cancelLabel="Voltar ao Evento"
+        onConfirm={() => {
+          setShowShortageWarning(false)
+          doSubmit()
+        }}
+        onCancel={() => setShowShortageWarning(false)}
+      />
+
+      {/* Custom Dialog for completion blocked */}
+      <CustomDialog
+        isOpen={showCompletionBlocked}
+        title="Não é Possível Concluir"
+        description={`Existem ${shortages.length} item(ns) sem provisão suficiente no inventário.\n\nAdquira o material em falta antes de alterar o estado para "Concluído".`}
+        variant="danger"
+        confirmLabel="Entendido"
+        onConfirm={() => setShowCompletionBlocked(false)}
       />
     </div>
 </div>

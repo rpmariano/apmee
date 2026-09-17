@@ -9,7 +9,7 @@ export function UnsavedDialog({ isOpen, onCancel, onDiscard, onSave }: UnsavedDi
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-all">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-all">
       <div className="w-full max-w-sm rounded-[var(--radius-card)] bg-surface p-6 shadow-xl animate-in zoom-in-95">
         <h3 className="text-lg font-bold text-foreground">Alterações não guardadas</h3>
         <p className="mt-2 text-sm text-secondary-600">

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Package, AlertTriangle } from 'lucide-react'
+import { Plus, Minus, Trash2, Package, AlertTriangle } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { CustomSelect } from '@/components/ui/custom-select'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useInventory, useCreateItem } from '@/features/inventory/api/use-inventory'
 import { useEventInventoryStatus } from '../api/use-event-inventory-status'
 import type { InventoryCategory } from '@/types/database'
@@ -19,7 +20,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   alimento: 'Alimentos',
   mobilizado: 'Mobilizado',
 }
-
 
 interface EventInventoryManagerProps {
   eventId: string
@@ -44,6 +44,19 @@ export function EventInventoryManager({
   const [selectedItemValue, setSelectedItemValue] = useState('')
   const [quantity, setQuantity] = useState(1)
 
+  // In-line editing quantities map { [reqId]: number }
+  const [editingQuantities, setEditingQuantities] = useState<Record<string, number>>({})
+
+  // Custom dialog state (replaces window.alert and window.confirm)
+  const [deleteReqId, setDeleteReqId] = useState<string | null>(null)
+  const [dialogConfig, setDialogConfig] = useState<{
+    isOpen: boolean
+    title: string
+    description?: string
+    variant?: 'warning' | 'danger' | 'info' | 'success'
+    confirmLabel?: string
+  }>({ isOpen: false, title: '' })
+
   const addMutation = useMutation({
     mutationFn: async (itemId: string) => {
       const { error } = await (supabase as any)
@@ -58,7 +71,36 @@ export function EventInventoryManager({
     },
     onError: (err: any) => {
       console.error('Error adding item to event:', err)
-      alert(`Erro ao adicionar item ao evento: ${err?.message || 'Verifique as permissões na base de dados.'}`)
+      setDialogConfig({
+        isOpen: true,
+        title: 'Erro ao Adicionar Material',
+        description: err?.message || 'Verifique as permissões na base de dados.',
+        variant: 'danger',
+        confirmLabel: 'Entendido',
+      })
+    },
+  })
+
+  const updateQuantityMutation = useMutation({
+    mutationFn: async ({ reqId, quantity }: { reqId: string; quantity: number }) => {
+      const { error } = await (supabase as any)
+        .from('event_inventory')
+        .update({ quantity })
+        .eq('id', reqId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['event-inventory', eventId] })
+    },
+    onError: (err: any) => {
+      console.error('Error updating quantity:', err)
+      setDialogConfig({
+        isOpen: true,
+        title: 'Erro ao Atualizar Quantidade',
+        description: err?.message || 'Não foi possível atualizar a quantidade.',
+        variant: 'danger',
+        confirmLabel: 'Entendido',
+      })
     },
   })
 
@@ -75,7 +117,13 @@ export function EventInventoryManager({
     },
     onError: (err: any) => {
       console.error('Error removing item from event:', err)
-      alert(`Erro ao remover item: ${err?.message || 'Tente novamente.'}`)
+      setDialogConfig({
+        isOpen: true,
+        title: 'Erro ao Remover Material',
+        description: err?.message || 'Tente novamente.',
+        variant: 'danger',
+        confirmLabel: 'Entendido',
+      })
     },
   })
 
@@ -104,7 +152,13 @@ export function EventInventoryManager({
         queryClient.invalidateQueries({ queryKey: ['inventory'] })
       } catch (err: any) {
         console.error('Failed to create item:', err)
-        alert(`Erro ao criar o item no inventário: ${err?.message || 'Tente novamente.'}`)
+        setDialogConfig({
+          isOpen: true,
+          title: 'Erro ao Criar Item',
+          description: err?.message || 'Não foi possível criar o item no inventário.',
+          variant: 'danger',
+          confirmLabel: 'Entendido',
+        })
       }
     } else {
       // It's an existing item
@@ -144,11 +198,10 @@ export function EventInventoryManager({
     {} as Record<string, typeof requirements>
   )
 
-  // Build select options — all inventory items (even zero stock in planned mode)
+  // Build select options — filtered by category and exclude already added
   const itemOptions = (inventory || [])
     .filter((i) => i.category === activeCategory)
     .filter((i) => {
-      // Don't show items already added
       const alreadyAdded = requirements?.some((r) => r.item_id === i.id)
       return !alreadyAdded
     })
@@ -308,9 +361,11 @@ export function EventInventoryManager({
                             {req.item?.name || 'Item removido'}
                           </p>
                           <div className="flex items-center gap-2">
-                            <p className="text-xs text-muted">
-                              Necessário: {req.quantity}
-                            </p>
+                            {!isEditing || isCompleted || isCancelled ? (
+                              <p className="text-xs text-muted">
+                                Necessário: {req.quantity}
+                              </p>
+                            ) : null}
                             {isShort && (
                               <span className="text-[10px] font-bold text-orange-700">
                                 (Stock: {available})
@@ -319,17 +374,90 @@ export function EventInventoryManager({
                           </div>
                         </div>
                       </div>
+
+                      {/* Editing controls for quantity & removal */}
                       {isEditing && !isCompleted && !isCancelled && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            removeMutation.mutate(req.id)
-                          }}
-                          className="rounded-md p-2 text-red-500 hover:bg-red-50 transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {/* Quantity stepper control */}
+                          <div className="flex items-center rounded-lg border border-warm-300 bg-warm-50 p-0.5 shadow-sm">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const current = req.quantity
+                                if (current > 1) {
+                                  updateQuantityMutation.mutate({ reqId: req.id, quantity: current - 1 })
+                                }
+                              }}
+                              disabled={req.quantity <= 1 || updateQuantityMutation.isPending}
+                              className="flex h-7 w-7 items-center justify-center rounded-md text-secondary-700 transition-colors hover:bg-warm-200 active:scale-95 disabled:opacity-30"
+                              title="Diminuir quantidade"
+                            >
+                              <Minus className="h-3.5 w-3.5" />
+                            </button>
+
+                            <input
+                              type="number"
+                              min="1"
+                              value={editingQuantities[req.id] !== undefined ? editingQuantities[req.id] : req.quantity}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value) || 0
+                                setEditingQuantities((prev) => ({ ...prev, [req.id]: val }))
+                              }}
+                              onBlur={() => {
+                                const val = editingQuantities[req.id]
+                                if (val !== undefined && val > 0 && val !== req.quantity) {
+                                  updateQuantityMutation.mutate({ reqId: req.id, quantity: val })
+                                }
+                                setEditingQuantities((prev) => {
+                                  const copy = { ...prev }
+                                  delete copy[req.id]
+                                  return copy
+                                })
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault()
+                                  const val = editingQuantities[req.id]
+                                  if (val !== undefined && val > 0 && val !== req.quantity) {
+                                    updateQuantityMutation.mutate({ reqId: req.id, quantity: val })
+                                  }
+                                  setEditingQuantities((prev) => {
+                                    const copy = { ...prev }
+                                    delete copy[req.id]
+                                    return copy
+                                  })
+                                }
+                              }}
+                              className="w-12 text-center text-xs font-bold text-foreground bg-transparent focus:bg-surface focus:outline-none focus:ring-1 focus:ring-primary-400 rounded py-1"
+                              title="Clique para editar o valor"
+                            />
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                updateQuantityMutation.mutate({ reqId: req.id, quantity: req.quantity + 1 })
+                              }}
+                              disabled={updateQuantityMutation.isPending}
+                              className="flex h-7 w-7 items-center justify-center rounded-md text-secondary-700 transition-colors hover:bg-warm-200 active:scale-95 disabled:opacity-30"
+                              title="Aumentar quantidade"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+
+                          {/* Delete item button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setDeleteReqId(req.id)
+                            }}
+                            className="rounded-md p-1.5 text-red-500 hover:bg-red-50 active:bg-red-100 transition-colors"
+                            title="Remover material"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   )
@@ -339,6 +467,33 @@ export function EventInventoryManager({
           ))
         )}
       </div>
+
+      {/* Confirmation Dialog for Item Deletion */}
+      <CustomDialog
+        isOpen={!!deleteReqId}
+        title="Remover Material"
+        description="Tem a certeza que deseja remover este material da lista de necessidades do evento?"
+        variant="danger"
+        confirmLabel="Remover"
+        cancelLabel="Cancelar"
+        onConfirm={() => {
+          if (deleteReqId) {
+            removeMutation.mutate(deleteReqId)
+            setDeleteReqId(null)
+          }
+        }}
+        onCancel={() => setDeleteReqId(null)}
+      />
+
+      {/* Generic Error / Info Custom Dialog */}
+      <CustomDialog
+        isOpen={dialogConfig.isOpen}
+        title={dialogConfig.title}
+        description={dialogConfig.description}
+        variant={dialogConfig.variant || 'danger'}
+        confirmLabel={dialogConfig.confirmLabel || 'OK'}
+        onConfirm={() => setDialogConfig((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   )
 }
