@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Users,
@@ -39,7 +40,15 @@ import { MenuAlerts } from '@/components/ui/menu-alerts'
  */
 export default function MenuPage() {
   const { isSuperAdmin, isFinancialReadOnly } = usePermissions()
-  
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredItems = menuItems
+    .filter((item) => !item.superadminOnly || isSuperAdmin)
+    .filter((item) => {
+      if (!searchQuery.trim()) return true
+      const q = searchQuery.toLowerCase().trim()
+      return item.label.toLowerCase().includes(q) || (item.module && item.module.toLowerCase().includes(q))
+    })
 
   return (
     <div className="px-4 pt-6 pb-24">
@@ -48,21 +57,26 @@ export default function MenuPage() {
         <MenuAlerts />
       </div>
 
-      {/* Search bar placeholder */}
+      {/* Search bar */}
       <div className="mt-4">
         <input
           type="search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           aria-label="Pesquisar no menu"
-          placeholder="Pesquisar..."
+          placeholder="Pesquisar módulos (ex: Quotas, Tarefas, Agenda)..."
           className="w-full rounded-[var(--radius-button)] border border-warm-200 bg-surface px-4 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200"
         />
       </div>
 
-      {/* 2-column grid of module cards */}
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        {menuItems
-          .filter((item) => !item.superadminOnly || isSuperAdmin)
-          .map((item) => {
+      {filteredItems.length === 0 ? (
+        <div className="mt-12 flex flex-col items-center justify-center text-center">
+          <p className="text-sm font-medium text-foreground">Nenhum módulo encontrado</p>
+          <p className="mt-1 text-xs text-muted">Não existem módulos correspondentes a "{searchQuery}".</p>
+        </div>
+      ) : (
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          {filteredItems.map((item) => {
           const isReadOnly =
             isFinancialReadOnly() && item.module && ['treasury', 'quotas'].includes(item.module)
 
@@ -85,8 +99,9 @@ export default function MenuPage() {
               <span className="text-sm font-semibold">{item.label}</span>
             </Link>
           )
-        })}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   )
 }

@@ -119,6 +119,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
       amount: Number(amount),
       description,
       category: category || null,
+      event_id: eventId || null,
       date: dateIso,
       receipt_url: finalReceiptUrl,
     })

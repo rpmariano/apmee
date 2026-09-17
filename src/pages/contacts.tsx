@@ -24,6 +24,7 @@ export default function ContactsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingContact, setEditingContact] = useState<Contact | undefined>()
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const createMutation = useCreateContact()
@@ -62,8 +63,17 @@ export default function ContactsPage() {
             <h1 className="text-xl font-bold text-foreground">Contactos</h1>
             <div className="flex items-center gap-1">
               <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="rounded-full p-2 text-muted transition-colors hover:bg-warm-100 hover:text-foreground"
+                type="button"
+                onClick={() => {
+                  const next = !isSearchOpen
+                  setIsSearchOpen(next)
+                  if (!next) setSearchQuery('')
+                }}
+                aria-label={isSearchOpen ? "Fechar pesquisa" : "Abrir pesquisa"}
+                className={cn(
+                  "rounded-full p-2 transition-colors hover:bg-warm-100",
+                  isSearchOpen ? "bg-warm-200 text-primary-600" : "text-muted hover:text-foreground"
+                )}
               >
                 <Search className="h-5 w-5" />
               </button>
@@ -76,8 +86,11 @@ export default function ContactsPage() {
             <div className="mt-3 animate-in fade-in slide-in-from-top-2">
               <input
                 type="search"
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label="Pesquisar contactos"
-                placeholder="Pesquisar por nome ou email..."
+                placeholder="Pesquisar por nome, turma, educando ou email..."
                 className="w-full rounded-[var(--radius-button)] border border-warm-200 bg-surface px-4 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200"
               />
             </div>
@@ -105,7 +118,7 @@ export default function ContactsPage() {
 
       {/* List Content */}
       <div className="px-4">
-        <ContactList category={activeTab} onEditContact={handleEditContact} />
+        <ContactList category={activeTab} onEditContact={handleEditContact} searchQuery={searchQuery} />
       </div>
 
       {/* Floating Action Button (FAB) */}
