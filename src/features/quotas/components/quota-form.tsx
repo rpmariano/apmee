@@ -23,7 +23,7 @@ function toDateString(isoString?: string | null) {
 
 export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProps) {
   const [showUnsaved, setShowUnsaved] = useState(false)
-  const [isEditing, setIsEditing] = useState(!quota)
+  const isEditing = true
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -110,7 +110,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
     <div className="fixed inset-0 z-[100] flex justify-center bg-warm-100">{/* Phone container */}<div className="flex w-full max-w-[430px] flex-col bg-background shadow-xl">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
-          {!isEditing ? 'Detalhes' : (quota ? 'Editar' : 'Novo')}
+          {quota ? 'Editar Quota' : 'Nova Quota'}
         </h2>
         <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
@@ -229,24 +229,14 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
 
         
 <div className="border-t border-warm-200 bg-surface p-4">
-          {isEditing ? (
-            <button
-          type="submit"
-          form="quota-form"
-          disabled={isLoading || isUploading || isLoadingContacts}
-          className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
-        >
-          {isUploading ? 'A anexar recibo...' : isLoading ? 'A Guardar...' : 'Guardar Quota'}
-        </button>
-          ) : (
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
-              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
-            >
-              Editar Quota
-            </button>
-          )}
+          <button
+            type="submit"
+            form="quota-form"
+            disabled={isLoading || isUploading || isLoadingContacts}
+            className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
+          >
+            {isUploading ? 'A anexar recibo...' : isLoading ? 'A Guardar...' : (quota ? 'Guardar Quota' : 'Registar Quota')}
+          </button>
         </div>
 </form>
       </div>

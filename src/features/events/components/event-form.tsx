@@ -58,7 +58,7 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
   const [showUnsaved, setShowUnsaved] = useState(false)
   const [showShortageWarning, setShowShortageWarning] = useState(false)
   const [showCompletionBlocked, setShowCompletionBlocked] = useState(false)
-  const [isEditing, setIsEditing] = useState(!event)
+  const isEditing = true
   const isExistingEvent = Boolean(event?.id || event)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -184,11 +184,7 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
         <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
           <div>
             <h2 className="text-lg font-bold text-foreground">
-              {!isEditing
-                ? event?.event_type === EVENT_TYPES.REUNIAO
-                  ? 'Detalhes da Reunião'
-                  : 'Detalhes da Festa'
-                : event
+              {event
                 ? event.event_type === EVENT_TYPES.REUNIAO
                   ? 'Editar Reunião'
                   : 'Editar Festa'
@@ -461,31 +457,18 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
 
         {/* Footer Action Button */}
         <div className="border-t border-warm-200 bg-surface p-4">
-          {isEditing ? (
-            <button
-              type="submit"
-              form="event-form"
-              disabled={isLoading}
-              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
-            >
-              {isLoading
-                ? 'A Guardar...'
-                : eventType === EVENT_TYPES.REUNIAO
-                ? 'Guardar Reunião'
-                : 'Guardar Festa'}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                setIsEditing(true)
-              }}
-              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
-            >
-              {eventType === EVENT_TYPES.REUNIAO ? 'Editar Reunião' : 'Editar Festa'}
-            </button>
-          )}
+          <button
+            type="submit"
+            form="event-form"
+            disabled={isLoading}
+            className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
+          >
+            {isLoading
+              ? 'A Guardar...'
+              : eventType === EVENT_TYPES.REUNIAO
+              ? 'Guardar Reunião'
+              : 'Guardar Festa'}
+          </button>
         </div>
 
         {/* Unsaved Changes Confirmation */}

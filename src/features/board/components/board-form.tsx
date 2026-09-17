@@ -17,7 +17,7 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
 
   const [isDirty, setIsDirty] = useState(false)
   const [showUnsaved, setShowUnsaved] = useState(false)
-  const [isEditing, setIsEditing] = useState(!member)
+  const isEditing = true
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleCloseClick = () => {
@@ -56,7 +56,7 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
     <div className="fixed inset-0 z-[100] flex justify-center bg-warm-100">{/* Phone container */}<div className="flex w-full max-w-[430px] flex-col bg-background shadow-xl">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
-          {!isEditing ? 'Detalhes' : (member ? 'Editar Membro' : 'Novo Membro da Direção')}
+          {member ? 'Editar Membro' : 'Novo Membro da Direção'}
         </h2>
         <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
@@ -145,23 +145,13 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
 
           {/* Moved Submit Button INSIDE the form to prevent silent HTML5 validation failures on mobile */}
           <div className="mt-4 pt-4 border-t border-warm-200">
-            {isEditing ? (
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
-              >
-                {isLoading ? 'A Guardar...' : 'Guardar Membro'}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
-                className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
-              >
-                Editar Membro
-              </button>
-            )}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
+            >
+              {isLoading ? 'A Guardar...' : (member ? 'Guardar Membro' : 'Adicionar Membro')}
+            </button>
           </div>
         </form>
       </div>

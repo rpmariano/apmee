@@ -58,7 +58,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
   const [whatsapp, setWhatsapp] = useState(contact?.whatsapp ?? '')
   const [notes, setNotes] = useState(contact?.notes ?? '')
   const [isMember, setIsMember] = useState(contact?.is_member ?? false)
-  const [isEditing, setIsEditing] = useState(!contact)
+  const isEditing = true
 
   const isDirty = (
     name !== (contact?.name ?? '') ||
@@ -115,7 +115,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
       {/* Header */}
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
-          {!isEditing ? 'Detalhes do Contacto' : (contact ? 'Editar Contacto' : 'Novo Contacto')}
+          {contact ? 'Editar Contacto' : 'Novo Contacto'}
         </h2>
         <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
@@ -256,25 +256,14 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
           </div>
         
 <div className="border-t border-warm-200 bg-surface p-4">
-          {isEditing ? (
-            
-        <button
-          type="submit"
-          form="contact-form"
-          disabled={isLoading}
-          className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
-        >
-          {isLoading ? 'A Guardar...' : 'Guardar Contacto'}
-        </button>
-          ) : (
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
-              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
-            >
-              Editar Contacto
-            </button>
-          )}
+          <button
+            type="submit"
+            form="contact-form"
+            disabled={isLoading}
+            className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
+          >
+            {isLoading ? 'A Guardar...' : (contact ? 'Guardar Contacto' : 'Criar Contacto')}
+          </button>
         </div>
 </form>
       </div>

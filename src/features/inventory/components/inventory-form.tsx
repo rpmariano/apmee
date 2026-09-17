@@ -29,7 +29,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
 
   
   const [showUnsaved, setShowUnsaved] = useState(false)
-  const [isEditing, setIsEditing] = useState(!item)
+  const isEditing = true
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleCloseClick = () => {
@@ -81,7 +81,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
     <div className="fixed inset-0 z-[100] flex justify-center bg-warm-100">{/* Phone container */}<div className="flex w-full max-w-[430px] flex-col bg-background shadow-xl">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
-          {!isEditing ? 'Detalhes' : (item ? 'Editar Item' : 'Novo Item')}
+          {item ? 'Editar Item' : 'Novo Item'}
         </h2>
         <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
@@ -179,24 +179,14 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
 
         
 <div className="border-t border-warm-200 bg-surface p-4">
-          {isEditing ? (
-            <button
-          type="submit"
-          form="inventory-form"
-          disabled={isLoading}
-          className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
-        >
-          {isLoading ? 'A Guardar...' : 'Guardar Item'}
-        </button>
-          ) : (
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
-              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
-            >
-              Editar Item
-            </button>
-          )}
+          <button
+            type="submit"
+            form="inventory-form"
+            disabled={isLoading}
+            className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
+          >
+            {isLoading ? 'A Guardar...' : (item ? 'Guardar Item' : 'Criar Item')}
+          </button>
         </div>
 </form>
       </div>
