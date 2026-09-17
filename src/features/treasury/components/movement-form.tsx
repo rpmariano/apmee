@@ -125,7 +125,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-background">
+    <div className="fixed inset-0 z-[100] flex justify-center bg-warm-100">{/* Phone container */}<div className="flex w-full max-w-[430px] flex-col bg-background shadow-xl">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
           {!isEditing ? 'Detalhes' : (movement ? 'Editar Movimento' : 'Novo Movimento')}
@@ -285,6 +285,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
         }}
         onSave={handleSaveAndClose}
       />
+</div>
 </div>
   )
 }

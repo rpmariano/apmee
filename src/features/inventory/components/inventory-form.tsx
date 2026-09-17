@@ -78,7 +78,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-background">
+    <div className="fixed inset-0 z-[100] flex justify-center bg-warm-100">{/* Phone container */}<div className="flex w-full max-w-[430px] flex-col bg-background shadow-xl">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
           {!isEditing ? 'Detalhes' : (item ? 'Editar Item' : 'Novo Item')}
@@ -212,6 +212,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
         }}
         onSave={handleSaveAndClose}
       />
+</div>
 </div>
   )
 }

@@ -67,7 +67,7 @@ export function MenuAlerts() {
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-background/80 backdrop-blur-sm animate-in fade-in">
+        <div className="fixed inset-0 z-[100] flex justify-center bg-warm-100/80 backdrop-blur-sm animate-in fade-in">{/* Phone container */}<div className="flex w-full max-w-[430px] flex-col bg-background shadow-xl">
           <div className="flex flex-1 flex-col justify-end">
             <div className="flex h-[80vh] flex-col rounded-t-3xl bg-surface shadow-2xl animate-in slide-in-from-bottom-full">
               <div className="flex items-center justify-between border-b border-warm-200 px-6 py-4">
@@ -111,6 +111,7 @@ export function MenuAlerts() {
             </div>
           </div>
         </div>
+</div>
       )}
     </>
   )

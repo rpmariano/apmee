@@ -10,13 +10,13 @@ const navItems = [
 ]
 
 /**
- * Bottom navigation bar — fixed at the bottom of the screen.
- * Mobile-first design with 4 navigation items.
+ * Bottom navigation bar — fixed at the bottom of the phone container.
+ * Uses sticky positioning so it stays within the max-width container on desktop.
  */
 export function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-warm-200 bg-surface shadow-lg">
-      <div className="mx-auto flex max-w-lg items-center justify-around">
+    <nav className="sticky bottom-0 z-50 border-t border-warm-200 bg-surface shadow-lg">
+      <div className="flex items-center justify-around">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
