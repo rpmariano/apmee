@@ -45,6 +45,34 @@ export const EVENT_STATUSES = {
   CANCELLED: 'cancelled',
 } as const
 
+/** Event types */
+export const EVENT_TYPES = {
+  FESTA: 'festa',
+  REUNIAO: 'reuniao',
+} as const
+
+/** Event type labels (pt-PT) */
+export const EVENT_TYPE_LABELS: Record<string, string> = {
+  festa: 'Festa',
+  reuniao: 'Reunião',
+}
+
+/** Meeting types */
+export const MEETING_TYPES = {
+  ASSEMBLEIA: 'assembleia',
+  DIRECAO: 'direcao',
+  PAIS: 'pais',
+  OUTRA: 'outra',
+} as const
+
+/** Meeting type labels (pt-PT) */
+export const MEETING_TYPE_LABELS: Record<string, string> = {
+  assembleia: 'Assembleia Geral',
+  direcao: 'Reunião de Direção',
+  pais: 'Reunião com Pais / EE',
+  outra: 'Outra Reunião',
+}
+
 /** Task priorities */
 export const TASK_PRIORITIES = {
   LOW: 'low',

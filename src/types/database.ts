@@ -10,6 +10,18 @@ export type PermissionLevel = 'superadmin' | 'nivel_1' | 'nivel_2'
 export type UserRole = 'admin' | 'presidente' | 'tesoureiro' | 'gestor_social'
 export type ContactCategory = 'pai' | 'professor' | 'parceiro' | 'fornecedor' | 'associado'
 export type EventStatus = 'planned' | 'active' | 'completed' | 'cancelled'
+export type EventType = 'festa' | 'reuniao'
+export type MeetingType = 'assembleia' | 'direcao' | 'pais' | 'outra'
+
+export interface EventDocument {
+  id: string
+  name: string
+  url: string
+  size?: number
+  type?: string
+  uploaded_at: string
+}
+
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
 export type TaskStatus = 'todo' | 'in_progress' | 'done'
 export type InventoryCategory = 'consumivel' | 'alimento' | 'mobilizado'
@@ -55,6 +67,11 @@ export interface Event {
   end_date: string | null
   is_all_day: boolean
   status: EventStatus
+  event_type: EventType
+  meeting_type?: MeetingType | string | null
+  objectives?: string | null
+  minutes?: string | null
+  documents?: EventDocument[] | null
   created_by: string | null
   created_at: string
   updated_at: string

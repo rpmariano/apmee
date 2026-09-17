@@ -94,6 +94,11 @@ CREATE TABLE IF NOT EXISTS events (
     end_date TIMESTAMPTZ,
     is_all_day BOOLEAN DEFAULT false,
     status TEXT DEFAULT 'planned' CHECK (status IN ('planned', 'active', 'completed', 'cancelled')),
+    event_type TEXT DEFAULT 'festa' CHECK (event_type IN ('festa', 'reuniao')),
+    meeting_type TEXT,
+    objectives TEXT,
+    minutes TEXT,
+    documents JSONB DEFAULT '[]'::jsonb,
     created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
@@ -102,6 +107,11 @@ CREATE TABLE IF NOT EXISTS events (
 
 COMMENT ON TABLE events IS 'Eventos, celebrações e iniciativas organizadas ou apoiadas pela associação escolar.';
 COMMENT ON COLUMN events.status IS 'Estado atual do evento: planned (planeado), active (em curso), completed (concluído), cancelled (cancelado).';
+COMMENT ON COLUMN events.event_type IS 'Tipo do evento: festa (celebrações/festas com materiais) ou reuniao (reuniões com ata e documentos).';
+COMMENT ON COLUMN events.meeting_type IS 'Subtipo de reunião: assembleia, direcao, pais, outra.';
+COMMENT ON COLUMN events.objectives IS 'Descrição dos objetivos ou ordem de trabalhos da reunião.';
+COMMENT ON COLUMN events.minutes IS 'Ata da reunião, resumo das discussões e deliberações.';
+COMMENT ON COLUMN events.documents IS 'Lista de documentos em JSONB: [{id, name, url, size, type, uploaded_at}].';
 COMMENT ON COLUMN events.deleted_at IS 'Data/hora de eliminação lógica (soft delete).';
 
 DROP TRIGGER IF EXISTS trg_events_updated_at ON events;

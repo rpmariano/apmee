@@ -19,6 +19,7 @@ export default function EventsPage() {
 
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [activeTab, setActiveTab] = useState<EventFilterType>('day')
+  const [typeFilter, setTypeFilter] = useState<'all' | 'festa' | 'reuniao'>('all')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -103,35 +104,50 @@ export default function EventsPage() {
     }
   }
 
-  // Calculate dynamic counts for filter tabs
-  const { dayCount, upcomingCount, pastCount, allCount } = useMemo(() => {
+  // Calculate dynamic counts for filter tabs & types
+  const { dayCount, upcomingCount, pastCount, allCount, festaCount, reuniaoCount } = useMemo(() => {
     let dayC = 0
     let upC = 0
     let pastC = 0
+    let fCount = 0
+    let rCount = 0
 
     events.forEach((event) => {
-      try {
-        if (isSameDay(parseISO(event.start_date), selectedDate)) {
-          dayC++
-        }
-      } catch {
-        // ignore
+      const eType = event.event_type || 'festa'
+      if (eType === 'reuniao') {
+        rCount++
+      } else {
+        fCount++
       }
 
-      if (event.status === 'planned' || event.status === 'active') {
-        upC++
-      } else if (event.status === 'completed' || event.status === 'cancelled') {
-        pastC++
+      if (typeFilter === 'all' || eType === typeFilter) {
+        try {
+          if (isSameDay(parseISO(event.start_date), selectedDate)) {
+            dayC++
+          }
+        } catch {
+          // ignore
+        }
+
+        if (event.status === 'planned' || event.status === 'active') {
+          upC++
+        } else if (event.status === 'completed' || event.status === 'cancelled') {
+          pastC++
+        }
       }
     })
+
+    const filteredTotal = typeFilter === 'all' ? events.length : typeFilter === 'reuniao' ? rCount : fCount
 
     return {
       dayCount: dayC,
       upcomingCount: upC,
       pastCount: pastC,
-      allCount: events.length,
+      allCount: filteredTotal,
+      festaCount: fCount,
+      reuniaoCount: rCount,
     }
-  }, [events, selectedDate])
+  }, [events, selectedDate, typeFilter])
 
   const tabs: { value: EventFilterType; label: string; count: number }[] = [
     {
@@ -169,8 +185,50 @@ export default function EventsPage() {
           events={events}
         />
 
+        {/* Type Filter Selector (Todos / Festas / Reuniões) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
+          <button
+            type="button"
+            onClick={() => setTypeFilter('all')}
+            className={cn(
+              'rounded-full px-3 py-1 text-xs font-semibold transition-all active:scale-95',
+              typeFilter === 'all'
+                ? 'bg-secondary-800 text-white shadow-sm'
+                : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
+            )}
+          >
+            Todos ({events.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setTypeFilter('festa')}
+            className={cn(
+              'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all active:scale-95',
+              typeFilter === 'festa'
+                ? 'bg-amber-700 text-white shadow-sm'
+                : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
+            )}
+          >
+            <span>🎉</span>
+            <span>Festas ({festaCount})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTypeFilter('reuniao')}
+            className={cn(
+              'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all active:scale-95',
+              typeFilter === 'reuniao'
+                ? 'bg-blue-700 text-white shadow-sm'
+                : 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100'
+            )}
+          >
+            <span>📋</span>
+            <span>Reuniões ({reuniaoCount})</span>
+          </button>
+        </div>
+
         {/* Filter Pills with Counters */}
-        <div className="flex gap-2 overflow-x-auto pb-1 pt-1 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-1 pt-0.5 scrollbar-hide">
           {tabs.map((tab) => (
             <button
               key={tab.value}
@@ -203,12 +261,28 @@ export default function EventsPage() {
           <h2 className="text-xs font-bold uppercase tracking-wider text-secondary-600">
             {activeTab === 'day'
               ? isToday(selectedDate)
-                ? 'Eventos de Hoje'
-                : `Eventos de ${format(selectedDate, "d 'de' MMMM", { locale: pt })}`
+                ? typeFilter === 'reuniao'
+                  ? 'Reuniões de Hoje'
+                  : typeFilter === 'festa'
+                  ? 'Festas de Hoje'
+                  : 'Eventos de Hoje'
+                : `${typeFilter === 'reuniao' ? 'Reuniões' : typeFilter === 'festa' ? 'Festas' : 'Eventos'} de ${format(selectedDate, "d 'de' MMMM", { locale: pt })}`
               : activeTab === 'upcoming'
-              ? 'Próximos Eventos'
+              ? typeFilter === 'reuniao'
+                ? 'Próximas Reuniões'
+                : typeFilter === 'festa'
+                ? 'Próximas Festas'
+                : 'Próximos Eventos'
               : activeTab === 'past'
-              ? 'Eventos Terminados'
+              ? typeFilter === 'reuniao'
+                ? 'Reuniões Terminadas'
+                : typeFilter === 'festa'
+                ? 'Festas Terminadas'
+                : 'Eventos Terminados'
+              : typeFilter === 'reuniao'
+              ? 'Todas as Reuniões'
+              : typeFilter === 'festa'
+              ? 'Todas as Festas'
               : 'Todos os Eventos'}
           </h2>
         </div>
@@ -216,6 +290,7 @@ export default function EventsPage() {
         {/* Detail Cards */}
         <EventList
           filter={activeTab}
+          typeFilter={typeFilter}
           selectedDate={selectedDate}
           events={events}
           isLoading={isLoading}

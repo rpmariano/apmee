@@ -1,7 +1,8 @@
-import { MapPin, Calendar, Clock, AlertTriangle } from 'lucide-react'
+import { MapPin, Calendar, Clock, AlertTriangle, FileText, Paperclip } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import type { Event, EventStatus } from '@/types/database'
+import { EVENT_TYPES, MEETING_TYPE_LABELS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { useEventInventoryStatus } from '../api/use-event-inventory-status'
 
@@ -18,6 +19,7 @@ const statusConfig: Record<EventStatus, { label: string; className: string }> = 
 }
 
 export function EventCard({ event, onEdit }: EventCardProps) {
+  const isReuniao = event.event_type === EVENT_TYPES.REUNIAO
   const startDate = parseISO(event.start_date)
   const endDate = event.end_date ? parseISO(event.end_date) : null
 
@@ -25,11 +27,18 @@ export function EventCard({ event, onEdit }: EventCardProps) {
   const formattedTime = event.is_all_day ? 'Dia Inteiro' : format(startDate, 'HH:mm')
   const status = statusConfig[event.status]
 
-  // Only check shortages for planned/active events
-  const shouldCheckShortages = event.status === 'planned' || event.status === 'active'
+  // Only check shortages for planned/active Festa events
+  const shouldCheckShortages = !isReuniao && (event.status === 'planned' || event.status === 'active')
   const { hasShortages, shortages } = useEventInventoryStatus(
     shouldCheckShortages ? event.id : undefined
   )
+
+  const meetingTypeLabel = event.meeting_type
+    ? MEETING_TYPE_LABELS[event.meeting_type] || event.meeting_type
+    : null
+
+  const hasMinutes = Boolean(event.minutes?.trim())
+  const documentCount = event.documents?.length || 0
 
   return (
     <div
@@ -41,7 +50,27 @@ export function EventCard({ event, onEdit }: EventCardProps) {
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {/* Event Type Badge */}
+            <span
+              className={cn(
+                'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                isReuniao
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'bg-amber-100 text-amber-800'
+              )}
+            >
+              {isReuniao ? '📋 Reunião' : '🎉 Festa'}
+            </span>
+
+            {/* Meeting subtype badge if available */}
+            {isReuniao && meetingTypeLabel && (
+              <span className="rounded-full bg-warm-100 px-2 py-0.5 text-[10px] font-medium text-secondary-700">
+                {meetingTypeLabel}
+              </span>
+            )}
+
+            {/* Status Badge */}
             <span
               className={cn(
                 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
@@ -50,18 +79,46 @@ export function EventCard({ event, onEdit }: EventCardProps) {
             >
               {status.label}
             </span>
-            {/* Shortage pill */}
+
+            {/* Shortage pill (only for Festas) */}
             {hasShortages && (
               <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-700">
                 <AlertTriangle className="h-3 w-3" />
                 {shortages.length} item(ns) em falta
               </span>
             )}
+
+            {/* Minutes indicator pill (for Reuniões) */}
+            {isReuniao && hasMinutes && (
+              <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+                <FileText className="h-3 w-3" />
+                Ata
+              </span>
+            )}
+
+            {/* Documents count pill (for Reuniões) */}
+            {isReuniao && documentCount > 0 && (
+              <span className="flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-bold text-purple-700 border border-purple-200">
+                <Paperclip className="h-3 w-3" />
+                {documentCount} doc{documentCount > 1 ? 's' : ''}
+              </span>
+            )}
           </div>
+
           <h3 className="mt-2 text-lg font-bold text-foreground leading-tight">{event.title}</h3>
 
-          {event.description && (
-            <p className="mt-1 line-clamp-2 text-sm text-muted">{event.description}</p>
+          {/* Description or Objectives Snippet */}
+          {isReuniao ? (
+            event.objectives ? (
+              <p className="mt-1 line-clamp-2 text-xs text-secondary-600">
+                <span className="font-semibold text-secondary-700">Objetivos: </span>
+                {event.objectives}
+              </p>
+            ) : null
+          ) : (
+            event.description ? (
+              <p className="mt-1 line-clamp-2 text-sm text-muted">{event.description}</p>
+            ) : null
           )}
         </div>
       </div>
