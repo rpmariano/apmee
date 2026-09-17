@@ -1,5 +1,5 @@
 import { MapPin, Calendar, Clock, AlertTriangle, FileText, Paperclip } from 'lucide-react'
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, isSameDay } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import type { Event, EventStatus } from '@/types/database'
 import { EVENT_TYPES, MEETING_TYPE_LABELS } from '@/lib/constants'
@@ -25,6 +25,7 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
   const creatorInitials = getInitials(effectiveCreatorName)
   const startDate = parseISO(event.start_date)
   const endDate = event.end_date ? parseISO(event.end_date) : null
+  const isSameDayEnd = endDate ? isSameDay(startDate, endDate) : true
 
   const formattedDate = format(startDate, "d 'de' MMMM", { locale: pt })
   const formattedTime = event.is_all_day ? 'Dia Inteiro' : format(startDate, 'HH:mm')
@@ -45,12 +46,21 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
 
   return (
     <div
-      className={cn(
-        'flex flex-col gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md',
-        onEdit && 'cursor-pointer active:scale-[0.98]'
-      )}
+      role="button"
+      tabIndex={0}
       onClick={() => onEdit && onEdit(event)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onEdit && onEdit(event)
+        }
+      }}
+      className={cn(
+        'group relative w-full text-left select-none touch-manipulation flex flex-col gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all',
+        onEdit && 'cursor-pointer active:scale-[0.98] hover:shadow-md hover:border-warm-300'
+      )}
     >
+      <div className="pointer-events-none flex flex-col gap-3 w-full">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
@@ -128,7 +138,7 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
         {/* Creator Circle Symbol (circulo vazio com as iniciais) */}
         <div
           className={cn(
-            'shrink-0 flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-transform hover:scale-105 select-none bg-transparent',
+            'shrink-0 flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold select-none bg-transparent',
             isReuniao
               ? 'border-blue-600 text-blue-600'
               : 'border-amber-500 text-amber-600'
@@ -143,8 +153,8 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
         <div className="flex items-center gap-2 text-sm text-secondary-600">
           <Calendar className="h-4 w-4 shrink-0 opacity-70" />
           <span>
-            {formattedDate}{' '}
-            {endDate && `- ${format(endDate, "d 'de' MMMM", { locale: pt })}`}
+            {formattedDate}
+            {endDate && !isSameDayEnd ? ` - ${format(endDate, "d 'de' MMMM", { locale: pt })}` : ''}
           </span>
         </div>
 
@@ -170,6 +180,7 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
             <span className="font-semibold text-secondary-700">{effectiveCreatorName}</span>
           </div>
         )}
+      </div>
       </div>
     </div>
   )
