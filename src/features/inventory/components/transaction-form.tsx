@@ -49,7 +49,7 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
             <h2 className="text-lg font-bold text-foreground">
               Movimento de Stock
             </h2>
-            <button onClick={onClose} className="rounded-full p-2 text-muted hover:bg-warm-100">
+            <button onClick={onClose} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -100,8 +100,8 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-secondary-700">Quantidade</label>
-                  <input
+                  <label htmlFor="trans-quantity" className="text-sm font-medium text-secondary-700">Quantidade</label>
+                  <input id="trans-quantity"
                     type="number"
                     min="1"
                     value={quantity}
@@ -113,8 +113,8 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-secondary-700">Notas (Opcional)</label>
-                <textarea
+                <label htmlFor="trans-notes" className="text-sm font-medium text-secondary-700">Notas (Opcional)</label>
+                <textarea id="trans-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={2}

@@ -83,7 +83,7 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
         <h2 className="text-lg font-bold text-foreground">
           {item ? 'Editar Item' : 'Novo Item'}
         </h2>
-        <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
+        <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -118,8 +118,8 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-secondary-700">Quantidade <span className="text-primary-500">*</span></label>
-              <input disabled={!isEditing} 
+              <label htmlFor="inv-quantity" className="text-sm font-medium text-secondary-700">Quantidade <span className="text-primary-500">*</span></label>
+              <input id="inv-quantity" disabled={!isEditing} 
                 type="number"
                 min="0"
                 value={quantity}
@@ -130,8 +130,8 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
             </div>
             
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-secondary-700">Unidade</label>
-              <input disabled={!isEditing} 
+              <label htmlFor="inv-unit" className="text-sm font-medium text-secondary-700">Unidade</label>
+              <input id="inv-unit" disabled={!isEditing} 
                 type="text"
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
@@ -142,8 +142,8 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Stock Mínimo (Alerta)</label>
-            <input disabled={!isEditing} 
+            <label htmlFor="inv-min-stock" className="text-sm font-medium text-secondary-700">Stock Mínimo (Alerta)</label>
+            <input id="inv-min-stock" disabled={!isEditing} 
               type="number"
               min="0"
               value={minStock}
@@ -156,8 +156,8 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
           <div className="my-2 border-t border-warm-200" />
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Localização</label>
-            <input disabled={!isEditing} 
+            <label htmlFor="inv-location" className="text-sm font-medium text-secondary-700">Localização</label>
+            <input id="inv-location" disabled={!isEditing} 
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
@@ -167,8 +167,8 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Observações</label>
-            <textarea disabled={!isEditing} 
+            <label htmlFor="inv-notes" className="text-sm font-medium text-secondary-700">Observações</label>
+            <textarea id="inv-notes" disabled={!isEditing} 
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}

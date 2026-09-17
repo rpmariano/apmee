@@ -97,7 +97,7 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
         <h2 className="text-lg font-bold text-foreground">
           {task ? 'Editar Tarefa' : 'Nova Tarefa'}
         </h2>
-        <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
+        <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -106,8 +106,8 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
         <form ref={formRef}   id="task-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Título <span className="text-primary-500">*</span></label>
-            <input disabled={!isEditing} 
+            <label htmlFor="task-title" className="text-sm font-medium text-secondary-700">Título <span className="text-primary-500">*</span></label>
+            <input id="task-title" disabled={!isEditing} 
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -118,8 +118,8 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Descrição</label>
-            <textarea disabled={!isEditing} 
+            <label htmlFor="task-desc" className="text-sm font-medium text-secondary-700">Descrição</label>
+            <textarea id="task-desc" disabled={!isEditing} 
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -156,8 +156,8 @@ export function TaskForm({ task, onClose, onSubmit, isLoading }: TaskFormProps) 
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5 z-[50]">
-              <label className="text-sm font-medium text-secondary-700">Data Limite</label>
-              <input disabled={!isEditing} 
+              <label htmlFor="task-due-date" className="text-sm font-medium text-secondary-700">Data Limite</label>
+              <input id="task-due-date" disabled={!isEditing} 
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}

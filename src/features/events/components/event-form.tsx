@@ -199,6 +199,7 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
           <button
             type="button"
             onClick={handleCloseClick}
+            aria-label="Fechar formulário"
             className="rounded-full p-2 text-muted hover:bg-warm-100 active:scale-95 transition-all"
           >
             <X className="h-5 w-5" />
@@ -274,10 +275,11 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
 
             {/* Title */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-secondary-700">
+              <label htmlFor="event-title" className="text-sm font-medium text-secondary-700">
                 Título <span className="text-primary-500">*</span>
               </label>
               <input
+                id="event-title"
                 disabled={!isEditing}
                 type="text"
                 value={title}
@@ -294,10 +296,11 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
 
             {/* Location */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-secondary-700">Localização</label>
+              <label htmlFor="event-location" className="text-sm font-medium text-secondary-700">Localização</label>
               <div className="relative flex items-center">
                 <MapPin className="absolute left-3 h-4 w-4 text-secondary-400" />
                 <input
+                  id="event-location"
                   disabled={!isEditing}
                   type="text"
                   value={location}
@@ -330,10 +333,11 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-secondary-700">
+                  <label htmlFor="event-start-date" className="text-xs font-medium text-secondary-700">
                     Início <span className="text-primary-500">*</span>
                   </label>
                   <input
+                    id="event-start-date"
                     disabled={!isEditing}
                     type={isAllDay ? 'date' : 'datetime-local'}
                     value={startDate}
@@ -343,8 +347,9 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-secondary-700">Fim</label>
+                  <label htmlFor="event-end-date" className="text-xs font-medium text-secondary-700">Fim</label>
                   <input
+                    id="event-end-date"
                     disabled={!isEditing}
                     type={isAllDay ? 'date' : 'datetime-local'}
                     value={endDate}
@@ -372,8 +377,9 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
             {/* Festa Specific: Description */}
             {eventType === EVENT_TYPES.FESTA && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-secondary-700">Descrição</label>
+                <label htmlFor="event-description" className="text-sm font-medium text-secondary-700">Descrição</label>
                 <textarea
+                  id="event-description"
                   disabled={!isEditing}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -391,11 +397,12 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center gap-1.5">
                     <Target className="h-4 w-4 text-primary-500" />
-                    <label className="text-sm font-medium text-secondary-700">
+                    <label htmlFor="event-objectives" className="text-sm font-medium text-secondary-700">
                       Objetivos & Ordem de Trabalhos
                     </label>
                   </div>
                   <textarea
+                    id="event-objectives"
                     disabled={!isEditing}
                     value={objectives}
                     onChange={(e) => setObjectives(e.target.value)}
@@ -409,11 +416,12 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center gap-1.5">
                     <FileText className="h-4 w-4 text-primary-500" />
-                    <label className="text-sm font-medium text-secondary-700">
+                    <label htmlFor="event-minutes" className="text-sm font-medium text-secondary-700">
                       Ata da Reunião
                     </label>
                   </div>
                   <textarea
+                    id="event-minutes"
                     disabled={!isEditing}
                     value={minutes}
                     onChange={(e) => setMinutes(e.target.value)}

@@ -130,7 +130,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
         <h2 className="text-lg font-bold text-foreground">
           {movement ? 'Editar Movimento' : 'Novo Movimento'}
         </h2>
-        <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
+        <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -167,8 +167,8 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Valor (€) <span className="text-primary-500">*</span></label>
-            <input disabled={!isEditing} 
+            <label htmlFor="mov-amount" className="text-sm font-medium text-secondary-700">Valor (€) <span className="text-primary-500">*</span></label>
+            <input id="mov-amount" disabled={!isEditing} 
               type="number"
               step="0.01"
               min="0"
@@ -181,8 +181,8 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Descrição <span className="text-primary-500">*</span></label>
-            <input disabled={!isEditing} 
+            <label htmlFor="mov-desc" className="text-sm font-medium text-secondary-700">Descrição <span className="text-primary-500">*</span></label>
+            <input id="mov-desc" disabled={!isEditing} 
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -205,8 +205,8 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
             </div>
             
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-secondary-700">Data <span className="text-primary-500">*</span></label>
-              <input disabled={!isEditing} 
+              <label htmlFor="mov-date" className="text-sm font-medium text-secondary-700">Data <span className="text-primary-500">*</span></label>
+              <input id="mov-date" disabled={!isEditing} 
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
@@ -231,13 +231,13 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-secondary-700">Fatura / Comprovativo</label>
             
-            <label className="flex cursor-pointer flex-col items-center justify-center rounded-[var(--radius-card)] border-2 border-dashed border-warm-200 bg-surface py-6 text-center transition-colors hover:bg-warm-50">
+            <label htmlFor="mov-receipt" className="flex cursor-pointer flex-col items-center justify-center rounded-[var(--radius-card)] border-2 border-dashed border-warm-200 bg-surface py-6 text-center transition-colors hover:bg-warm-50">
               <Upload className="mb-2 h-6 w-6 text-secondary-400" />
               <span className="text-sm font-medium text-foreground">
                 {file ? file.name : 'Tocar para enviar documento'}
               </span>
               <span className="mt-1 text-xs text-muted">Imagens ou PDF</span>
-              <input disabled={!isEditing} 
+              <input id="mov-receipt" disabled={!isEditing} 
                 type="file"
                 accept="image/*,.pdf"
                 className="hidden"

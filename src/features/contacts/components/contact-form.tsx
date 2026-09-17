@@ -117,7 +117,7 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
         <h2 className="text-lg font-bold text-foreground">
           {contact ? 'Editar Contacto' : 'Novo Contacto'}
         </h2>
-        <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
+        <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -155,8 +155,8 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Nome <span className="text-primary-500">*</span></label>
-            <input disabled={!isEditing} 
+            <label htmlFor="contact-name" className="text-sm font-medium text-secondary-700">Nome <span className="text-primary-500">*</span></label>
+            <input id="contact-name" disabled={!isEditing} 
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -168,8 +168,8 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-secondary-700">Telemóvel</label>
-              <input disabled={!isEditing} 
+              <label htmlFor="contact-phone" className="text-sm font-medium text-secondary-700">Telemóvel</label>
+              <input id="contact-phone" disabled={!isEditing} 
                 type="tel"
                 value={phone}
                 onChange={(e) => handlePhoneChange(e.target.value)}
@@ -178,8 +178,8 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-secondary-700">WhatsApp</label>
-              <input disabled={!isEditing} 
+              <label htmlFor="contact-whatsapp" className="text-sm font-medium text-secondary-700">WhatsApp</label>
+              <input id="contact-whatsapp" disabled={!isEditing} 
                 type="tel"
                 value={whatsapp}
                 onChange={(e) => handleWhatsappChange(e.target.value)}
@@ -190,8 +190,8 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Email</label>
-            <input disabled={!isEditing} 
+            <label htmlFor="contact-email" className="text-sm font-medium text-secondary-700">Email</label>
+            <input id="contact-email" disabled={!isEditing} 
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -219,8 +219,8 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
 
           {category === 'pai' && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-secondary-700">Nome do Educando</label>
-              <input disabled={!isEditing} 
+              <label htmlFor="contact-educando" className="text-sm font-medium text-secondary-700">Nome do Educando</label>
+              <input id="contact-educando" disabled={!isEditing} 
                 type="text"
                 value={educando}
                 onChange={(e) => setEducando(e.target.value)}
@@ -245,8 +245,8 @@ export function ContactForm({ contact, onClose, onSubmit, isLoading }: ContactFo
           <div className="my-2 border-t border-warm-200" />
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Notas / Observações</label>
-            <textarea disabled={!isEditing} 
+            <label htmlFor="contact-notes" className="text-sm font-medium text-secondary-700">Notas / Observações</label>
+            <textarea id="contact-notes" disabled={!isEditing} 
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}

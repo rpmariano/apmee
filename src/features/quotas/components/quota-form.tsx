@@ -112,7 +112,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
         <h2 className="text-lg font-bold text-foreground">
           {quota ? 'Editar Quota' : 'Nova Quota'}
         </h2>
-        <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
+        <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -133,8 +133,8 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-secondary-700">Ano Letivo / Civil <span className="text-primary-500">*</span></label>
-              <input disabled={!isEditing} 
+              <label htmlFor="quota-year" className="text-sm font-medium text-secondary-700">Ano Letivo / Civil <span className="text-primary-500">*</span></label>
+              <input id="quota-year" disabled={!isEditing} 
                 type="number"
                 min="2000"
                 max="2100"
@@ -146,8 +146,8 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
             </div>
             
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-secondary-700">Valor (€) <span className="text-primary-500">*</span></label>
-              <input disabled={!isEditing} 
+              <label htmlFor="quota-amount" className="text-sm font-medium text-secondary-700">Valor (€) <span className="text-primary-500">*</span></label>
+              <input id="quota-amount" disabled={!isEditing} 
                 type="number"
                 step="0.01"
                 min="0"
@@ -161,8 +161,8 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
 
           <div className="my-2 border-t border-warm-200" />
 
-          <label className="flex items-center gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4">
-            <input disabled={!isEditing} 
+          <label htmlFor="quota-paid" className="flex items-center gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4">
+            <input id="quota-paid" disabled={!isEditing} 
               type="checkbox"
               checked={paid}
               onChange={(e) => setPaid(e.target.checked)}
@@ -177,8 +177,8 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
           {paid && (
             <div className="grid grid-cols-2 gap-4 rounded-[var(--radius-card)] bg-warm-50 p-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-secondary-700">Data de Pagamento</label>
-                <input disabled={!isEditing} 
+                <label htmlFor="quota-paid-date" className="text-xs font-medium text-secondary-700">Data de Pagamento</label>
+                <input id="quota-paid-date" disabled={!isEditing} 
                   type="date"
                   value={paidDate}
                   onChange={(e) => setPaidDate(e.target.value)}
@@ -207,13 +207,13 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading }: QuotaFormProp
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-secondary-700">Upload de Recibo (Opcional)</label>
               
-              <label className="flex cursor-pointer flex-col items-center justify-center rounded-[var(--radius-card)] border-2 border-dashed border-warm-200 bg-surface py-6 text-center transition-colors hover:bg-warm-50">
+              <label htmlFor="quota-receipt" className="flex cursor-pointer flex-col items-center justify-center rounded-[var(--radius-card)] border-2 border-dashed border-warm-200 bg-surface py-6 text-center transition-colors hover:bg-warm-50">
                 <Upload className="mb-2 h-6 w-6 text-secondary-400" />
                 <span className="text-sm font-medium text-foreground">
                   {file ? file.name : 'Tocar para anexar recibo'}
                 </span>
                 <span className="mt-1 text-xs text-muted">PDF ou Imagem</span>
-                <input disabled={!isEditing} 
+                <input id="quota-receipt" disabled={!isEditing} 
                   type="file"
                   accept="image/*,.pdf"
                   className="hidden"

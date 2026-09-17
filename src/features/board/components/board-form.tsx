@@ -58,7 +58,7 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
         <h2 className="text-lg font-bold text-foreground">
           {member ? 'Editar Membro' : 'Novo Membro da Direção'}
         </h2>
-        <button onClick={handleCloseClick} className="rounded-full p-2 text-muted hover:bg-warm-100">
+        <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -67,8 +67,8 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
         <form ref={formRef} onChange={() => setIsDirty(true)}  id="board-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Email (Google) <span className="text-primary-500">*</span></label>
-            <input disabled={!isEditing || !!member} 
+            <label htmlFor="board-email" className="text-sm font-medium text-secondary-700">Email (Google) <span className="text-primary-500">*</span></label>
+            <input id="board-email" disabled={!isEditing || !!member} 
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -80,8 +80,8 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Nome <span className="text-primary-500">*</span></label>
-            <input disabled={!isEditing} 
+            <label htmlFor="board-name" className="text-sm font-medium text-secondary-700">Nome <span className="text-primary-500">*</span></label>
+            <input id="board-name" disabled={!isEditing} 
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
@@ -91,8 +91,8 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Telemóvel</label>
-            <input disabled={!isEditing} 
+            <label htmlFor="board-phone" className="text-sm font-medium text-secondary-700">Telemóvel</label>
+            <input id="board-phone" disabled={!isEditing} 
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -130,8 +130,8 @@ export function BoardForm({ member, onClose, onSubmit, isLoading }: BoardFormPro
 
           <div className="my-2 border-t border-warm-200" />
 
-          <label className="flex items-center gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4">
-            <input disabled={!isEditing} 
+          <label htmlFor="board-active" className="flex items-center gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4">
+            <input id="board-active" disabled={!isEditing} 
               type="checkbox"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
