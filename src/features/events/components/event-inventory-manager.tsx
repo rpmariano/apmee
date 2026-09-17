@@ -20,11 +20,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   mobilizado: 'Mobilizado',
 }
 
-const ITEMS_BY_CATEGORY: Record<string, string[]> = {
-  consumivel: ['Pratos de papel', 'Pratos de Plástico', 'Talheres', 'Guardanapos', 'Copos de plástico'],
-  alimento: ['Pacote batata frita', 'Pacote de pipocas', 'Sumos Naturais', 'Refrigerantes', 'Água', 'Pão cachorro', 'Salsicha'],
-  mobilizado: ['Microfone', 'Coluna', 'Máquina Café'],
-}
 
 interface EventInventoryManagerProps {
   eventId: string
@@ -39,11 +34,9 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
   const { requirements, shortages, hasShortages, isLoading } = useEventInventoryStatus(eventId)
 
   // Form state for adding
-  const [selectedItemId, setSelectedItemId] = useState('')
-  const [newItemName, setNewItemName] = useState('')
-  const [newItemCategory, setNewItemCategory] = useState<InventoryCategory>('consumivel')
+  const [activeCategory, setActiveCategory] = useState<InventoryCategory>('consumivel')
+  const [selectedItemValue, setSelectedItemValue] = useState('')
   const [quantity, setQuantity] = useState(1)
-  const [isCreatingNew, setIsCreatingNew] = useState(false)
 
   const addMutation = useMutation({
     mutationFn: async (itemId: string) => {
@@ -54,10 +47,8 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['event-inventory', eventId] })
-      setSelectedItemId('')
-      setNewItemName('')
+      setSelectedItemValue('')
       setQuantity(1)
-      setIsCreatingNew(false)
     },
   })
 
@@ -78,12 +69,17 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
     e?.preventDefault()
     e?.stopPropagation()
 
-    if (isCreatingNew) {
-      if (!newItemName.trim()) return
+    if (!selectedItemValue.trim()) return
+
+    // Check if the selectedItemValue matches an existing inventory item ID
+    const existingItem = inventory?.find(i => i.id === selectedItemValue)
+
+    if (!existingItem) {
+      // It's a new item name typed by the user, so create it first
       try {
         const newItem = await createItemMutation.mutateAsync({
-          name: newItemName.trim(),
-          category: newItemCategory,
+          name: selectedItemValue.trim(),
+          category: activeCategory,
           quantity: 0,
           unit: 'un',
           min_stock: 0,
@@ -95,8 +91,8 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
         alert('Erro ao criar o item.')
       }
     } else {
-      if (!selectedItemId) return
-      addMutation.mutate(selectedItemId)
+      // It's an existing item
+      addMutation.mutate(existingItem.id)
     }
   }
 
@@ -160,72 +156,42 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
 
       {/* Add form — only when editing and not locked by status */}
       {isEditing && !isCompleted && !isCancelled && (
-        <div
-          className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-warm-50 p-4 border border-warm-200"
-        >
-          {/* Toggle between existing / new item */}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setIsCreatingNew(false)}
-              className={cn(
-                'rounded-full px-3 py-1 text-xs font-medium transition-colors',
-                !isCreatingNew
-                  ? 'bg-secondary-900 text-white'
-                  : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
-              )}
-            >
-              Item Existente
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsCreatingNew(true)}
-              className={cn(
-                'rounded-full px-3 py-1 text-xs font-medium transition-colors',
-                isCreatingNew
-                  ? 'bg-secondary-900 text-white'
-                  : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
-              )}
-            >
-              + Criar Novo
-            </button>
+        <div className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-warm-50 p-4 border border-warm-200">
+          
+          <div className="flex flex-col gap-1.5 z-[50]">
+            <label className="text-xs font-medium text-secondary-700">Categoria</label>
+            <div className="flex gap-2">
+              {INVENTORY_CATEGORIES_OPTIONS.map((cat) => (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => {
+                    setActiveCategory(cat.value as InventoryCategory)
+                    setSelectedItemValue('')
+                  }}
+                  className={cn(
+                    'flex-1 rounded-full px-2 py-1.5 text-xs font-medium transition-colors',
+                    activeCategory === cat.value
+                      ? 'bg-secondary-900 text-white'
+                      : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
+                  )}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {isCreatingNew ? (
-            <>
-              <div className="flex flex-col gap-1.5 z-[50]">
-                <label className="text-xs font-medium text-secondary-700">Categoria</label>
-                <CustomSelect
-                  value={newItemCategory}
-                  onChange={(val) => setNewItemCategory(val as InventoryCategory)}
-                  options={INVENTORY_CATEGORIES_OPTIONS}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5 z-[40]">
-                <label className="text-xs font-medium text-secondary-700">Nome do Item</label>
-                <CustomSelect
-                  value={newItemName}
-                  onChange={(val) => setNewItemName(val)}
-                  options={(ITEMS_BY_CATEGORY[newItemCategory] || []).map((n) => ({
-                    label: n,
-                    value: n,
-                  }))}
-                  placeholder="Selecione ou escreva..."
-                  creatable
-                />
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col gap-1.5 z-[50]">
-              <label className="text-xs font-medium text-secondary-700">Adicionar Item</label>
-              <CustomSelect
-                value={selectedItemId}
-                onChange={(val) => setSelectedItemId(val)}
-                options={itemOptions}
-                placeholder="Escolha um item do inventário..."
-              />
-            </div>
-          )}
+          <div className="flex flex-col gap-1.5 z-[40]">
+            <label className="text-xs font-medium text-secondary-700">Nome do Item</label>
+            <CustomSelect
+              value={selectedItemValue}
+              onChange={(val) => setSelectedItemValue(val)}
+              options={itemOptions}
+              placeholder="Selecione ou escreva..."
+              creatable
+            />
+          </div>
 
           <div className="flex items-end gap-3">
             <div className="flex flex-1 flex-col gap-1.5">
@@ -244,7 +210,7 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
               disabled={
                 addMutation.isPending ||
                 createItemMutation.isPending ||
-                (isCreatingNew ? !newItemName.trim() : !selectedItemId)
+                !selectedItemValue.trim()
               }
               className="rounded-md bg-secondary-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-secondary-700 disabled:opacity-50"
             >
