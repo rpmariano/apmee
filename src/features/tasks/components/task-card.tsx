@@ -1,4 +1,4 @@
-import { Calendar, Circle, CheckCircle2, Clock, Loader2 } from 'lucide-react'
+import { Calendar, Circle, CheckCircle2, Clock } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import type { Task, TaskPriority, TaskStatus } from '@/types/database'
@@ -8,8 +8,6 @@ import { TASK_STATUSES, TASK_PRIORITIES } from '@/lib/constants'
 interface TaskCardProps {
   task: Task
   onEdit?: (task: Task) => void
-  onToggleStatus?: (task: Task) => void
-  isToggling?: boolean
 }
 
 const priorityConfig: Record<TaskPriority, { label: string; color: string }> = {
@@ -19,28 +17,25 @@ const priorityConfig: Record<TaskPriority, { label: string; color: string }> = {
   [TASK_PRIORITIES.URGENT]: { label: 'Urgente', color: 'text-red-600 font-bold' },
 }
 
-const statusConfig: Record<TaskStatus, { label: string; icon: any; color: string; badgeColor: string }> = {
+const statusConfig: Record<TaskStatus, { label: string; icon: any; badgeColor: string }> = {
   [TASK_STATUSES.TODO]: { 
     label: 'A Fazer', 
     icon: Circle, 
-    color: 'text-secondary-400 hover:text-green-600',
     badgeColor: 'bg-warm-100 text-secondary-600 border-warm-200'
   },
   [TASK_STATUSES.IN_PROGRESS]: { 
     label: 'Em Curso', 
     icon: Clock, 
-    color: 'text-amber-500 hover:text-green-600',
     badgeColor: 'bg-amber-50 text-amber-700 border-amber-200'
   },
   [TASK_STATUSES.DONE]: { 
     label: 'Concluída', 
     icon: CheckCircle2, 
-    color: 'text-green-600 hover:text-secondary-400',
     badgeColor: 'bg-green-50 text-green-700 border-green-200'
   },
 }
 
-export function TaskCard({ task, onEdit, onToggleStatus, isToggling }: TaskCardProps) {
+export function TaskCard({ task, onEdit }: TaskCardProps) {
   const priority = priorityConfig[task.priority]
   const status = statusConfig[task.status]
   const StatusIcon = status.icon
@@ -57,29 +52,6 @@ export function TaskCard({ task, onEdit, onToggleStatus, isToggling }: TaskCardP
       onClick={() => onEdit && onEdit(task)}
     >
       <div className="flex items-start justify-between gap-3">
-        {/* Toggle Status Button */}
-        {onToggleStatus && (
-          <button 
-            type="button"
-            disabled={isToggling}
-            onClick={(e) => { 
-              e.stopPropagation()
-              onToggleStatus(task)
-            }}
-            title={isDone ? 'Reabrir tarefa' : 'Marcar como concluída'}
-            className={cn(
-              "mt-0.5 shrink-0 rounded-full p-0.5 transition-transform active:scale-90 disabled:opacity-50",
-              status.color
-            )}
-          >
-            {isToggling ? (
-              <Loader2 className="h-6 w-6 animate-spin text-primary-400" />
-            ) : (
-              <StatusIcon className={cn("h-6 w-6", isDone && "fill-green-100 text-green-600")} />
-            )}
-          </button>
-        )}
-
         {/* Content */}
         <div className="flex-1">
           <h3 className={cn("font-bold text-foreground leading-tight", isDone && "line-through text-muted")}>
@@ -97,7 +69,8 @@ export function TaskCard({ task, onEdit, onToggleStatus, isToggling }: TaskCardP
             </span>
 
             {/* Status Badge */}
-            <span className={cn("rounded-md px-1.5 py-0.5 font-medium border", status.badgeColor)}>
+            <span className={cn("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium border", status.badgeColor)}>
+              <StatusIcon className="h-3 w-3" />
               {status.label}
             </span>
 

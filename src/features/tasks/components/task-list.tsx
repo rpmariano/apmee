@@ -1,10 +1,7 @@
-import { useState } from 'react'
-import { useTasks, useUpdateTask } from '../api/use-tasks'
+import { useTasks } from '../api/use-tasks'
 import { TaskCard } from './task-card'
 import type { Task, TaskStatus } from '@/types/database'
-import { TASK_STATUSES } from '@/lib/constants'
 import { useBoardMembers } from '@/features/board/api/use-board'
-import { CustomDialog } from '@/components/ui/custom-dialog'
 
 interface TaskListProps {
   filter: TaskStatus | 'all'
@@ -13,9 +10,6 @@ interface TaskListProps {
 
 export function TaskList({ filter, onEditTask }: TaskListProps) {
   const { data: tasks, isLoading, error } = useTasks()
-  const updateMutation = useUpdateTask()
-  const [togglingId, setTogglingId] = useState<string | null>(null)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const { data: boardMembers, isLoading: isLoadingBoard } = useBoardMembers()
 
@@ -42,27 +36,6 @@ export function TaskList({ filter, onEditTask }: TaskListProps) {
     if (filter === 'all') return true
     return task.status === filter
   })
-
-  const handleToggleStatus = async (task: Task) => {
-    try {
-      setTogglingId(task.id)
-      // Direct toggle: if done, reopen to todo. Otherwise mark as done!
-      const nextStatus: TaskStatus =
-        task.status === TASK_STATUSES.DONE ? TASK_STATUSES.TODO : TASK_STATUSES.DONE
-
-      await updateMutation.mutateAsync({
-        id: task.id,
-        status: nextStatus
-      })
-    } catch (err: any) {
-      console.error('Error toggling task status:', err)
-      setErrorMessage(
-        err?.message || 'Não foi possível alterar o estado da tarefa. Verifique a ligação e tente novamente.'
-      )
-    } finally {
-      setTogglingId(null)
-    }
-  }
 
   if (filteredTasks.length === 0) {
     return (
@@ -101,36 +74,23 @@ export function TaskList({ filter, onEditTask }: TaskListProps) {
   })
 
   return (
-    <>
-      <div className="flex flex-col gap-6 py-4">
-        {groupKeys.map((assigneeId) => (
-          <div key={assigneeId} className="flex flex-col gap-3">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-secondary-600">
-              {getAssigneeName(assigneeId)}
-            </h3>
-            <div className="flex flex-col gap-3">
-              {groupedTasks[assigneeId].map((task) => (
-                <TaskCard 
-                  key={task.id} 
-                  task={task} 
-                  onEdit={onEditTask} 
-                  onToggleStatus={handleToggleStatus} 
-                  isToggling={togglingId === task.id}
-                />
-              ))}
-            </div>
+    <div className="flex flex-col gap-6 py-4">
+      {groupKeys.map((assigneeId) => (
+        <div key={assigneeId} className="flex flex-col gap-3">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-secondary-600">
+            {getAssigneeName(assigneeId)}
+          </h3>
+          <div className="flex flex-col gap-3">
+            {groupedTasks[assigneeId].map((task) => (
+              <TaskCard 
+                key={task.id} 
+                task={task} 
+                onEdit={onEditTask} 
+              />
+            ))}
           </div>
-        ))}
-      </div>
-
-      <CustomDialog
-        isOpen={!!errorMessage}
-        title="Erro ao alterar tarefa"
-        description={errorMessage || ''}
-        variant="danger"
-        confirmLabel="OK"
-        onConfirm={() => setErrorMessage(null)}
-      />
-    </>
+        </div>
+      ))}
+    </div>
   )
 }
