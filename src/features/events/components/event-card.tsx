@@ -3,11 +3,12 @@ import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import type { Event, EventStatus } from '@/types/database'
 import { EVENT_TYPES, MEETING_TYPE_LABELS } from '@/lib/constants'
-import { cn } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 import { useEventInventoryStatus } from '../api/use-event-inventory-status'
 
 interface EventCardProps {
   event: Event
+  creatorName?: string
   onEdit?: (event: Event) => void
 }
 
@@ -18,8 +19,10 @@ const statusConfig: Record<EventStatus, { label: string; className: string }> = 
   cancelled: { label: 'Cancelado', className: 'bg-red-100 text-red-700' },
 }
 
-export function EventCard({ event, onEdit }: EventCardProps) {
+export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
   const isReuniao = event.event_type === EVENT_TYPES.REUNIAO
+  const effectiveCreatorName = creatorName || event.created_by_name || null
+  const creatorInitials = getInitials(effectiveCreatorName)
   const startDate = parseISO(event.start_date)
   const endDate = event.end_date ? parseISO(event.end_date) : null
 
@@ -48,8 +51,8 @@ export function EventCard({ event, onEdit }: EventCardProps) {
       )}
       onClick={() => onEdit && onEdit(event)}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
             {/* Event Type Badge */}
             <span
@@ -121,6 +124,29 @@ export function EventCard({ event, onEdit }: EventCardProps) {
             ) : null
           )}
         </div>
+
+        {/* Creator Seal / Selo com Iniciais */}
+        <div
+          className={cn(
+            'shrink-0 flex flex-col items-center justify-center rounded-full p-1 border-2 border-dashed transition-transform hover:scale-105 select-none',
+            isReuniao
+              ? 'border-blue-300 bg-blue-50/90 text-blue-800'
+              : 'border-amber-300 bg-amber-50/90 text-amber-800'
+          )}
+          title={effectiveCreatorName ? `Criado por: ${effectiveCreatorName}` : 'Criado por: APMEE'}
+        >
+          <div
+            className={cn(
+              'flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-black tracking-tight shadow-xs',
+              isReuniao ? 'bg-blue-600 text-white' : 'bg-amber-500 text-white'
+            )}
+          >
+            {creatorInitials}
+          </div>
+          <span className="mt-0.5 text-[7px] font-bold uppercase tracking-wider opacity-75">
+            SELO
+          </span>
+        </div>
       </div>
 
       <div className="mt-1 flex flex-col gap-1.5 border-t border-warm-100 pt-3">
@@ -145,6 +171,13 @@ export function EventCard({ event, onEdit }: EventCardProps) {
           <div className="flex items-center gap-2 text-sm text-secondary-600">
             <MapPin className="h-4 w-4 shrink-0 opacity-70" />
             <span className="line-clamp-1">{event.location}</span>
+          </div>
+        )}
+
+        {effectiveCreatorName && (
+          <div className="flex items-center gap-1 text-[11px] text-muted pt-0.5">
+            <span>Criado por:</span>
+            <span className="font-semibold text-secondary-700">{effectiveCreatorName}</span>
           </div>
         )}
       </div>

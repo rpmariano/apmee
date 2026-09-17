@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS events (
     minutes TEXT,
     documents JSONB DEFAULT '[]'::jsonb,
     created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    created_by_name TEXT,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     deleted_at TIMESTAMPTZ
@@ -112,6 +113,7 @@ COMMENT ON COLUMN events.meeting_type IS 'Subtipo de reunião: assembleia, direc
 COMMENT ON COLUMN events.objectives IS 'Descrição dos objetivos ou ordem de trabalhos da reunião.';
 COMMENT ON COLUMN events.minutes IS 'Ata da reunião, resumo das discussões e deliberações.';
 COMMENT ON COLUMN events.documents IS 'Lista de documentos em JSONB: [{id, name, url, size, type, uploaded_at}].';
+COMMENT ON COLUMN events.created_by_name IS 'Nome de exibição do utilizador que criou o evento.';
 COMMENT ON COLUMN events.deleted_at IS 'Data/hora de eliminação lógica (soft delete).';
 
 DROP TRIGGER IF EXISTS trg_events_updated_at ON events;

@@ -17,15 +17,13 @@ import { pt } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEvents } from '@/features/events/api/use-events'
 import { cn } from '@/lib/utils'
-import type { EventStatus, Event } from '@/types/database'
-import { EVENT_STATUSES } from '@/lib/constants'
+import type { Event, EventType } from '@/types/database'
+import { EVENT_TYPES } from '@/lib/constants'
 
-// Color map for event dots
-const dotColors: Record<EventStatus, string> = {
-  [EVENT_STATUSES.PLANNED]: 'bg-warm-400',
-  [EVENT_STATUSES.ACTIVE]: 'bg-primary-500',
-  [EVENT_STATUSES.COMPLETED]: 'bg-[#2E7D32]',
-  [EVENT_STATUSES.CANCELLED]: 'bg-red-500',
+// Color map for event dots by event type
+const eventTypeDotColors: Record<EventType, string> = {
+  [EVENT_TYPES.FESTA]: 'bg-amber-500',
+  [EVENT_TYPES.REUNIAO]: 'bg-blue-600',
 }
 
 interface MobileCalendarProps {
@@ -155,20 +153,36 @@ export function MobileCalendar({
               {/* Event indicator dots */}
               {dayEvents.length > 0 && (
                 <div className="flex gap-0.5 mt-1 absolute bottom-1.5">
-                  {dayEvents.slice(0, 3).map((event, dotIndex) => (
-                    <span
-                      key={dotIndex}
-                      className={cn(
-                        'h-1.5 w-1.5 rounded-full',
-                        isSelected ? 'bg-white' : dotColors[event.status as EventStatus] || 'bg-secondary-400'
-                      )}
-                    />
-                  ))}
+                  {dayEvents.slice(0, 3).map((event, dotIndex) => {
+                    const eType = event.event_type || EVENT_TYPES.FESTA
+                    const dotClass = eventTypeDotColors[eType] || 'bg-amber-500'
+                    return (
+                      <span
+                        key={dotIndex}
+                        className={cn(
+                          'h-1.5 w-1.5 rounded-full',
+                          isSelected ? 'bg-white' : dotClass
+                        )}
+                      />
+                    )
+                  })}
                 </div>
               )}
             </div>
           )
         })}
+      </div>
+
+      {/* Mini Legend for Event Types */}
+      <div className="mt-3 flex items-center justify-center gap-5 border-t border-warm-100 pt-2.5 text-[11px] font-medium text-secondary-600">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-amber-500" />
+          <span>Festas</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-blue-600" />
+          <span>Reuniões</span>
+        </div>
       </div>
     </div>
   )

@@ -13,6 +13,7 @@ interface EventListProps {
   events?: Event[]
   isLoading?: boolean
   error?: unknown
+  creatorMap?: Record<string, string>
   onEditEvent?: (event: Event) => void
   onCreateEvent?: () => void
 }
@@ -24,6 +25,7 @@ export function EventList({
   events: propEvents,
   isLoading: propIsLoading,
   error: propError,
+  creatorMap,
   onEditEvent,
   onCreateEvent,
 }: EventListProps) {
@@ -131,9 +133,19 @@ export function EventList({
 
   return (
     <div className="flex flex-col gap-3 py-2">
-      {filteredEvents.map((event) => (
-        <EventCard key={event.id} event={event} onEdit={onEditEvent} />
-      ))}
+      {filteredEvents.map((event) => {
+        const creator =
+          event.created_by_name ||
+          (event.created_by ? creatorMap?.[event.created_by] : undefined)
+        return (
+          <EventCard
+            key={event.id}
+            event={event}
+            creatorName={creator}
+            onEdit={onEditEvent}
+          />
+        )
+      })}
     </div>
   )
 }

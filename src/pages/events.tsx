@@ -1,21 +1,25 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Plus, Calendar as CalendarIcon } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { format, isToday, isSameDay, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import { MobileCalendar } from '@/features/calendar/components/mobile-calendar'
 import { EventList, type EventFilterType } from '@/features/events/components/event-list'
 import { EventForm } from '@/features/events/components/event-form'
 import { useEvents, useCreateEvent, useUpdateEvent } from '@/features/events/api/use-events'
+import { useBoardMembers } from '@/features/board/api/use-board'
+import { useAuth } from '@/providers/auth-provider'
 import type { Event } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
-import { cn } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 
 export default function EventsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const editId = searchParams.get('edit')
   const isNew = searchParams.get('new') === 'true'
   const { data: events = [], isLoading } = useEvents()
+  const { data: boardMembers = [] } = useBoardMembers()
+  const { user } = useAuth()
 
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [activeTab, setActiveTab] = useState<EventFilterType>('day')
@@ -26,6 +30,22 @@ export default function EventsPage() {
 
   const createMutation = useCreateEvent()
   const updateMutation = useUpdateEvent()
+
+  // Map user IDs to display names or emails
+  const creatorMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    boardMembers.forEach((member) => {
+      if (member.id) {
+        map[member.id] = member.display_name || member.email
+      }
+    })
+    if (user?.id) {
+      map[user.id] = user.displayName || user.email
+    }
+    return map
+  }, [boardMembers, user])
+
+  const userInitials = getInitials(user?.displayName || user?.email)
 
   // Sync with searchParams
   useEffect(() => {
@@ -84,11 +104,36 @@ export default function EventsPage() {
   const handleSubmitForm = async (data: Partial<Event>) => {
     try {
       const current = editingEvent || (editId && events ? events.find((e) => e.id === editId) : undefined)
-      if (current) {
-        await updateMutation.mutateAsync({ id: current.id, ...data })
-      } else {
-        await createMutation.mutateAsync(data as any)
+      const payload: Partial<Event> = {
+        ...data,
+        ...(!current
+          ? {
+              created_by: user?.id,
+              created_by_name: user?.displayName || user?.email?.split('@')[0] || 'APMEE',
+            }
+          : {}),
       }
+
+      try {
+        if (current) {
+          await updateMutation.mutateAsync({ id: current.id, ...payload })
+        } else {
+          await createMutation.mutateAsync(payload as any)
+        }
+      } catch (err: any) {
+        // Defensive: if created_by_name column does not exist on remote table (code 42703)
+        if (err?.message?.includes('created_by_name') || err?.code === '42703') {
+          delete payload.created_by_name
+          if (current) {
+            await updateMutation.mutateAsync({ id: current.id, ...payload })
+          } else {
+            await createMutation.mutateAsync(payload as any)
+          }
+        } else {
+          throw err
+        }
+      }
+
       if (data.start_date) {
         try {
           setSelectedDate(parseISO(data.start_date))
@@ -167,8 +212,13 @@ export default function EventsPage() {
       {/* Header - Sticky */}
       <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="flex items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <CalendarIcon className="h-6 w-6 text-primary-500" />
+          <div className="flex items-center gap-2.5">
+            <div
+              className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-primary-500 bg-primary-100 text-primary-800 font-black text-xs shadow-xs select-none"
+              title={user?.displayName || user?.email || 'Agenda APMEE'}
+            >
+              {userInitials}
+            </div>
             <h1 className="text-xl font-bold text-foreground">Agenda</h1>
           </div>
           <span className="text-xs font-medium text-secondary-500 capitalize">
@@ -294,6 +344,7 @@ export default function EventsPage() {
           selectedDate={selectedDate}
           events={events}
           isLoading={isLoading}
+          creatorMap={creatorMap}
           onEditEvent={handleEditEvent}
           onCreateEvent={handleCreateEvent}
         />
