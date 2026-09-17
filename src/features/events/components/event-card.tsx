@@ -1,8 +1,9 @@
-import { MapPin, Calendar, Clock } from 'lucide-react'
+import { MapPin, Calendar, Clock, AlertTriangle } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import type { Event, EventStatus } from '@/types/database'
 import { cn } from '@/lib/utils'
+import { useEventInventoryStatus } from '../api/use-event-inventory-status'
 
 interface EventCardProps {
   event: Event
@@ -19,46 +20,67 @@ const statusConfig: Record<EventStatus, { label: string; className: string }> = 
 export function EventCard({ event, onEdit }: EventCardProps) {
   const startDate = parseISO(event.start_date)
   const endDate = event.end_date ? parseISO(event.end_date) : null
-  
+
   const formattedDate = format(startDate, "d 'de' MMMM", { locale: pt })
   const formattedTime = event.is_all_day ? 'Dia Inteiro' : format(startDate, 'HH:mm')
   const status = statusConfig[event.status]
 
+  // Only check shortages for planned/active events
+  const shouldCheckShortages = event.status === 'planned' || event.status === 'active'
+  const { hasShortages, shortages } = useEventInventoryStatus(
+    shouldCheckShortages ? event.id : undefined
+  )
+
   return (
-    <div 
+    <div
       className={cn(
-        "flex flex-col gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md",
-        onEdit && "cursor-pointer active:scale-[0.98]"
+        'flex flex-col gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md',
+        onEdit && 'cursor-pointer active:scale-[0.98]'
       )}
       onClick={() => onEdit && onEdit(event)}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', status.className)}>
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={cn(
+                'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                status.className
+              )}
+            >
               {status.label}
             </span>
+            {/* Shortage pill */}
+            {hasShortages && (
+              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-700">
+                <AlertTriangle className="h-3 w-3" />
+                {shortages.length} item(ns) em falta
+              </span>
+            )}
           </div>
           <h3 className="mt-2 text-lg font-bold text-foreground leading-tight">{event.title}</h3>
-          
+
           {event.description && (
             <p className="mt-1 line-clamp-2 text-sm text-muted">{event.description}</p>
           )}
         </div>
-
-        
       </div>
 
       <div className="mt-1 flex flex-col gap-1.5 border-t border-warm-100 pt-3">
         <div className="flex items-center gap-2 text-sm text-secondary-600">
           <Calendar className="h-4 w-4 shrink-0 opacity-70" />
-          <span>{formattedDate} {endDate && `- ${format(endDate, "d 'de' MMMM", { locale: pt })}`}</span>
+          <span>
+            {formattedDate}{' '}
+            {endDate && `- ${format(endDate, "d 'de' MMMM", { locale: pt })}`}
+          </span>
         </div>
-        
+
         {!event.is_all_day && (
           <div className="flex items-center gap-2 text-sm text-secondary-600">
             <Clock className="h-4 w-4 shrink-0 opacity-70" />
-            <span>{formattedTime} {endDate && `às ${format(endDate, 'HH:mm')}`}</span>
+            <span>
+              {formattedTime} {endDate && `às ${format(endDate, 'HH:mm')}`}
+            </span>
           </div>
         )}
 
