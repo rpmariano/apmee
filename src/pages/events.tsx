@@ -1,28 +1,24 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Plus } from 'lucide-react'
-import { EventList } from '@/features/events/components/event-list'
+import { Plus, Calendar as CalendarIcon } from 'lucide-react'
+import { format, isToday, isSameDay, parseISO } from 'date-fns'
+import { pt } from 'date-fns/locale'
+import { MobileCalendar } from '@/features/calendar/components/mobile-calendar'
+import { EventList, type EventFilterType } from '@/features/events/components/event-list'
 import { EventForm } from '@/features/events/components/event-form'
 import { useEvents, useCreateEvent, useUpdateEvent } from '@/features/events/api/use-events'
 import type { Event } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { cn } from '@/lib/utils'
 
-type FilterValue = 'upcoming' | 'past' | 'all'
-
-const tabs: { value: FilterValue; label: string }[] = [
-  { value: 'upcoming', label: 'Próximos' },
-  { value: 'past', label: 'Terminados' },
-  { value: 'all', label: 'Todos' },
-]
-
 export default function EventsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const editId = searchParams.get('edit')
   const isNew = searchParams.get('new') === 'true'
-  const { data: events } = useEvents()
+  const { data: events = [], isLoading } = useEvents()
 
-  const [activeTab, setActiveTab] = useState<FilterValue>('upcoming')
+  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [activeTab, setActiveTab] = useState<EventFilterType>('day')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -32,10 +28,17 @@ export default function EventsPage() {
 
   // Sync with searchParams
   useEffect(() => {
-    if (editId && events) {
+    if (editId && events.length > 0) {
       const found = events.find((e) => e.id === editId)
       if (found) {
         setEditingEvent(found)
+        if (found.start_date) {
+          try {
+            setSelectedDate(parseISO(found.start_date))
+          } catch {
+            // ignore parse error
+          }
+        }
         setIsFormOpen(true)
       }
     } else if (isNew) {
@@ -45,10 +48,17 @@ export default function EventsPage() {
       setIsFormOpen(false)
       setEditingEvent(undefined)
     }
-  }, [editId, isNew, events])
+  }, [editId, isNew, events, isFormOpen])
 
   const handleEditEvent = (event: Event) => {
     setEditingEvent(event)
+    if (event.start_date) {
+      try {
+        setSelectedDate(parseISO(event.start_date))
+      } catch {
+        // ignore parse error
+      }
+    }
     setIsFormOpen(true)
     setSearchParams({ edit: event.id })
   }
@@ -65,13 +75,26 @@ export default function EventsPage() {
     setSearchParams({})
   }
 
+  const handleSelectDate = (date: Date) => {
+    setSelectedDate(date)
+    setActiveTab('day')
+  }
+
   const handleSubmitForm = async (data: Partial<Event>) => {
     try {
-      const current = editingEvent || (editId && events ? events.find(e => e.id === editId) : undefined)
+      const current = editingEvent || (editId && events ? events.find((e) => e.id === editId) : undefined)
       if (current) {
         await updateMutation.mutateAsync({ id: current.id, ...data })
       } else {
         await createMutation.mutateAsync(data as any)
+      }
+      if (data.start_date) {
+        try {
+          setSelectedDate(parseISO(data.start_date))
+          setActiveTab('day')
+        } catch {
+          // ignore
+        }
       }
       handleCloseForm()
     } catch (error: any) {
@@ -80,56 +103,149 @@ export default function EventsPage() {
     }
   }
 
-  return (
-    <div className="relative min-h-[calc(100vh-4rem)] bg-background">
-      {/* Header & Tabs - Sticky */}
-      <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="px-4">
-          <h1 className="text-xl font-bold text-foreground">Eventos</h1>
-        </div>
+  // Calculate dynamic counts for filter tabs
+  const { dayCount, upcomingCount, pastCount, allCount } = useMemo(() => {
+    let dayC = 0
+    let upC = 0
+    let pastC = 0
 
-        {/* Tabs - Horizontal Scroll */}
-        <div className="mt-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide">
+    events.forEach((event) => {
+      try {
+        if (isSameDay(parseISO(event.start_date), selectedDate)) {
+          dayC++
+        }
+      } catch {
+        // ignore
+      }
+
+      if (event.status === 'planned' || event.status === 'active') {
+        upC++
+      } else if (event.status === 'completed' || event.status === 'cancelled') {
+        pastC++
+      }
+    })
+
+    return {
+      dayCount: dayC,
+      upcomingCount: upC,
+      pastCount: pastC,
+      allCount: events.length,
+    }
+  }, [events, selectedDate])
+
+  const tabs: { value: EventFilterType; label: string; count: number }[] = [
+    {
+      value: 'day',
+      label: isToday(selectedDate) ? 'Hoje' : format(selectedDate, "d 'de' MMM", { locale: pt }),
+      count: dayCount,
+    },
+    { value: 'upcoming', label: 'Próximos', count: upcomingCount },
+    { value: 'past', label: 'Terminados', count: pastCount },
+    { value: 'all', label: 'Todos', count: allCount },
+  ]
+
+  const activeEvent = editingEvent || (editId && events ? events.find((e) => e.id === editId) : undefined)
+
+  return (
+    <div className="relative min-h-[calc(100vh-4rem)] bg-background pb-24">
+      {/* Header - Sticky */}
+      <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="flex items-center justify-between px-4">
+          <div className="flex items-center gap-2">
+            <CalendarIcon className="h-6 w-6 text-primary-500" />
+            <h1 className="text-xl font-bold text-foreground">Agenda</h1>
+          </div>
+          <span className="text-xs font-medium text-secondary-500 capitalize">
+            {format(selectedDate, "EEEE, d 'de' MMMM", { locale: pt })}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4 px-4 pt-2">
+        {/* Interactive Calendar Card */}
+        <MobileCalendar
+          selectedDate={selectedDate}
+          onSelectDate={handleSelectDate}
+          events={events}
+        />
+
+        {/* Filter Pills with Counters */}
+        <div className="flex gap-2 overflow-x-auto pb-1 pt-1 scrollbar-hide">
           {tabs.map((tab) => (
             <button
               key={tab.value}
+              type="button"
               onClick={() => setActiveTab(tab.value)}
               className={cn(
-                'whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                'flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-95',
                 activeTab === tab.value
                   ? 'bg-secondary-900 text-white shadow-sm'
                   : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
               )}
             >
-              {tab.label}
+              <span>{tab.label}</span>
+              <span
+                className={cn(
+                  'rounded-full px-1.5 py-0.2 text-[10px] font-bold',
+                  activeTab === tab.value
+                    ? 'bg-white/20 text-white'
+                    : 'bg-warm-200 text-secondary-700'
+                )}
+              >
+                {tab.count}
+              </span>
             </button>
           ))}
         </div>
+
+        {/* Section Heading */}
+        <div className="flex items-center justify-between pt-1">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-secondary-600">
+            {activeTab === 'day'
+              ? isToday(selectedDate)
+                ? 'Eventos de Hoje'
+                : `Eventos de ${format(selectedDate, "d 'de' MMMM", { locale: pt })}`
+              : activeTab === 'upcoming'
+              ? 'Próximos Eventos'
+              : activeTab === 'past'
+              ? 'Eventos Terminados'
+              : 'Todos os Eventos'}
+          </h2>
+        </div>
+
+        {/* Detail Cards */}
+        <EventList
+          filter={activeTab}
+          selectedDate={selectedDate}
+          events={events}
+          isLoading={isLoading}
+          onEditEvent={handleEditEvent}
+          onCreateEvent={handleCreateEvent}
+        />
       </div>
 
-      {/* List */}
-      <div className="px-4">
-        <EventList filter={activeTab} onEditEvent={handleEditEvent} />
-      </div>
-
-      {/* Floating Action Button */}
+      {/* Floating Action Button (+) */}
       <button
-        className="fixed bottom-24 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary-400 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-500 active:scale-95"
+        type="button"
+        className="fixed bottom-24 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary-400 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-500 active:scale-95 z-20"
         onClick={handleCreateEvent}
+        aria-label="Criar Evento"
       >
         <Plus className="h-6 w-6" />
       </button>
 
-      {/* Form Modal/Slide-over */}
+      {/* Form Modal */}
       {isFormOpen && (
         <EventForm
-          event={editingEvent}
+          event={activeEvent}
+          initialDate={selectedDate}
           onClose={handleCloseForm}
           onSubmit={handleSubmitForm}
           isLoading={createMutation.isPending || updateMutation.isPending}
         />
       )}
 
+      {/* Custom Error Dialog */}
       <CustomDialog
         isOpen={!!errorMessage}
         title="Erro ao guardar evento"

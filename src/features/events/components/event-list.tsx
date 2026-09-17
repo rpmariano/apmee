@@ -1,20 +1,41 @@
+import { isSameDay, parseISO, compareAsc, compareDesc } from 'date-fns'
+import { Plus } from 'lucide-react'
 import { useEvents } from '../api/use-events'
 import { EventCard } from './event-card'
 import type { Event } from '@/types/database'
 
+export type EventFilterType = 'day' | 'upcoming' | 'past' | 'all'
+
 interface EventListProps {
-  filter: 'upcoming' | 'past' | 'all'
+  filter: EventFilterType
+  selectedDate?: Date
+  events?: Event[]
+  isLoading?: boolean
+  error?: unknown
   onEditEvent?: (event: Event) => void
+  onCreateEvent?: () => void
 }
 
-export function EventList({ filter, onEditEvent }: EventListProps) {
-  const { data: events, isLoading, error } = useEvents()
+export function EventList({
+  filter,
+  selectedDate = new Date(),
+  events: propEvents,
+  isLoading: propIsLoading,
+  error: propError,
+  onEditEvent,
+  onCreateEvent,
+}: EventListProps) {
+  const { data: queryEvents, isLoading: queryLoading, error: queryError } = useEvents()
+
+  const events = propEvents ?? queryEvents
+  const isLoading = propIsLoading ?? queryLoading
+  const error = propError ?? queryError
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4 py-8">
+      <div className="flex flex-col gap-3 py-4">
         {[1, 2].map((i) => (
-          <div key={i} className="h-40 w-full animate-pulse rounded-[var(--radius-card)] bg-warm-100" />
+          <div key={i} className="h-32 w-full animate-pulse rounded-[var(--radius-card)] bg-warm-100" />
         ))}
       </div>
     )
@@ -29,11 +50,17 @@ export function EventList({ filter, onEditEvent }: EventListProps) {
   }
 
   // Filter logic
-  
   const filteredEvents = (events || []).filter((event) => {
     if (filter === 'all') return true
-    
-    // Consider events upcoming if they are planned, active, or their end date is in the future
+
+    if (filter === 'day') {
+      try {
+        return isSameDay(parseISO(event.start_date), selectedDate)
+      } catch {
+        return false
+      }
+    }
+
     const isPastStatus = event.status === 'completed' || event.status === 'cancelled'
     const isUpcomingStatus = event.status === 'planned' || event.status === 'active'
 
@@ -42,22 +69,58 @@ export function EventList({ filter, onEditEvent }: EventListProps) {
     return true
   })
 
+  // Sort events
+  filteredEvents.sort((a, b) => {
+    try {
+      const dateA = parseISO(a.start_date)
+      const dateB = parseISO(b.start_date)
+      if (filter === 'past' || filter === 'all') {
+        return compareDesc(dateA, dateB)
+      }
+      return compareAsc(dateA, dateB)
+    } catch {
+      return 0
+    }
+  })
+
   if (filteredEvents.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-warm-100">
-          <svg className="h-8 w-8 text-secondary-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="flex flex-col items-center justify-center rounded-[var(--radius-card)] border border-dashed border-warm-200 bg-surface/50 py-10 px-4 text-center my-2">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-warm-100">
+          <svg className="h-6 w-6 text-secondary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </div>
-        <p className="mt-4 text-sm font-medium text-foreground">Sem eventos</p>
-        <p className="mt-1 text-xs text-muted">Não foram encontrados eventos para este filtro.</p>
+        <p className="mt-3 text-sm font-medium text-foreground">
+          {filter === 'day'
+            ? 'Sem eventos marcados para este dia'
+            : filter === 'upcoming'
+            ? 'Sem eventos futuros'
+            : filter === 'past'
+            ? 'Sem eventos terminados'
+            : 'Nenhum evento encontrado'}
+        </p>
+        <p className="mt-1 text-xs text-muted">
+          {filter === 'day'
+            ? 'Pode agendar um novo evento diretamente para esta data.'
+            : 'Não existem eventos registados nesta categoria.'}
+        </p>
+        {onCreateEvent && (
+          <button
+            type="button"
+            onClick={onCreateEvent}
+            className="mt-4 flex items-center gap-1.5 rounded-full bg-primary-50 px-4 py-2 text-xs font-semibold text-primary-700 hover:bg-primary-100 active:scale-95 transition-all"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>Agendar Evento</span>
+          </button>
+        )}
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-4 py-4">
+    <div className="flex flex-col gap-3 py-2">
       {filteredEvents.map((event) => (
         <EventCard key={event.id} event={event} onEdit={onEditEvent} />
       ))}

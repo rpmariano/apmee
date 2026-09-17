@@ -12,6 +12,7 @@ import { useEventInventoryStatus } from '../api/use-event-inventory-status'
 
 interface EventFormProps {
   event?: Event
+  initialDate?: Date
   onClose: () => void
   onSubmit: (data: Partial<Event>) => void
   isLoading?: boolean
@@ -34,7 +35,19 @@ function toDateTimeLocal(isoString?: string | null) {
     .slice(0, 16)
 }
 
-export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProps) {
+function getDefaultDates(initialDate?: Date) {
+  if (!initialDate) return { start: '', end: '' }
+  const start = new Date(initialDate)
+  start.setHours(9, 0, 0, 0)
+  const end = new Date(initialDate)
+  end.setHours(10, 0, 0, 0)
+  return {
+    start: toDateTimeLocal(start.toISOString()),
+    end: toDateTimeLocal(end.toISOString()),
+  }
+}
+
+export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: EventFormProps) {
   const [showUnsaved, setShowUnsaved] = useState(false)
   const [showShortageWarning, setShowShortageWarning] = useState(false)
   const [showCompletionBlocked, setShowCompletionBlocked] = useState(false)
@@ -56,11 +69,15 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
     formRef.current?.requestSubmit()
   }
 
+  const defaultDates = getDefaultDates(initialDate)
+  const initialStartDate = toDateTimeLocal(event?.start_date) || defaultDates.start
+  const initialEndDate = toDateTimeLocal(event?.end_date) || defaultDates.end
+
   const [title, setTitle] = useState(event?.title ?? '')
   const [description, setDescription] = useState(event?.description ?? '')
   const [location, setLocation] = useState(event?.location ?? '')
-  const [startDate, setStartDate] = useState(toDateTimeLocal(event?.start_date))
-  const [endDate, setEndDate] = useState(toDateTimeLocal(event?.end_date))
+  const [startDate, setStartDate] = useState(initialStartDate)
+  const [endDate, setEndDate] = useState(initialEndDate)
   const [isAllDay, setIsAllDay] = useState(event?.is_all_day ?? false)
   const [status, setStatus] = useState<EventStatus>(event?.status ?? EVENT_STATUSES.PLANNED)
 
@@ -68,8 +85,8 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
     title !== (event?.title ?? '') ||
     description !== (event?.description ?? '') ||
     location !== (event?.location ?? '') ||
-    startDate !== toDateTimeLocal(event?.start_date) ||
-    endDate !== toDateTimeLocal(event?.end_date) ||
+    startDate !== initialStartDate ||
+    endDate !== initialEndDate ||
     isAllDay !== (event?.is_all_day ?? false) ||
     status !== (event?.status ?? EVENT_STATUSES.PLANNED)
 

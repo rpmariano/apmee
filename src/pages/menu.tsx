@@ -23,7 +23,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { to: '/contactos', label: 'Contactos', icon: Users, color: 'bg-primary-100 text-primary-600' },
-  { to: '/eventos', label: 'Eventos', icon: CalendarDays, color: 'bg-warm-200 text-secondary-600' },
+  { to: '/agenda', label: 'Agenda & Eventos', icon: CalendarDays, color: 'bg-warm-200 text-secondary-600' },
   { to: '/tarefas', label: 'Tarefas', icon: ListTodo, color: 'bg-secondary-100 text-secondary-600' },
   { to: '/inventario', label: 'Inventário', icon: Package, color: 'bg-warm-100 text-secondary-700' },
   { to: '/tesouraria', label: 'Tesouraria', icon: Wallet, color: 'bg-primary-200 text-primary-700', module: 'treasury' },

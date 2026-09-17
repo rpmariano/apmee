@@ -65,7 +65,7 @@ export default function HomePage() {
           textColor="text-secondary-700"
         />
         <StatCard
-          to="/eventos"
+          to="/agenda"
           label="Eventos Ativos"
           value={isLoading ? '-' : stats?.events.toString() ?? '0'}
           color="bg-primary-100 hover:bg-primary-200 transition-colors"

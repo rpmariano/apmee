@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AppShell } from '@/components/layout/app-shell'
 import LoginPage from '@/pages/login'
 import HomePage from '@/pages/home'
-import CalendarPage from '@/pages/calendar'
 import EmailPage from '@/pages/email'
 import MenuPage from '@/pages/menu'
 import ContactsPage from '@/pages/contacts'
@@ -28,7 +27,8 @@ export default function App() {
         <Route element={<AppShell />}>
           {/* Bottom nav routes */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/calendario" element={<CalendarPage />} />
+          <Route path="/agenda" element={<EventsPage />} />
+          <Route path="/calendario" element={<EventsPage />} />
           <Route path="/email" element={<EmailPage />} />
           <Route path="/menu" element={<MenuPage />} />
 
