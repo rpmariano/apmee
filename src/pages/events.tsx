@@ -114,24 +114,67 @@ export default function EventsPage() {
           : {}),
       }
 
-      try {
-        if (current) {
-          await updateMutation.mutateAsync({ id: current.id, ...payload })
-        } else {
-          await createMutation.mutateAsync(payload as any)
-        }
-      } catch (err: any) {
-        // Defensive: if created_by_name column does not exist on remote table (code 42703)
-        if (err?.message?.includes('created_by_name') || err?.code === '42703') {
-          delete payload.created_by_name
+      // New columns that might not exist yet if remote database migrations haven't run
+      const newColumns = [
+        'documents',
+        'minutes',
+        'objectives',
+        'meeting_type',
+        'event_type',
+        'created_by_name',
+      ]
+
+      let attemptPayload = { ...payload }
+      let saved = false
+      let lastErr: any = null
+
+      for (let attempt = 0; attempt <= newColumns.length; attempt++) {
+        try {
           if (current) {
-            await updateMutation.mutateAsync({ id: current.id, ...payload })
+            await updateMutation.mutateAsync({ id: current.id, ...attemptPayload })
           } else {
-            await createMutation.mutateAsync(payload as any)
+            await createMutation.mutateAsync(attemptPayload as any)
           }
-        } else {
+          saved = true
+          break
+        } catch (err: any) {
+          lastErr = err
+          const errMsg = err?.message || ''
+
+          // Check if error is about missing column in schema cache or relation
+          // Examples:
+          // "Could not find the 'documents' column of 'events' in the schema cache"
+          // "column "documents" of relation "events" does not exist"
+          const match =
+            errMsg.match(/Could not find the '([^']+)' column/) ||
+            errMsg.match(/column "([^"]+)" of relation "events" does not exist/)
+
+          if (match && match[1] && match[1] in attemptPayload) {
+            delete (attemptPayload as any)[match[1]]
+            continue
+          }
+
+          // Fallback: check if any of the new columns is mentioned in errMsg
+          const foundCol = newColumns.find(
+            (col) => errMsg.includes(col) && col in attemptPayload
+          )
+          if (foundCol) {
+            delete (attemptPayload as any)[foundCol]
+            continue
+          }
+
+          // If code 42703 (undefined_column) or PGRST204 without column match
+          if ((err?.code === '42703' || err?.code === 'PGRST204') && attempt === 0) {
+            newColumns.forEach((col) => delete (attemptPayload as any)[col])
+            continue
+          }
+
           throw err
         }
+      }
+
+      if (!saved && lastErr) {
+        throw lastErr
       }
 
       if (data.start_date) {
