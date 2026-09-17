@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { FileText, Upload, Trash2, ExternalLink, Plus, Loader2 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
-import { supabase } from '@/lib/supabase'
+import { uploadDocumentToGoogleDrive } from '../services/google-drive-upload'
 import type { EventDocument } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 
@@ -31,34 +31,13 @@ export function EventDocumentsManager({
 
     try {
       setIsUploading(true)
-      const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-      const storagePath = `meetings/${Date.now()}-${cleanFileName}`
-
-      const { error: uploadError } = await (supabase as any).storage
-        .from('receipts')
-        .upload(storagePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data } = (supabase as any).storage
-        .from('receipts')
-        .getPublicUrl(storagePath)
-
-      const newDoc: EventDocument = {
-        id: crypto.randomUUID(),
-        name: file.name,
-        url: data.publicUrl,
-        size: file.size,
-        type: file.type,
-        uploaded_at: new Date().toISOString(),
-      }
-
+      const newDoc = await uploadDocumentToGoogleDrive(file)
       onChange([...documents, newDoc])
     } catch (err: any) {
-      console.error('Error uploading document:', err)
+      console.error('Error uploading document to Google Drive:', err)
       setDialogError(
         err?.message ||
-          'Erro ao carregar o documento. Verifique a sua ligação ou permissões do Supabase.'
+          'Erro ao carregar o documento para o Google Drive. Pode também adicionar o documento colando o respetivo link partilhado.'
       )
     } finally {
       setIsUploading(false)
@@ -109,7 +88,7 @@ export function EventDocumentsManager({
         <div>
           <h4 className="text-sm font-bold text-foreground">Documentos & Anexos</h4>
           <p className="text-xs text-muted">
-            Anexe ficheiros (PDF, DOC, imagens) ou adicione links para o Google Drive / OneDrive.
+            Anexe atas e documentos diretamente para o Google Drive da APMEE ou adicione links partilhados.
           </p>
         </div>
         <span className="rounded-full bg-warm-100 px-2 py-0.5 text-xs font-bold text-secondary-700">
@@ -141,7 +120,7 @@ export function EventDocumentsManager({
             ) : (
               <Upload className="h-3.5 w-3.5" />
             )}
-            <span>{isUploading ? 'A carregar...' : 'Anexar Ficheiro'}</span>
+            <span>{isUploading ? 'A enviar para o Google Drive...' : 'Anexar para o Google Drive'}</span>
           </button>
 
           <button
@@ -237,7 +216,15 @@ export function EventDocumentsManager({
                     <div className="flex items-center gap-2 text-xs text-muted">
                       {doc.size ? <span>{formatFileSize(doc.size)}</span> : null}
                       {formattedDate ? <span>{formattedDate}</span> : null}
-                      {doc.type === 'link' ? <span>(Link externo)</span> : null}
+                      {doc.provider === 'google_drive' || (doc.url && doc.url.includes('drive.google.com')) ? (
+                        <span className="inline-flex items-center rounded-full bg-blue-50 px-1.5 py-0.2 text-xs font-semibold text-blue-700 border border-blue-200">
+                          Google Drive
+                        </span>
+                      ) : doc.type === 'link' ? (
+                        <span className="inline-flex items-center rounded-full bg-warm-100 px-1.5 py-0.2 text-xs font-semibold text-secondary-600">
+                          Link externo
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                 </a>

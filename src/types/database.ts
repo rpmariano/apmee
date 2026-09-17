@@ -20,6 +20,8 @@ export interface EventDocument {
   size?: number
   type?: string
   uploaded_at: string
+  drive_file_id?: string
+  provider?: 'google_drive' | 'supabase' | 'link'
 }
 
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
