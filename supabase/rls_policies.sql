@@ -214,6 +214,42 @@ CREATE POLICY "Authenticated users can delete event tasks"
     USING (true);
 
 -- ----------------------------------------------------------------------------
+-- 7b. POLÍTICAS: event_inventory
+-- ----------------------------------------------------------------------------
+-- Requisito: Todos os utilizadores autenticados podem SELECT, INSERT, UPDATE e DELETE.
+
+ALTER TABLE IF EXISTS event_inventory ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated users can select event inventory" ON event_inventory;
+CREATE POLICY "Authenticated users can select event inventory"
+    ON event_inventory
+    FOR SELECT
+    TO authenticated
+    USING (true);
+
+DROP POLICY IF EXISTS "Authenticated users can insert event inventory" ON event_inventory;
+CREATE POLICY "Authenticated users can insert event inventory"
+    ON event_inventory
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Authenticated users can update event inventory" ON event_inventory;
+CREATE POLICY "Authenticated users can update event inventory"
+    ON event_inventory
+    FOR UPDATE
+    TO authenticated
+    USING (true)
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Authenticated users can delete event inventory" ON event_inventory;
+CREATE POLICY "Authenticated users can delete event inventory"
+    ON event_inventory
+    FOR DELETE
+    TO authenticated
+    USING (true);
+
+-- ----------------------------------------------------------------------------
 -- 8. POLÍTICAS: tasks
 -- ----------------------------------------------------------------------------
 -- Requisito: Todos os utilizadores autenticados podem SELECT, INSERT e UPDATE.

@@ -238,46 +238,46 @@ export function EventForm({ event, onClose, onSubmit, isLoading }: EventFormProp
               }))}
             />
           </div>
-
-          {/* Event Inventory Manager */}
-          {event?.id ? (
-            <EventInventoryManager
-              eventId={event.id}
-              eventStatus={status}
-              isEditing={isEditing}
-            />
-          ) : (
-            <div className="rounded-[var(--radius-card)] bg-warm-50 p-4 border border-warm-100 text-center mt-2">
-              <p className="text-sm text-secondary-600">
-                Guarde o evento primeiro para poder associar material do inventário.
-              </p>
-            </div>
-          )}
-
-          <div className="border-t border-warm-200 bg-surface p-4">
-            {isEditing ? (
-              <button
-                type="submit"
-                form="event-form"
-                disabled={isLoading}
-                className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
-              >
-                {isLoading ? 'A Guardar...' : 'Guardar Evento'}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault()
-                  setIsEditing(true)
-                }}
-                className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
-              >
-                Editar Evento
-              </button>
-            )}
-          </div>
         </form>
+
+        {/* Event Inventory Manager */}
+        {event?.id ? (
+          <EventInventoryManager
+            eventId={event.id}
+            eventStatus={status}
+            isEditing={isEditing}
+          />
+        ) : (
+          <div className="rounded-[var(--radius-card)] bg-warm-50 p-4 border border-warm-100 text-center mt-2">
+            <p className="text-sm text-secondary-600">
+              Guarde o evento primeiro para poder associar material do inventário.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="border-t border-warm-200 bg-surface p-4">
+        {isEditing ? (
+          <button
+            type="submit"
+            form="event-form"
+            disabled={isLoading}
+            className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
+          >
+            {isLoading ? 'A Guardar...' : 'Guardar Evento'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              setIsEditing(true)
+            }}
+            className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
+          >
+            Editar Evento
+          </button>
+        )}
       </div>
 
       <UnsavedDialog

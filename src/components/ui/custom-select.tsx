@@ -98,6 +98,26 @@ export function CustomSelect({
                   autoFocus
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      const filtered = creatable && search 
+                        ? options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()))
+                        : options;
+                      const exactMatch = filtered.find(o => o.label.toLowerCase() === search.toLowerCase());
+                      if (exactMatch) {
+                        onChange(exactMatch.value)
+                        setIsOpen(false)
+                      } else if (creatable && search.trim()) {
+                        onChange(search.trim())
+                        setIsOpen(false)
+                      } else if (filtered.length > 0) {
+                        onChange(filtered[0].value)
+                        setIsOpen(false)
+                      }
+                    }
+                  }}
                   placeholder="Procurar ou criar novo..."
                   className="w-full rounded-md border border-warm-200 bg-warm-50 px-3 py-1.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
                 />

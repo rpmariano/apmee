@@ -50,6 +50,10 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
       setSelectedItemValue('')
       setQuantity(1)
     },
+    onError: (err: any) => {
+      console.error('Error adding item to event:', err)
+      alert(`Erro ao adicionar item ao evento: ${err?.message || 'Verifique as permissões na base de dados.'}`)
+    },
   })
 
   const removeMutation = useMutation({
@@ -63,6 +67,10 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['event-inventory', eventId] })
     },
+    onError: (err: any) => {
+      console.error('Error removing item from event:', err)
+      alert(`Erro ao remover item: ${err?.message || 'Tente novamente.'}`)
+    },
   })
 
   const handleAdd = async (e?: React.MouseEvent | React.FormEvent) => {
@@ -71,8 +79,10 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
 
     if (!selectedItemValue.trim()) return
 
-    // Check if the selectedItemValue matches an existing inventory item ID
-    const existingItem = inventory?.find(i => i.id === selectedItemValue)
+    // Check if the selectedItemValue matches an existing inventory item ID or exact name
+    const existingItem = inventory?.find(
+      (i) => i.id === selectedItemValue || i.name.toLowerCase() === selectedItemValue.trim().toLowerCase()
+    )
 
     if (!existingItem) {
       // It's a new item name typed by the user, so create it first
@@ -86,13 +96,17 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
         })
         await addMutation.mutateAsync(newItem.id)
         queryClient.invalidateQueries({ queryKey: ['inventory'] })
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to create item:', err)
-        alert('Erro ao criar o item.')
+        alert(`Erro ao criar o item no inventário: ${err?.message || 'Tente novamente.'}`)
       }
     } else {
       // It's an existing item
-      addMutation.mutate(existingItem.id)
+      try {
+        await addMutation.mutateAsync(existingItem.id)
+      } catch (err: any) {
+        console.error('Failed to add item to event:', err)
+      }
     }
   }
 
@@ -202,6 +216,13 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
                 min="1"
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleAdd()
+                  }
+                }}
                 className="rounded-md border border-warm-200 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none"
               />
             </div>
