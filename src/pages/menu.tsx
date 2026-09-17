@@ -52,6 +52,7 @@ export default function MenuPage() {
       <div className="mt-4">
         <input
           type="search"
+          aria-label="Pesquisar no menu"
           placeholder="Pesquisar..."
           className="w-full rounded-[var(--radius-button)] border border-warm-200 bg-surface px-4 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200"
         />

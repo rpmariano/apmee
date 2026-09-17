@@ -56,8 +56,9 @@ export function CustomSelect({
           value={value}
           onChange={() => {}}
           required
-          className="absolute inset-0 -z-10 h-full w-full opacity-0 pointer-events-none"
+          aria-hidden="true"
           tabIndex={-1}
+          className="absolute inset-0 -z-10 h-full w-full opacity-0 pointer-events-none"
         />
       )}
       
@@ -96,6 +97,7 @@ export function CustomSelect({
                 <input
                   type="text"
                   autoFocus
+                  aria-label="Pesquisar opções"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => {

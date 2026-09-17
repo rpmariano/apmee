@@ -123,6 +123,7 @@ export function EventDocumentsManager({
           <input
             type="file"
             ref={fileInputRef}
+            aria-label="Anexar ficheiro"
             onChange={handleFileUpload}
             disabled={isUploading}
             className="hidden"
@@ -160,6 +161,7 @@ export function EventDocumentsManager({
           <p className="text-xs font-semibold text-primary-900">Adicionar Link para Documento Externo</p>
           <input
             type="text"
+            aria-label="Nome do documento"
             placeholder="Nome do documento (ex: Ata Assinada no Google Drive)"
             value={linkTitle}
             onChange={(e) => setLinkTitle(e.target.value)}
@@ -167,6 +169,7 @@ export function EventDocumentsManager({
           />
           <input
             type="url"
+            aria-label="URL do documento"
             placeholder="URL (ex: https://docs.google.com/...)"
             value={linkUrl}
             onChange={(e) => setLinkUrl(e.target.value)}

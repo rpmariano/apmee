@@ -76,6 +76,7 @@ export default function ContactsPage() {
             <div className="mt-3 animate-in fade-in slide-in-from-top-2">
               <input
                 type="search"
+                aria-label="Pesquisar contactos"
                 placeholder="Pesquisar por nome ou email..."
                 className="w-full rounded-[var(--radius-button)] border border-warm-200 bg-surface px-4 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200"
               />

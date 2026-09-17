@@ -282,8 +282,9 @@ export function EventInventoryManager({
 
           <div className="flex items-end gap-3">
             <div className="flex flex-1 flex-col gap-1.5">
-              <label className="text-xs font-medium text-secondary-700">Qtd. Necessária</label>
+              <label htmlFor="inv-event-qty" className="text-xs font-medium text-secondary-700">Qtd. Necessária</label>
               <input
+                id="inv-event-qty"
                 type="number"
                 min="1"
                 value={quantity}
@@ -398,6 +399,7 @@ export function EventInventoryManager({
                             <input
                               type="number"
                               min="1"
+                              aria-label="Editar quantidade"
                               value={editingQuantities[req.id] !== undefined ? editingQuantities[req.id] : req.quantity}
                               onChange={(e) => {
                                 const val = parseInt(e.target.value) || 0
