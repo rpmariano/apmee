@@ -91,8 +91,28 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
       <div className="flex-1 overflow-y-auto p-4">
         <form ref={formRef}   id="inventory-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
+          {/* 1. Categoria (em primeiro lugar) */}
+          <div className="flex flex-col gap-1.5 z-[80]">
+            <label className="text-sm font-medium text-secondary-700">
+              Categoria <span className="text-primary-500">*</span>
+            </label>
+            <CustomSelect disabled={!isEditing} 
+              value={category}
+              onChange={(val) => {
+                setCategory(val as InventoryCategory)
+                if (!item) {
+                  setName('')
+                }
+              }}
+              options={INVENTORY_CATEGORIES}
+            />
+          </div>
+
+          {/* 2. Nome do Item (depois da categoria) */}
           <div className="flex flex-col gap-1.5 z-[70]">
-            <label className="text-sm font-medium text-secondary-700">Nome do Item <span className="text-primary-500">*</span></label>
+            <label className="text-sm font-medium text-secondary-700">
+              Nome do Item <span className="text-primary-500">*</span>
+            </label>
             <CustomSelect disabled={!isEditing} 
               value={name}
               onChange={(val) => setName(val)}
@@ -101,19 +121,6 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading }: InventoryF
               creatable
               required
             />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary-700">Categoria</label>
-            <CustomSelect disabled={!isEditing} 
-              value={category}
-              onChange={(val) => {
-                setCategory(val as InventoryCategory)
-                setName('')
-              }}
-              options={INVENTORY_CATEGORIES}
-            />
-  
           </div>
 
           <div className="grid grid-cols-2 gap-4">
