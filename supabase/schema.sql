@@ -234,6 +234,7 @@ CREATE TRIGGER trg_inventory_items_updated_at
 CREATE TABLE IF NOT EXISTS financial_movements (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
+    account TEXT NOT NULL DEFAULT 'banco' CHECK (account IN ('banco', 'caixa')),
     amount NUMERIC(10,2) NOT NULL,
     description TEXT NOT NULL,
     category TEXT,
@@ -248,6 +249,7 @@ CREATE TABLE IF NOT EXISTS financial_movements (
 
 COMMENT ON TABLE financial_movements IS 'Fluxos de caixa e registos de tesouraria (receitas e despesas da associação).';
 COMMENT ON COLUMN financial_movements.type IS 'Tipo de fluxo: income (receita) ou expense (despesa).';
+COMMENT ON COLUMN financial_movements.account IS 'Conta financeira: banco (conta bancária) ou caixa (dinheiro físico em numerário).';
 COMMENT ON COLUMN financial_movements.amount IS 'Valor monetário do movimento com duas casas decimais.';
 COMMENT ON COLUMN financial_movements.event_id IS 'Associação opcional a um evento específico gerador da receita/despesa.';
 COMMENT ON COLUMN financial_movements.receipt_url IS 'Ligação ou caminho para comprovativo digital/recibo.';
@@ -297,6 +299,7 @@ CREATE TRIGGER trg_quotas_updated_at
 CREATE INDEX IF NOT EXISTS idx_contacts_category ON contacts(category);
 CREATE INDEX IF NOT EXISTS idx_inventory_items_category ON inventory_items(category);
 CREATE INDEX IF NOT EXISTS idx_financial_movements_category ON financial_movements(category);
+CREATE INDEX IF NOT EXISTS idx_financial_movements_account ON financial_movements(account);
 
 -- Índices por estado / prioridade
 CREATE INDEX IF NOT EXISTS idx_events_status ON events(status);

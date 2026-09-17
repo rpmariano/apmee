@@ -29,6 +29,7 @@ export type TaskStatus = 'todo' | 'in_progress' | 'done'
 export type InventoryCategory = 'consumivel' | 'alimento' | 'mobilizado'
 export type InventoryTransactionType = 'in' | 'out'
 export type FinancialType = 'income' | 'expense'
+export type FinancialAccount = 'banco' | 'caixa'
 
 export interface AllowedUser {
   id: string
@@ -134,6 +135,7 @@ export interface InventoryItem {
 export interface FinancialMovement {
   id: string
   type: FinancialType
+  account: FinancialAccount
   amount: number
   description: string
   category: string | null

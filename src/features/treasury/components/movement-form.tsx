@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
-import { X, Upload } from 'lucide-react'
-import type { FinancialMovement, FinancialType } from '@/types/database'
+import { X, Upload, Landmark, Coins } from 'lucide-react'
+import type { FinancialMovement, FinancialType, FinancialAccount } from '@/types/database'
 import { supabase } from '@/lib/supabase'
 
 import { useHardwareBack } from '@/hooks/use-hardware-back'
@@ -61,6 +61,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
   }
 
   const [type, setType] = useState<FinancialType>(movement?.type ?? 'expense')
+  const [account, setAccount] = useState<FinancialAccount>(movement?.account ?? 'banco')
   const [amount, setAmount] = useState(movement?.amount ?? '')
   const [description, setDescription] = useState(movement?.description ?? '')
   const [category, setCategory] = useState(movement?.category ?? '')
@@ -71,6 +72,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
 
   const isDirty = (
     type !== (movement?.type ?? 'expense') ||
+    account !== (movement?.account ?? 'banco') ||
     amount !== (movement?.amount ?? '') ||
     description !== (movement?.description ?? '') ||
     category !== (movement?.category ?? '') ||
@@ -116,6 +118,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
 
     onSubmit({
       type,
+      account,
       amount: Number(amount),
       description,
       category: category || null,
@@ -165,6 +168,39 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
             >
               Receita
             </button>
+          </div>
+
+          {/* Account Toggle */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wider text-secondary-600">
+              Conta de Tesouraria <span className="text-primary-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-2 rounded-[var(--radius-button)] bg-warm-100 p-1">
+              <button
+                type="button"
+                onClick={() => setAccount('banco')}
+                className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold transition-all ${
+                  account === 'banco'
+                    ? 'bg-white text-secondary-900 shadow-sm'
+                    : 'text-secondary-600 hover:text-foreground'
+                }`}
+              >
+                <Landmark className="h-4 w-4 text-blue-600" />
+                <span>Banco</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAccount('caixa')}
+                className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold transition-all ${
+                  account === 'caixa'
+                    ? 'bg-white text-secondary-900 shadow-sm'
+                    : 'text-secondary-600 hover:text-foreground'
+                }`}
+              >
+                <Coins className="h-4 w-4 text-amber-600" />
+                <span>Caixa</span>
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
