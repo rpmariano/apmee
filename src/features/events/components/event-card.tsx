@@ -125,27 +125,17 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
           )}
         </div>
 
-        {/* Creator Seal / Selo com Iniciais */}
+        {/* Creator Circle Symbol (circulo vazio com as iniciais) */}
         <div
           className={cn(
-            'shrink-0 flex flex-col items-center justify-center rounded-full p-1 border-2 border-dashed transition-transform hover:scale-105 select-none',
+            'shrink-0 flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-transform hover:scale-105 select-none bg-transparent',
             isReuniao
-              ? 'border-blue-300 bg-blue-50/90 text-blue-800'
-              : 'border-amber-300 bg-amber-50/90 text-amber-800'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-amber-500 text-amber-600'
           )}
           title={effectiveCreatorName ? `Criado por: ${effectiveCreatorName}` : 'Criado por: APMEE'}
         >
-          <div
-            className={cn(
-              'flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-black tracking-tight shadow-xs',
-              isReuniao ? 'bg-blue-600 text-white' : 'bg-amber-500 text-white'
-            )}
-          >
-            {creatorInitials}
-          </div>
-          <span className="mt-0.5 text-[7px] font-bold uppercase tracking-wider opacity-75">
-            SELO
-          </span>
+          {creatorInitials}
         </div>
       </div>
 

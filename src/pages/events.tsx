@@ -214,7 +214,7 @@ export default function EventsPage() {
         <div className="flex items-center justify-between px-4">
           <div className="flex items-center gap-2.5">
             <div
-              className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-primary-500 bg-primary-100 text-primary-800 font-black text-xs shadow-xs select-none"
+              className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary-500 bg-transparent text-primary-600 font-bold text-xs select-none"
               title={user?.displayName || user?.email || 'Agenda APMEE'}
             >
               {userInitials}

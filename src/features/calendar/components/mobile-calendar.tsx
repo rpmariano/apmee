@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import {
   format,
   addMonths,
@@ -7,9 +7,9 @@ import {
   endOfMonth,
   startOfWeek,
   endOfWeek,
+  eachDayOfInterval,
   isSameMonth,
   isSameDay,
-  addDays,
   parseISO,
   isToday,
 } from 'date-fns'
@@ -39,38 +39,38 @@ export function MobileCalendar({
   events: propEvents,
   className,
 }: MobileCalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(selectedDate)
+  const [currentMonth, setCurrentMonth] = useState<Date>(() => startOfMonth(selectedDate))
+  const lastSelectedDateRef = useRef<Date>(selectedDate)
 
-  // Keep month view synchronized when selectedDate changes
+  // Keep month view synchronized ONLY when selectedDate actually changes externally
   useEffect(() => {
-    if (!isSameMonth(currentMonth, selectedDate)) {
-      setCurrentMonth(startOfMonth(selectedDate))
+    if (!isSameDay(lastSelectedDateRef.current, selectedDate)) {
+      lastSelectedDateRef.current = selectedDate
+      if (!isSameMonth(currentMonth, selectedDate)) {
+        setCurrentMonth(startOfMonth(selectedDate))
+      }
     }
   }, [selectedDate, currentMonth])
 
   const { data: queryEvents } = useEvents()
   const events = propEvents ?? queryEvents ?? []
 
-  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
-  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1))
+  const nextMonth = () => setCurrentMonth((prev) => addMonths(prev, 1))
+  const prevMonth = () => setCurrentMonth((prev) => subMonths(prev, 1))
   const goToToday = () => {
     const today = new Date()
-    setCurrentMonth(today)
+    setCurrentMonth(startOfMonth(today))
     onSelectDate(today)
   }
 
-  // Generate days for the grid
-  const monthStart = startOfMonth(currentMonth)
-  const monthEnd = endOfMonth(monthStart)
-  const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }) // Start on Monday
-  const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 })
-
-  const days = []
-  let day = startDate
-  while (day <= endDate) {
-    days.push(day)
-    day = addDays(day, 1)
-  }
+  // Generate days for the grid safely
+  const days = useMemo(() => {
+    const monthStart = startOfMonth(currentMonth)
+    const monthEnd = endOfMonth(monthStart)
+    const startDate = startOfWeek(monthStart, { weekStartsOn: 1 }) // Start on Monday
+    const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 })
+    return eachDayOfInterval({ start: startDate, end: endDate })
+  }, [currentMonth])
 
   // Group events by day to render dots efficiently
   const eventsByDay = events.reduce((acc, event) => {
