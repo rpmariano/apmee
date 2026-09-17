@@ -14,6 +14,7 @@ import { CustomDialog } from '@/components/ui/custom-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
 import { EventInventoryManager } from './event-inventory-manager'
 import { EventDocumentsManager } from './event-documents-manager'
+import { EventFinancesSection } from './event-finances-section'
 import { useEventInventoryStatus } from '../api/use-event-inventory-status'
 import { cn } from '@/lib/utils'
 
@@ -444,14 +445,20 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
           ) : (
             <>
               {event?.id ? (
-                <EventInventoryManager
-                  eventId={event.id}
-                  eventStatus={status}
-                  isEditing={isEditing}
-                  onRegisterPendingHandler={(handler) => {
-                    pendingInventoryHandlerRef.current = handler
-                  }}
-                />
+                <div className="flex flex-col gap-4">
+                  <EventFinancesSection
+                    eventId={event.id}
+                    eventTitle={title || 'Festa'}
+                  />
+                  <EventInventoryManager
+                    eventId={event.id}
+                    eventStatus={status}
+                    isEditing={isEditing}
+                    onRegisterPendingHandler={(handler) => {
+                      pendingInventoryHandlerRef.current = handler
+                    }}
+                  />
+                </div>
               ) : (
                 <div className="rounded-[var(--radius-card)] bg-warm-50 p-4 border border-warm-100 text-center">
                   <p className="text-sm text-secondary-600">

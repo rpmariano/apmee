@@ -6,10 +6,18 @@ import { EVENT_TYPES, MEETING_TYPE_LABELS } from '@/lib/constants'
 import { cn, getInitials } from '@/lib/utils'
 import { useEventInventoryStatus } from '../api/use-event-inventory-status'
 
-interface EventCardProps {
+export interface EventFinanceSummary {
+  income: number
+  expense: number
+  balance: number
+  count: number
+}
+
+export interface EventCardProps {
   event: Event
   creatorName?: string
   onEdit?: (event: Event) => void
+  financeSummary?: EventFinanceSummary
 }
 
 const statusConfig: Record<EventStatus, { label: string; className: string }> = {
@@ -19,7 +27,7 @@ const statusConfig: Record<EventStatus, { label: string; className: string }> = 
   cancelled: { label: 'Cancelado', className: 'bg-red-100 text-red-700' },
 }
 
-export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
+export function EventCard({ event, creatorName, onEdit, financeSummary }: EventCardProps) {
   const isReuniao = event.event_type === EVENT_TYPES.REUNIAO
   const effectiveCreatorName = creatorName || event.created_by_name || null
   const creatorInitials = getInitials(effectiveCreatorName)
@@ -114,6 +122,23 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
               <span className="flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-xs font-bold text-purple-700 border border-purple-200">
                 <Paperclip className="h-3 w-3" />
                 {documentCount} doc{documentCount > 1 ? 's' : ''}
+              </span>
+            )}
+
+            {/* Financial balance pill (for Festas or Events with finances) */}
+            {financeSummary && financeSummary.count > 0 && (
+              <span
+                className={cn(
+                  'flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold border',
+                  financeSummary.balance >= 0
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-rose-50 text-rose-800 border-rose-200'
+                )}
+              >
+                <span>
+                  Saldo: {financeSummary.balance >= 0 ? '+' : ''}
+                  {financeSummary.balance.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
+                </span>
               </span>
             )}
           </div>

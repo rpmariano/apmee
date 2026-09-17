@@ -7,6 +7,8 @@ import { MobileCalendar } from '@/features/calendar/components/mobile-calendar'
 import { EventList, type EventFilterType } from '@/features/events/components/event-list'
 import { EventForm } from '@/features/events/components/event-form'
 import { useEvents, useCreateEvent, useUpdateEvent } from '@/features/events/api/use-events'
+import { useMovements } from '@/features/treasury/api/use-treasury'
+import type { EventFinanceSummary } from '@/features/events/components/event-card'
 import { useBoardMembers } from '@/features/board/api/use-board'
 import { useAuth } from '@/providers/auth-provider'
 import type { Event } from '@/types/database'
@@ -32,6 +34,7 @@ export default function EventsPage() {
   const [editingEvent, setEditingEvent] = useState<Event | undefined>()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  const { data: movements = [] } = useMovements()
   const createMutation = useCreateEvent()
   const updateMutation = useUpdateEvent()
   const { toast } = useToast()
@@ -51,6 +54,28 @@ export default function EventsPage() {
   }, [boardMembers, user])
 
   const userInitials = getInitials(user?.displayName || user?.email)
+
+  // Map finances by event_id for instantaneous badges
+  const eventFinancesMap = useMemo(() => {
+    const map: Record<string, EventFinanceSummary> = {}
+    movements.forEach((m) => {
+      if (m.event_id) {
+        if (!map[m.event_id]) {
+          map[m.event_id] = { income: 0, expense: 0, balance: 0, count: 0 }
+        }
+        map[m.event_id].count++
+        const val = Number(m.amount) || 0
+        if (m.type === 'income') {
+          map[m.event_id].income += val
+          map[m.event_id].balance += val
+        } else {
+          map[m.event_id].expense += val
+          map[m.event_id].balance -= val
+        }
+      }
+    })
+    return map
+  }, [movements])
 
   // Sync with searchParams
   useEffect(() => {
@@ -410,6 +435,7 @@ export default function EventsPage() {
           events={events}
           isLoading={isLoading}
           creatorMap={creatorMap}
+          financesMap={eventFinancesMap}
           onEditEvent={handleEditEvent}
           onCreateEvent={handleCreateEvent}
         />

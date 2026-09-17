@@ -1,4 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { useEvents } from '@/features/events/api/use-events'
 import { Plus, SlidersHorizontal, X } from 'lucide-react'
 import { TreasurySummary, type TreasuryViewMode } from '@/features/treasury/components/treasury-summary'
 import { MovementList } from '@/features/treasury/components/movement-list'
@@ -23,9 +25,22 @@ import { MenuAlerts } from '@/components/ui/menu-alerts'
 type MainTab = 'movements' | 'events'
 
 export default function TreasuryPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const urlEventId = searchParams.get('event')
+  const { data: events = [] } = useEvents()
+
   const [mainTab, setMainTab] = useState<MainTab>('movements')
   const [summaryMode, setSummaryMode] = useState<TreasuryViewMode>('consolidado')
-  const [filters, setFilters] = useState<TreasuryFilters>({ ...DEFAULT_TREASURY_FILTERS })
+  const [filters, setFilters] = useState<TreasuryFilters>(() => ({
+    ...DEFAULT_TREASURY_FILTERS,
+    eventId: urlEventId || 'all',
+  }))
+
+  useEffect(() => {
+    if (urlEventId && filters.eventId !== urlEventId) {
+      setFilters((prev) => ({ ...prev, eventId: urlEventId }))
+    }
+  }, [urlEventId, filters.eventId])
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingMovement, setEditingMovement] = useState<FinancialMovement | undefined>()
@@ -51,6 +66,7 @@ export default function TreasuryPage() {
     let count = 0
     if (filters.account !== 'all') count++
     if (filters.type !== 'all') count++
+    if (filters.eventId !== 'all') count++
     if (filters.periodPreset !== 'all') count++
     return count
   }, [filters])
@@ -82,6 +98,7 @@ export default function TreasuryPage() {
 
   const handleClearFilters = () => {
     setFilters({ ...DEFAULT_TREASURY_FILTERS })
+    if (urlEventId) setSearchParams({})
   }
 
   const handleSubmitForm = async (data: Partial<FinancialMovement>) => {
@@ -168,6 +185,22 @@ export default function TreasuryPage() {
         {/* Active Filter Chips Bar */}
         {mainTab === 'movements' && isFilterActive && (
           <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto px-4 pb-1 scrollbar-hide">
+            {filters.eventId !== 'all' && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-semibold text-primary-800 shrink-0 border border-primary-200">
+                <span>Evento: {events.find((e) => e.id === filters.eventId)?.title || 'Evento'}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilters((f) => ({ ...f, eventId: 'all' }))
+                    if (urlEventId) setSearchParams({})
+                  }}
+                  aria-label="Remover filtro de evento"
+                  className="rounded-full p-0.5 hover:bg-primary-200"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
             {filters.account !== 'all' && (
               <span className="inline-flex items-center gap-1 rounded-full bg-secondary-100 px-2.5 py-0.5 text-xs font-semibold text-secondary-800 shrink-0">
                 <span>Conta: {filters.account === 'banco' ? 'Banco' : 'Caixa'}</span>
@@ -230,7 +263,7 @@ export default function TreasuryPage() {
 
       {/* Body Content */}
       {mainTab === 'events' ? (
-        <EventFinances onEditMovement={handleEditMovement} />
+        <EventFinances onEditMovement={handleEditMovement} initialEventId={filters.eventId !== 'all' ? filters.eventId : undefined} />
       ) : (
         <div className="px-4 mt-3 space-y-5">
           {/* Demonstração de Resultados (Consolidado, Banco e Caixa) */}
@@ -286,6 +319,7 @@ export default function TreasuryPage() {
       {isFormOpen && (
         <MovementForm
           movement={editingMovement}
+          initialEventId={filters.eventId !== 'all' ? filters.eventId : undefined}
           onClose={handleCloseForm}
           onSubmit={handleSubmitForm}
           isLoading={createMutation.isPending || updateMutation.isPending}

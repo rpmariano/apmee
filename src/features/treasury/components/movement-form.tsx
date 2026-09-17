@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { X, Upload, Landmark, Coins, ExternalLink } from 'lucide-react'
 import type { FinancialMovement, FinancialType, FinancialAccount } from '@/types/database'
 import { supabase } from '@/lib/supabase'
@@ -30,6 +30,7 @@ const EXPENSE_CATEGORIES = [
 
 interface MovementFormProps {
   movement?: FinancialMovement
+  initialEventId?: string
   onClose: () => void
   onSubmit: (data: Partial<FinancialMovement>) => void
   isLoading?: boolean
@@ -42,7 +43,7 @@ function toDateString(isoString?: string | null) {
   return isoString.split('T')[0]
 }
 
-export function MovementForm({ movement, onClose, onSubmit, isLoading, readOnly = false }: MovementFormProps) {
+export function MovementForm({ movement, initialEventId, onClose, onSubmit, isLoading, readOnly = false }: MovementFormProps) {
   const [showUnsaved, setShowUnsaved] = useState(false)
   const isEditing = !readOnly
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -66,8 +67,21 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading, readOnly 
   const [amount, setAmount] = useState(movement?.amount ?? '')
   const [description, setDescription] = useState(movement?.description ?? '')
   const [category, setCategory] = useState(movement?.category ?? '')
-  const [eventId, setEventId] = useState(movement?.event_id ?? '')
-  const { data: events } = useEvents()
+  const [eventId, setEventId] = useState(movement?.event_id ?? initialEventId ?? '')
+  const { data: events = [] } = useEvents()
+
+  // Format and sort events: Festas first (main cost centers), then Reuniões
+  const eventOptions = useMemo(() => {
+    const sorted = [...events].sort((a, b) => {
+      const aIsFesta = a.event_type === 'festa' ? 0 : 1
+      const bIsFesta = b.event_type === 'festa' ? 0 : 1
+      return aIsFesta - bIsFesta
+    })
+    return sorted.map((e) => ({
+      label: `${e.event_type === 'festa' ? '🎉' : '📋'} ${e.title}`,
+      value: e.id,
+    }))
+  }, [events])
   const [date, setDate] = useState(toDateString(movement?.date))
   const [file, setFile] = useState<File | null>(null)
 
@@ -259,8 +273,8 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading, readOnly 
               <CustomSelect disabled={!isEditing} 
                 value={eventId}
                 onChange={(val) => setEventId(val)}
-                options={(events || []).map(e => ({ label: e.title, value: e.id }))}
-                placeholder="Sem evento"
+                options={eventOptions}
+                placeholder="Sem evento associado"
               />
             </div>
 

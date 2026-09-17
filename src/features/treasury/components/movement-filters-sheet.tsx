@@ -22,6 +22,8 @@ import {
   isAfter,
   isBefore,
 } from 'date-fns'
+import { useEvents } from '@/features/events/api/use-events'
+import { CustomSelect } from '@/components/ui/custom-select'
 import type { FinancialMovement, FinancialType, FinancialAccount } from '@/types/database'
 import { cn } from '@/lib/utils'
 
@@ -36,6 +38,7 @@ export type PeriodPreset =
 export interface TreasuryFilters {
   account: 'all' | FinancialAccount
   type: 'all' | FinancialType
+  eventId: string // 'all' or event UUID
   periodPreset: PeriodPreset
   startDate: string // YYYY-MM-DD
   endDate: string // YYYY-MM-DD
@@ -44,6 +47,7 @@ export interface TreasuryFilters {
 export const DEFAULT_TREASURY_FILTERS: TreasuryFilters = {
   account: 'all',
   type: 'all',
+  eventId: 'all',
   periodPreset: 'all',
   startDate: '',
   endDate: '',
@@ -53,6 +57,7 @@ export function isFilterCustom(filters: TreasuryFilters): boolean {
   return (
     filters.account !== 'all' ||
     filters.type !== 'all' ||
+    filters.eventId !== 'all' ||
     filters.periodPreset !== 'all' ||
     Boolean(filters.startDate) ||
     Boolean(filters.endDate)
@@ -103,6 +108,13 @@ export function filterMovements(
   }
 
   return movements.filter((movement) => {
+    // 0. Event Filter
+    if (filters.eventId && filters.eventId !== 'all') {
+      if (movement.event_id !== filters.eventId) {
+        return false
+      }
+    }
+
     // 1. Account Filter
     const mAccount = movement.account || 'banco'
     if (filters.account !== 'all' && mAccount !== filters.account) {
@@ -152,6 +164,23 @@ export function MovementFiltersSheet({
   movements,
 }: MovementFiltersSheetProps) {
   const [draft, setDraft] = useState<TreasuryFilters>(initialFilters)
+  const { data: events = [] } = useEvents()
+
+  // Format and sort events: Festas first, then Reuniões
+  const eventOptions = useMemo(() => {
+    const sorted = [...events].sort((a, b) => {
+      const aIsFesta = a.event_type === 'festa' ? 0 : 1
+      const bIsFesta = b.event_type === 'festa' ? 0 : 1
+      return aIsFesta - bIsFesta
+    })
+    return [
+      { label: 'Todos os Eventos / Gerais', value: 'all' },
+      ...sorted.map((e) => ({
+        label: `${e.event_type === 'festa' ? '🎉' : '📋'} ${e.title}`,
+        value: e.id,
+      })),
+    ]
+  }, [events])
 
   // Real-time matching count with draft filters
   const matchingMovements = useMemo(() => {
@@ -300,6 +329,19 @@ export function MovementFiltersSheet({
                 <span>Despesas</span>
               </button>
             </div>
+          </div>
+
+          {/* Section: Evento Associado */}
+          <div className="space-y-2 z-[60]">
+            <label className="text-xs font-bold uppercase tracking-wider text-secondary-600">
+              Evento Associado (Festas / Atividades)
+            </label>
+            <CustomSelect
+              value={draft.eventId}
+              onChange={(val) => setDraft((d) => ({ ...d, eventId: val }))}
+              options={eventOptions}
+              placeholder="Filtrar por evento..."
+            />
           </div>
 
           {/* Section 3: Período do Ano */}

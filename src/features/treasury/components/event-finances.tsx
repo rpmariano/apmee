@@ -1,23 +1,21 @@
 import { useState } from 'react'
 import { useEvents } from '@/features/events/api/use-events'
 import { useMovements } from '@/features/treasury/api/use-treasury'
-import { useInventoryTransactions } from '@/features/inventory/api/use-inventory-transactions'
-import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
 import { CustomSelect } from '@/components/ui/custom-select'
 import { MovementCard } from '@/features/treasury/components/movement-card'
 import type { FinancialMovement } from '@/types/database'
 
 interface EventFinancesProps {
   onEditMovement: (movement: FinancialMovement) => void
+  initialEventId?: string
 }
 
-export function EventFinances({ onEditMovement }: EventFinancesProps) {
-  const [selectedEventId, setSelectedEventId] = useState<string>('')
+export function EventFinances({ onEditMovement, initialEventId }: EventFinancesProps) {
+  const [selectedEventId, setSelectedEventId] = useState<string>(initialEventId || '')
   const { data: events, isLoading: isLoadingEvents } = useEvents()
   const { data: movements, isLoading: isLoadingMovements } = useMovements()
-  const { data: transactions, isLoading: isLoadingTransactions } = useInventoryTransactions()
 
-  if (isLoadingEvents || isLoadingMovements || isLoadingTransactions) {
+  if (isLoadingEvents || isLoadingMovements) {
     return (
       <div className="flex flex-col gap-3 py-4 animate-pulse">
         <div className="h-10 w-full rounded-md bg-warm-100" />
@@ -26,25 +24,38 @@ export function EventFinances({ onEditMovement }: EventFinancesProps) {
     )
   }
 
-  const eventOptions = (events || []).map(e => ({ label: e.title, value: e.id }))
+  // Sort Festas first with icons
+  const eventOptions = (events || [])
+    .slice()
+    .sort((a, b) => {
+      const aIsFesta = a.event_type === 'festa' ? 0 : 1
+      const bIsFesta = b.event_type === 'festa' ? 0 : 1
+      return aIsFesta - bIsFesta
+    })
+    .map((e) => ({
+      label: `${e.event_type === 'festa' ? '🎉' : '📋'} ${e.title}`,
+      value: e.id,
+    }))
 
-  const eventMovements = (movements || []).filter(m => m.event_id === selectedEventId)
-  const eventTransactions = (transactions || []).filter(t => t.event_id === selectedEventId)
-  
+  const eventMovements = (movements || []).filter((m) => m.event_id === selectedEventId)
+
   const totalIncome = eventMovements
-    .filter(m => m.type === 'income')
-    .reduce((sum, m) => sum + m.amount, 0)
-    
+    .filter((m) => m.type === 'income')
+    .reduce((sum, m) => sum + Number(m.amount), 0)
+
   const totalExpense = eventMovements
-    .filter(m => m.type === 'expense')
-    .reduce((sum, m) => sum + m.amount, 0)
-    
+    .filter((m) => m.type === 'expense')
+    .reduce((sum, m) => sum + Number(m.amount), 0)
+
   const balance = totalIncome - totalExpense
+  const selectedEvent = events?.find((e) => e.id === selectedEventId)
 
   return (
-    <div className="flex flex-col gap-6 py-4 px-4">
+    <div className="flex flex-col gap-5 py-3 px-4">
       <div className="flex flex-col gap-1.5 z-[50]">
-        <label className="text-sm font-bold text-secondary-700">Selecione o Evento</label>
+        <label className="text-xs font-bold uppercase tracking-wider text-secondary-600">
+          Selecione o Evento / Atividade
+        </label>
         <CustomSelect
           value={selectedEventId}
           onChange={(val) => setSelectedEventId(val)}
@@ -55,66 +66,70 @@ export function EventFinances({ onEditMovement }: EventFinancesProps) {
 
       {selectedEventId ? (
         <>
+          {/* Summary Cards */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="flex flex-col rounded-[var(--radius-card)] bg-green-50 p-3">
-              <span className="text-xs font-medium text-green-700">Receitas</span>
-              <span className="text-sm font-bold text-green-700">{totalIncome.toFixed(2)}€</span>
+            <div className="flex flex-col rounded-[var(--radius-card)] border border-green-200 bg-green-50 p-3">
+              <span className="text-xs font-semibold text-green-700">Receitas</span>
+              <span className="text-sm font-black text-green-800 tracking-tight">
+                +{totalIncome.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
+              </span>
             </div>
-            <div className="flex flex-col rounded-[var(--radius-card)] bg-red-50 p-3">
-              <span className="text-xs font-medium text-red-700">Despesas</span>
-              <span className="text-sm font-bold text-red-700">{totalExpense.toFixed(2)}€</span>
+            <div className="flex flex-col rounded-[var(--radius-card)] border border-red-200 bg-red-50 p-3">
+              <span className="text-xs font-semibold text-red-700">Despesas</span>
+              <span className="text-sm font-black text-red-800 tracking-tight">
+                -{totalExpense.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
+              </span>
             </div>
-            <div className="flex flex-col rounded-[var(--radius-card)] bg-primary-50 p-3">
-              <span className="text-xs font-medium text-primary-700">Saldo</span>
-              <span className="text-sm font-bold text-primary-700">{balance.toFixed(2)}€</span>
+            <div className="flex flex-col rounded-[var(--radius-card)] border border-primary-200 bg-primary-50 p-3">
+              <span className="text-xs font-semibold text-primary-700">Saldo Líquido</span>
+              <span
+                className={`text-sm font-black tracking-tight ${
+                  balance >= 0 ? 'text-primary-900' : 'text-red-700'
+                }`}
+              >
+                {balance.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
+              </span>
             </div>
           </div>
 
-          <div className="flex flex-col gap-3">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-secondary-600">
-              Movimentos do Evento
-            </h3>
+          {/* Movements List */}
+          <div className="flex flex-col gap-2.5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-secondary-600">
+                Movimentos de {selectedEvent?.title}
+              </h3>
+              <span className="text-xs text-secondary-500 font-medium">
+                {eventMovements.length} transação(ões)
+              </span>
+            </div>
+
             {eventMovements.length === 0 ? (
-              <p className="text-sm text-muted text-center py-4">Nenhum movimento registado para este evento.</p>
+              <div className="rounded-[var(--radius-card)] border border-dashed border-warm-200 bg-warm-50/50 p-6 text-center">
+                <p className="text-sm font-semibold text-foreground">Sem movimentos registados</p>
+                <p className="text-xs text-secondary-500 mt-1">
+                  Ainda não foram registadas despesas ou receitas para esta celebração.
+                </p>
+              </div>
             ) : (
-              eventMovements.map(movement => (
-                <MovementCard 
-                  key={movement.id}
-                  movement={movement}
-                  onEdit={onEditMovement}
-                  eventName={events?.find(e => e.id === selectedEventId)?.title}
-                />
-              ))
-            )}
-          </div>
-
-          <div className="flex flex-col gap-3 mt-4">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-secondary-600">
-              Material Movimentado
-            </h3>
-            {eventTransactions.length === 0 ? (
-              <p className="text-sm text-muted text-center py-4">Nenhum registo de inventário para este evento.</p>
-            ) : (
-              eventTransactions.map(t => (
-                <div key={t.id} className="flex gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-3">
-                  <div className={`mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${t.type === 'in' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                    {t.type === 'in' ? <ArrowDownRight className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-foreground">
-                      {t.type === 'in' ? 'Entrada' : 'Saída'} de {t.quantity} {t.item?.name ? `(${t.item.name})` : ''}
-                    </p>
-                    {t.notes && <p className="text-xs text-muted mt-0.5">{t.notes}</p>}
-                  </div>
-                </div>
-              ))
+              <div className="flex flex-col gap-2">
+                {eventMovements.map((movement) => (
+                  <MovementCard
+                    key={movement.id}
+                    movement={movement}
+                    onEdit={onEditMovement}
+                    eventName={selectedEvent?.title}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="mt-4 text-sm font-medium text-foreground">Sem evento selecionado</p>
-          <p className="mt-1 text-xs text-muted">Escolha um evento acima para ver as suas contas.</p>
+        <div className="flex flex-col items-center justify-center py-12 text-center rounded-[var(--radius-card)] border border-dashed border-warm-200 bg-warm-50/40">
+          <p className="text-sm font-bold text-foreground">Sem evento selecionado</p>
+          <p className="mt-1 text-xs text-secondary-500">
+            Escolha uma festa ou reunião acima para auditar o respetivo centro de custos.
+          </p>
         </div>
       )}
     </div>

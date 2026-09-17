@@ -1,7 +1,7 @@
 import { isSameDay, parseISO, compareAsc, compareDesc } from 'date-fns'
 import { Plus } from 'lucide-react'
 import { useEvents } from '../api/use-events'
-import { EventCard } from './event-card'
+import { EventCard, type EventFinanceSummary } from './event-card'
 import type { Event } from '@/types/database'
 
 export type EventFilterType = 'day' | 'upcoming' | 'past' | 'all'
@@ -14,6 +14,7 @@ interface EventListProps {
   isLoading?: boolean
   error?: unknown
   creatorMap?: Record<string, string>
+  financesMap?: Record<string, EventFinanceSummary>
   onEditEvent?: (event: Event) => void
   onCreateEvent?: () => void
 }
@@ -26,6 +27,7 @@ export function EventList({
   isLoading: propIsLoading,
   error: propError,
   creatorMap,
+  financesMap,
   onEditEvent,
   onCreateEvent,
 }: EventListProps) {
@@ -143,6 +145,7 @@ export function EventList({
             event={event}
             creatorName={creator}
             onEdit={onEditEvent}
+            financeSummary={financesMap?.[event.id]}
           />
         )
       })}
