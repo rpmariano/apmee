@@ -40,7 +40,7 @@ export function InventoryCard({ item, onEdit, onTransaction }: InventoryCardProp
                 {item.name}
               </h3>
               {isLowStock && (
-                <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-700">
+                <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">
                   <AlertTriangle className="h-3 w-3" />
                   Stock Baixo
                 </span>

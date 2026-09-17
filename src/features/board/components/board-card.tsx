@@ -57,7 +57,7 @@ export function BoardCard({ member, onEdit }: BoardCardProps) {
             )}
             
             <div className="mt-2 flex items-center gap-2">
-              <span className="rounded-md bg-warm-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-secondary-700">
+              <span className="rounded-md bg-warm-100 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider text-secondary-700">
                 {ROLE_LABELS[member.role] || member.role}
               </span>
             </div>
@@ -77,7 +77,7 @@ export function BoardCard({ member, onEdit }: BoardCardProps) {
               Inativo
             </div>
           )}
-          <span className="text-[10px] font-bold text-primary-600">{PERMISSION_LABELS[member.permission_level]}</span>
+          <span className="text-xs font-bold text-primary-600">{PERMISSION_LABELS[member.permission_level]}</span>
         </div>
       </div>
     </div>

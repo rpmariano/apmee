@@ -217,7 +217,7 @@ export function EventForm({ event, initialDate, onClose, onSubmit, isLoading }: 
                   Tipo de Evento
                 </label>
                 {isExistingEvent && (
-                  <span className="flex items-center gap-1 text-[11px] font-medium text-muted">
+                  <span className="flex items-center gap-1 text-xs font-medium text-muted">
                     <Lock className="h-3 w-3 text-secondary-400" />
                     Não alterável após criação
                   </span>

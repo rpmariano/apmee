@@ -67,7 +67,7 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
             {/* Event Type Badge */}
             <span
               className={cn(
-                'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                'rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wider',
                 isReuniao
                   ? 'bg-blue-100 text-blue-800'
                   : 'bg-amber-100 text-amber-800'
@@ -78,7 +78,7 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
 
             {/* Meeting subtype badge if available */}
             {isReuniao && meetingTypeLabel && (
-              <span className="rounded-full bg-warm-100 px-2 py-0.5 text-[10px] font-medium text-secondary-700">
+              <span className="rounded-full bg-warm-100 px-2 py-0.5 text-xs font-medium text-secondary-700">
                 {meetingTypeLabel}
               </span>
             )}
@@ -86,7 +86,7 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
             {/* Status Badge */}
             <span
               className={cn(
-                'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                'rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wider',
                 status.className
               )}
             >
@@ -95,7 +95,7 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
 
             {/* Shortage pill (only for Festas) */}
             {hasShortages && (
-              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-700">
+              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">
                 <AlertTriangle className="h-3 w-3" />
                 {shortages.length} item(ns) em falta
               </span>
@@ -103,7 +103,7 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
 
             {/* Minutes indicator pill (for Reuniões) */}
             {isReuniao && hasMinutes && (
-              <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+              <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200">
                 <FileText className="h-3 w-3" />
                 Ata
               </span>
@@ -111,7 +111,7 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
 
             {/* Documents count pill (for Reuniões) */}
             {isReuniao && documentCount > 0 && (
-              <span className="flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-bold text-purple-700 border border-purple-200">
+              <span className="flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-xs font-bold text-purple-700 border border-purple-200">
                 <Paperclip className="h-3 w-3" />
                 {documentCount} doc{documentCount > 1 ? 's' : ''}
               </span>
@@ -175,7 +175,7 @@ export function EventCard({ event, creatorName, onEdit }: EventCardProps) {
         )}
 
         {effectiveCreatorName && (
-          <div className="flex items-center gap-1 text-[11px] text-muted pt-0.5">
+          <div className="flex items-center gap-1 text-xs text-muted pt-0.5">
             <span>Criado por:</span>
             <span className="font-semibold text-secondary-700">{effectiveCreatorName}</span>
           </div>

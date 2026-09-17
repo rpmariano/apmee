@@ -368,7 +368,7 @@ export function EventInventoryManager({
                               </p>
                             ) : null}
                             {isShort && (
-                              <span className="text-[10px] font-bold text-orange-700">
+                              <span className="text-xs font-bold text-orange-700">
                                 (Stock: {available})
                               </span>
                             )}

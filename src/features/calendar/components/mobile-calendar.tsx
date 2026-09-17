@@ -174,7 +174,7 @@ export function MobileCalendar({
       </div>
 
       {/* Mini Legend for Event Types */}
-      <div className="mt-3 flex items-center justify-center gap-5 border-t border-warm-100 pt-2.5 text-[11px] font-medium text-secondary-600">
+      <div className="mt-3 flex items-center justify-center gap-5 border-t border-warm-100 pt-2.5 text-xs font-medium text-secondary-600">
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-amber-500" />
           <span>Festas</span>

@@ -6,9 +6,10 @@ import { useBoardMembers } from '@/features/board/api/use-board'
 interface TaskListProps {
   filter: TaskStatus | 'all'
   onEditTask?: (task: Task) => void
+  onToggleStatus?: (task: Task) => void
 }
 
-export function TaskList({ filter, onEditTask }: TaskListProps) {
+export function TaskList({ filter, onEditTask, onToggleStatus }: TaskListProps) {
   const { data: tasks, isLoading, error } = useTasks()
 
   const { data: boardMembers, isLoading: isLoadingBoard } = useBoardMembers()
@@ -85,7 +86,8 @@ export function TaskList({ filter, onEditTask }: TaskListProps) {
               <TaskCard 
                 key={task.id} 
                 task={task} 
-                onEdit={onEditTask} 
+                onEdit={onEditTask}
+                onToggleStatus={onToggleStatus} 
               />
             ))}
           </div>

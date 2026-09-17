@@ -64,28 +64,22 @@ export function MenuAlerts() {
         title={hasAlerts ? `${lowStockItems.length} alerta(s) de stock` : 'Alertas'}
         aria-label="Alertas"
       >
-        {/* Fuchsia Ripple Waves radiating from the center of the bell */}
-        {hasAlerts && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-visible">
-            <span className="absolute h-6 w-6 rounded-full border-2 border-fuchsia-500 bg-fuchsia-400/25 animate-fuchsia-wave-1" />
-            <span className="absolute h-6 w-6 rounded-full border-2 border-fuchsia-500 bg-fuchsia-400/20 animate-fuchsia-wave-2" />
-            <span className="absolute h-6 w-6 rounded-full border border-fuchsia-400 bg-fuchsia-400/10 animate-fuchsia-wave-3" />
-          </div>
-        )}
-
-        {/* Bell Icon in Fuchsia */}
+        {/* Bell Icon */}
         <Bell 
           className={cn(
-            "relative z-10 h-5 w-5 transition-colors duration-300", 
+            "h-5 w-5 transition-colors", 
             hasAlerts 
-              ? "text-fuchsia-600 drop-shadow-[0_0_6px_rgba(217,70,239,0.5)]" 
+              ? "text-primary-600" 
               : "text-secondary-600"
           )} 
         />
 
-        {/* Fuchsia Badge */}
+        {/* Calm Notification Badge */}
         {hasAlerts && (
-          <span className="absolute right-2 top-2 z-20 flex h-2 w-2 rounded-full bg-fuchsia-500 ring-2 ring-background" />
+          <span className={cn(
+            "absolute right-1.5 top-1.5 z-20 flex h-2.5 w-2.5 rounded-full ring-2 ring-background",
+            hasUnread ? "bg-primary-500 animate-pulse" : "bg-amber-500"
+          )} />
         )}
       </button>
 
@@ -95,7 +89,7 @@ export function MenuAlerts() {
             <div className="flex h-[80vh] flex-col rounded-t-3xl bg-surface shadow-2xl animate-in slide-in-from-bottom-full">
               <div className="flex items-center justify-between border-b border-warm-200 px-6 py-4">
                 <div className="flex items-center gap-2">
-                  <Bell className={cn("h-5 w-5", hasAlerts ? "text-fuchsia-600" : "text-secondary-600")} />
+                  <Bell className={cn("h-5 w-5", hasAlerts ? "text-primary-600" : "text-secondary-600")} />
                   <h2 className="text-lg font-bold text-foreground">
                     Alertas {hasAlerts && `(${lowStockItems.length})`}
                   </h2>
@@ -121,7 +115,7 @@ export function MenuAlerts() {
                   <div className="flex flex-col gap-3">
                     {lowStockItems.map(item => (
                       <div key={item.id} className="flex gap-3 rounded-[var(--radius-card)] border border-fuchsia-200 bg-fuchsia-50/70 p-3">
-                        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-fuchsia-600" />
+                        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-primary-600" />
                         <div>
                           <p className="text-sm font-bold text-fuchsia-950">{item.name}</p>
                           <p className="text-sm text-fuchsia-800">

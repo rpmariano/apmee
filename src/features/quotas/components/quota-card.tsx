@@ -38,7 +38,7 @@ export function QuotaCard({ quota, onEdit }: QuotaCardProps) {
             </div>
             
             <div className="mt-1 flex items-center gap-2">
-              <span className="rounded-md bg-secondary-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-secondary-700">
+              <span className="rounded-md bg-secondary-100 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider text-secondary-700">
                 Quota {quota.year}
               </span>
               <span className="text-sm font-black text-foreground">

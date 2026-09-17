@@ -8,6 +8,7 @@ import { TASK_STATUSES, TASK_PRIORITIES } from '@/lib/constants'
 interface TaskCardProps {
   task: Task
   onEdit?: (task: Task) => void
+  onToggleStatus?: (task: Task) => void
 }
 
 const priorityConfig: Record<TaskPriority, { label: string; color: string }> = {
@@ -35,56 +36,78 @@ const statusConfig: Record<TaskStatus, { label: string; icon: any; badgeColor: s
   },
 }
 
-export function TaskCard({ task, onEdit }: TaskCardProps) {
+export function TaskCard({ task, onEdit, onToggleStatus }: TaskCardProps) {
   const priority = priorityConfig[task.priority]
   const status = statusConfig[task.status]
   const StatusIcon = status.icon
 
   const isDone = task.status === TASK_STATUSES.DONE
 
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (onToggleStatus) {
+      onToggleStatus(task)
+    }
+  }
+
   return (
     <div 
       className={cn(
-        "flex flex-col gap-2 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md",
+        "flex items-start gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md",
         isDone && "opacity-75 bg-warm-50/70",
-        onEdit && "cursor-pointer active:scale-[0.98]"
+        onEdit && "cursor-pointer active:scale-[0.99]"
       )}
       onClick={() => onEdit && onEdit(task)}
     >
-      <div className="flex items-start justify-between gap-3">
-        {/* Content */}
-        <div className="flex-1">
-          <h3 className={cn("font-bold text-foreground leading-tight", isDone && "line-through text-muted")}>
-            {task.title}
-          </h3>
-          
-          {task.description && (
-            <p className="mt-1 line-clamp-2 text-sm text-muted">{task.description}</p>
+      {/* 1-Tap Completion Checkbox Micro-Interaction */}
+      <button
+        type="button"
+        role="checkbox"
+        aria-checked={isDone}
+        aria-label={isDone ? "Marcar tarefa como a fazer" : "Marcar tarefa como concluída"}
+        onClick={handleToggle}
+        className={cn(
+          "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-all active:scale-90",
+          isDone
+            ? "border-green-600 bg-green-500 text-white shadow-sm"
+            : "border-secondary-300 bg-white hover:border-green-500 hover:text-green-500 text-transparent"
+        )}
+      >
+        <CheckCircle2 className={cn("h-4 w-4 transition-transform", isDone ? "scale-100" : "scale-75")} />
+      </button>
+
+      {/* Main Content */}
+      <div className="flex-1 min-w-0">
+        <h3 className={cn("font-bold text-foreground leading-tight text-sm", isDone && "line-through text-muted")}>
+          {task.title}
+        </h3>
+        
+        {task.description && (
+          <p className="mt-1 line-clamp-2 text-xs text-muted">{task.description}</p>
+        )}
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          {/* Priority Badge */}
+          <span className={cn("rounded-md px-1.5 py-0.5 font-medium bg-warm-100", priority.color)}>
+            {priority.label}
+          </span>
+
+          {/* Status Badge */}
+          <span className={cn("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium border", status.badgeColor)}>
+            <StatusIcon className="h-3 w-3" />
+            {status.label}
+          </span>
+
+          {/* Due Date */}
+          {task.due_date && (
+            <div className={cn(
+              "flex items-center gap-1 ml-auto", 
+              (new Date(task.due_date) < new Date() && !isDone) ? "text-red-500 font-medium" : "text-secondary-600"
+            )}>
+              <Calendar className="h-3.5 w-3.5" />
+              <span>{format(parseISO(task.due_date), "d 'de' MMM", { locale: pt })}</span>
+            </div>
           )}
-
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-            {/* Priority Badge */}
-            <span className={cn("rounded-md px-1.5 py-0.5 font-medium bg-warm-100", priority.color)}>
-              {priority.label}
-            </span>
-
-            {/* Status Badge */}
-            <span className={cn("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium border", status.badgeColor)}>
-              <StatusIcon className="h-3 w-3" />
-              {status.label}
-            </span>
-
-            {/* Due Date */}
-            {task.due_date && (
-              <div className={cn(
-                "flex items-center gap-1 ml-auto", 
-                (new Date(task.due_date) < new Date() && !isDone) ? "text-red-500 font-medium" : "text-secondary-600"
-              )}>
-                <Calendar className="h-3.5 w-3.5" />
-                <span>{format(parseISO(task.due_date), "d 'de' MMM", { locale: pt })}</span>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>

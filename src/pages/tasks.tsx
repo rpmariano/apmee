@@ -26,6 +26,16 @@ export default function TasksPage() {
   const createMutation = useCreateTask()
   const updateMutation = useUpdateTask()
 
+  const handleToggleStatus = async (task: Task) => {
+    const nextStatus: TaskStatus = task.status === 'done' ? 'todo' : 'done'
+    try {
+      await updateMutation.mutateAsync({ id: task.id, status: nextStatus })
+    } catch (error: any) {
+      console.error('Failed to toggle task status:', error)
+      setErrorMessage('Erro ao atualizar estado da tarefa.')
+    }
+  }
+
   const handleEditTask = (task: Task) => {
     setEditingTask(task)
     setIsFormOpen(true)
@@ -77,7 +87,7 @@ export default function TasksPage() {
       </div>
 
       <div className="px-4">
-        <TaskList filter={activeTab} onEditTask={handleEditTask} />
+        <TaskList filter={activeTab} onEditTask={handleEditTask} onToggleStatus={handleToggleStatus} />
       </div>
 
       <button

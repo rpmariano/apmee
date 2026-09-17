@@ -234,7 +234,7 @@ export function EventDocumentsManager({
                     <p className="truncate text-xs font-semibold text-foreground">
                       {doc.name}
                     </p>
-                    <div className="flex items-center gap-2 text-[10px] text-muted">
+                    <div className="flex items-center gap-2 text-xs text-muted">
                       {doc.size ? <span>{formatFileSize(doc.size)}</span> : null}
                       {formattedDate ? <span>{formattedDate}</span> : null}
                       {doc.type === 'link' ? <span>(Link externo)</span> : null}

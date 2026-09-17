@@ -341,7 +341,7 @@ export default function EventsPage() {
               <span>{tab.label}</span>
               <span
                 className={cn(
-                  'rounded-full px-1.5 py-0.2 text-[10px] font-bold',
+                  'rounded-full px-1.5 py-0.2 text-xs font-bold',
                   activeTab === tab.value
                     ? 'bg-white/20 text-white'
                     : 'bg-warm-200 text-secondary-700'

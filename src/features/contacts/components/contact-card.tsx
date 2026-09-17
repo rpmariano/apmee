@@ -64,7 +64,7 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
                 {tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-full bg-warm-100 px-2 py-0.5 text-[10px] font-medium text-secondary-600"
+                    className="rounded-full bg-warm-100 px-2 py-0.5 text-xs font-medium text-secondary-600"
                   >
                     {tag}
                   </span>
