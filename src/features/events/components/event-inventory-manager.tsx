@@ -113,6 +113,7 @@ export function EventInventoryManager({ eventId, eventStatus, isEditing }: Event
 
   // Build select options — all inventory items (even zero stock in planned mode)
   const itemOptions = (inventory || [])
+    .filter((i) => i.category === activeCategory)
     .filter((i) => {
       // Don't show items already added
       const alreadyAdded = requirements?.some((r) => r.item_id === i.id)
