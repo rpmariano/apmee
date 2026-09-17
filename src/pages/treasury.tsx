@@ -71,7 +71,6 @@ export default function TreasuryPage() {
   }, [filters])
 
   const handleEditMovement = (movement: FinancialMovement) => {
-    if (!canWriteTreasury) return
     setEditingMovement(movement)
     setIsFormOpen(true)
   }
@@ -263,7 +262,7 @@ export default function TreasuryPage() {
             <MovementList
               movements={filteredMovements}
               isLoading={isLoading}
-              onEdit={canWriteTreasury ? handleEditMovement : undefined}
+              onEdit={handleEditMovement}
               onClearFilters={handleClearFilters}
               isFiltered={isFilterActive}
             />
@@ -290,6 +289,7 @@ export default function TreasuryPage() {
           onClose={handleCloseForm}
           onSubmit={handleSubmitForm}
           isLoading={createMutation.isPending || updateMutation.isPending}
+          readOnly={!canWriteTreasury}
         />
       )}
 

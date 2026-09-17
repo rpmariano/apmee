@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { MovementCard } from './movement-card'
+import { useEvents } from '@/features/events/api/use-events'
 import type { FinancialMovement } from '@/types/database'
 
 interface MovementListProps {
@@ -17,6 +19,17 @@ export function MovementList({
   onClearFilters,
   isFiltered,
 }: MovementListProps) {
+  const { data: events } = useEvents()
+
+  // Map event_id to event title
+  const eventsById = useMemo(() => {
+    const map: Record<string, string> = {}
+    events?.forEach((e) => {
+      map[e.id] = e.title
+    })
+    return map
+  }, [events])
+
   if (isLoading) {
     return (
       <div className="flex flex-col gap-2 py-3">
@@ -66,7 +79,12 @@ export function MovementList({
   return (
     <div className="flex flex-col gap-2 py-2">
       {movements.map((movement) => (
-        <MovementCard key={movement.id} movement={movement} onEdit={onEdit} />
+        <MovementCard
+          key={movement.id}
+          movement={movement}
+          onEdit={onEdit}
+          eventName={movement.event_id ? eventsById[movement.event_id] : undefined}
+        />
       ))}
     </div>
   )

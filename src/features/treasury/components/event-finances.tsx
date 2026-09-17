@@ -82,6 +82,7 @@ export function EventFinances({ onEditMovement }: EventFinancesProps) {
                   key={movement.id}
                   movement={movement}
                   onEdit={onEditMovement}
+                  eventName={events?.find(e => e.id === selectedEventId)?.title}
                 />
               ))
             )}

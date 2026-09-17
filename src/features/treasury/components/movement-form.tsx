@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, Upload, Landmark, Coins } from 'lucide-react'
+import { X, Upload, Landmark, Coins, ExternalLink } from 'lucide-react'
 import type { FinancialMovement, FinancialType, FinancialAccount } from '@/types/database'
 import { supabase } from '@/lib/supabase'
 
@@ -33,6 +33,7 @@ interface MovementFormProps {
   onClose: () => void
   onSubmit: (data: Partial<FinancialMovement>) => void
   isLoading?: boolean
+  readOnly?: boolean
 }
 
 // Convert ISO to YYYY-MM-DD for date input
@@ -41,9 +42,9 @@ function toDateString(isoString?: string | null) {
   return isoString.split('T')[0]
 }
 
-export function MovementForm({ movement, onClose, onSubmit, isLoading }: MovementFormProps) {
+export function MovementForm({ movement, onClose, onSubmit, isLoading, readOnly = false }: MovementFormProps) {
   const [showUnsaved, setShowUnsaved] = useState(false)
-  const isEditing = true
+  const isEditing = !readOnly
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -132,7 +133,7 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
     <div className="fixed inset-0 z-[100] flex justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">{/* Phone container */}<div className="flex w-full max-w-[430px] flex-col bg-background shadow-2xl animate-in slide-in-from-bottom-6 duration-200 ease-out">
       <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-4 py-4">
         <h2 className="text-lg font-bold text-foreground">
-          {movement ? 'Editar Movimento' : 'Novo Movimento'}
+          {readOnly ? 'Detalhes do Movimento' : movement ? 'Editar Movimento' : 'Novo Movimento'}
         </h2>
         <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
           <X className="h-5 w-5" />
@@ -283,20 +284,41 @@ export function MovementForm({ movement, onClose, onSubmit, isLoading }: Movemen
             </label>
             
             {movement?.receipt_url && !file && (
-              <p className="text-xs text-green-600">Fatura atual anexada.</p>
+              <div className="mt-1 flex items-center justify-between rounded-lg bg-warm-50 border border-warm-200 px-3 py-2">
+                <span className="text-xs text-green-700 font-medium">✓ Comprovativo anexado</span>
+                <a
+                  href={movement.receipt_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700 underline"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>Ver Fatura / Recibo</span>
+                </a>
+              </div>
             )}
           </div>
 
         
 <div className="border-t border-warm-200 bg-surface p-4">
-          <button
-            type="submit"
-            form="movement-form"
-            disabled={isLoading || isUploading}
-            className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
-          >
-            {isUploading ? 'A enviar documento...' : isLoading ? 'A Guardar...' : (movement ? 'Guardar Movimento' : 'Registar Movimento')}
-          </button>
+          {readOnly ? (
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-secondary-900 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary-800 active:scale-95"
+            >
+              Fechar
+            </button>
+          ) : (
+            <button
+              type="submit"
+              form="movement-form"
+              disabled={isLoading || isUploading}
+              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
+            >
+              {isUploading ? 'A enviar documento...' : isLoading ? 'A Guardar...' : (movement ? 'Guardar Movimento' : 'Registar Movimento')}
+            </button>
+          )}
         </div>
 </form>
       </div>
