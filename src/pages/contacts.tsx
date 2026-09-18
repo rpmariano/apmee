@@ -16,10 +16,11 @@ type FilterValue = ContactCategory | 'all'
 
 const tabs: { value: FilterValue; label: string }[] = [
   { value: 'all', label: 'Todos' },
-  ...Object.values(CONTACT_CATEGORIES).map((cat) => ({
-    value: cat as ContactCategory,
-    label: CONTACT_CATEGORY_LABELS[cat] || (cat.charAt(0).toUpperCase() + cat.slice(1) + 's'),
-  })),
+  { value: 'pai', label: 'EE' },
+  { value: 'professor', label: 'Professores' },
+  { value: 'parceiro', label: 'Parceiros' },
+  { value: 'fornecedor', label: 'Fornecedores' },
+  { value: 'associado', label: 'Associados' },
 ]
 
 export default function ContactsPage() {
