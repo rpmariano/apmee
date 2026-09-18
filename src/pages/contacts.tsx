@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { Plus, Search } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Plus, Search, ChevronDown, Star, RotateCcw } from 'lucide-react'
 import { ContactList } from '@/features/contacts/components/contact-list'
 import { ContactForm } from '@/features/contacts/components/contact-form'
-import { useCreateContact, useUpdateContact, useDeleteContact } from '@/features/contacts/api/use-contacts'
+import { useContacts, useCreateContact, useUpdateContact, useDeleteContact } from '@/features/contacts/api/use-contacts'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { Contact, ContactCategory } from '@/types/database'
+import { TURMA_OPTIONS } from '@/lib/constants'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
 import { getFriendlyErrorMessage } from '@/lib/error-utils'
@@ -19,23 +20,43 @@ const tabs: { value: FilterValue; label: string }[] = [
   { value: 'professor', label: 'Professores' },
   { value: 'parceiro', label: 'Parceiros' },
   { value: 'fornecedor', label: 'Fornecedores' },
-  { value: 'associado', label: 'Associados' },
 ]
 
 export default function ContactsPage() {
   const [activeTab, setActiveTab] = useState<FilterValue>('all')
+  const [statusFilter, setStatusFilter] = useState<'active' | 'inactive' | 'all'>('active')
+  const [turmaFilter, setTurmaFilter] = useState<string>('all')
+  const [onlyMembers, setOnlyMembers] = useState<boolean>(false)
+
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingContact, setEditingContact] = useState<Contact | undefined>()
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  const { data: allContacts } = useContacts('all')
   const createMutation = useCreateContact()
   const updateMutation = useUpdateContact()
   const deleteMutation = useDeleteContact()
   const { toast } = useToast()
   const { canWrite } = usePermissions()
   const canWriteContacts = canWrite('contacts')
+
+  const availableTurmas = useMemo(() => {
+    const set = new Set(TURMA_OPTIONS.map((o) => o.value))
+    if (allContacts) {
+      allContacts.forEach((c) => {
+        const meta = (c.metadata as Record<string, any>) || {}
+        const raw = meta.turmas ?? meta.turma
+        if (Array.isArray(raw)) {
+          raw.forEach((t) => t && set.add(String(t).trim()))
+        } else if (typeof raw === 'string') {
+          raw.split(',').forEach((t) => t && set.add(t.trim()))
+        }
+      })
+    }
+    return Array.from(set)
+  }, [allContacts])
 
   const handleEditContact = (contact: Contact) => {
     setEditingContact(contact)
@@ -50,10 +71,28 @@ export default function ContactsPage() {
   const handleSubmitForm = async (data: Partial<Contact>) => {
     try {
       if (editingContact) {
-        await updateMutation.mutateAsync({ id: editingContact.id, ...data })
+        try {
+          await updateMutation.mutateAsync({ id: editingContact.id, ...data })
+        } catch (err: any) {
+          if (err?.code === '42703' || err?.message?.includes('column') || err?.message?.includes('is_active')) {
+            const { is_active, ...fallbackData } = data
+            await updateMutation.mutateAsync({ id: editingContact.id, ...fallbackData })
+          } else {
+            throw err
+          }
+        }
         toast.success('Contacto atualizado com sucesso!')
       } else {
-        await createMutation.mutateAsync(data as any)
+        try {
+          await createMutation.mutateAsync(data as any)
+        } catch (err: any) {
+          if (err?.code === '42703' || err?.message?.includes('column') || err?.message?.includes('is_active')) {
+            const { is_active, ...fallbackData } = data
+            await createMutation.mutateAsync(fallbackData as any)
+          } else {
+            throw err
+          }
+        }
         toast.success('Contacto criado com sucesso!')
       }
       handleCloseForm()
@@ -134,11 +173,98 @@ export default function ContactsPage() {
             </button>
           ))}
         </div>
+
+        {/* Secondary Filters Bar */}
+        <div className="mt-2 flex flex-wrap items-center gap-2 px-4 pb-2 text-xs">
+          {/* Status Filter (Ativos por defeito) */}
+          <div className="relative inline-flex items-center">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              aria-label="Filtrar por estado"
+              className={cn(
+                'appearance-none rounded-full border px-3 py-1.5 pr-7 text-xs font-semibold focus:outline-none focus:ring-1 transition-all cursor-pointer',
+                statusFilter === 'active'
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                  : statusFilter === 'inactive'
+                  ? 'border-red-300 bg-red-50 text-red-800'
+                  : 'border-warm-200 bg-surface text-secondary-700'
+              )}
+            >
+              <option value="active">Estado: Ativos</option>
+              <option value="inactive">Estado: Inativos</option>
+              <option value="all">Estado: Todos</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 opacity-60" />
+          </div>
+
+          {/* Turma Filter */}
+          <div className="relative inline-flex items-center">
+            <select
+              value={turmaFilter}
+              onChange={(e) => setTurmaFilter(e.target.value)}
+              aria-label="Filtrar por turma"
+              className={cn(
+                'appearance-none rounded-full border px-3 py-1.5 pr-7 text-xs font-semibold focus:outline-none focus:ring-1 transition-all cursor-pointer',
+                turmaFilter !== 'all'
+                  ? 'border-primary-400 bg-primary-50 text-primary-800'
+                  : 'border-warm-200 bg-surface text-secondary-700'
+              )}
+            >
+              <option value="all">Turma: Todas</option>
+              {availableTurmas.map((t) => (
+                <option key={t} value={t}>
+                  Turma: {t}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 opacity-60" />
+          </div>
+
+          {/* Associados Filter Toggle */}
+          <button
+            type="button"
+            onClick={() => setOnlyMembers((prev) => !prev)}
+            className={cn(
+              'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer',
+              onlyMembers
+                ? 'border-amber-400 bg-amber-50 text-amber-900 shadow-xs ring-1 ring-amber-300'
+                : 'border-warm-200 bg-surface text-secondary-700 hover:bg-warm-100'
+            )}
+          >
+            <Star className={cn('h-3.5 w-3.5', onlyMembers ? 'fill-amber-500 text-amber-500' : 'text-secondary-400')} />
+            <span>Só Associados</span>
+          </button>
+
+          {/* Clear Filters (if modified from default) */}
+          {(statusFilter !== 'active' || turmaFilter !== 'all' || onlyMembers) && (
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter('active')
+                setTurmaFilter('all')
+                setOnlyMembers(false)
+              }}
+              className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-muted hover:text-foreground transition-colors cursor-pointer"
+              title="Repor filtros por defeito"
+            >
+              <RotateCcw className="h-3 w-3" />
+              <span>Limpar</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* List Content */}
       <div className="px-4">
-        <ContactList category={activeTab} onEditContact={handleEditContact} searchQuery={searchQuery} />
+        <ContactList 
+          category={activeTab} 
+          onEditContact={handleEditContact} 
+          searchQuery={searchQuery}
+          statusFilter={statusFilter}
+          turmaFilter={turmaFilter}
+          onlyMembers={onlyMembers}
+        />
       </div>
 
       {/* Floating Action Button (FAB) */}

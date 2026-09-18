@@ -68,6 +68,13 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
   const [notes, setNotes] = useState(contact?.notes ?? '')
   const [isMember, setIsMember] = useState(contact?.is_member ?? false)
 
+  const initialIsActive = contact?.is_active !== undefined
+    ? contact.is_active
+    : (contact?.metadata as any)?.is_active !== undefined
+    ? (contact?.metadata as any)?.is_active
+    : true
+  const [isActive, setIsActive] = useState<boolean>(initialIsActive)
+
   const { data: allQuotas = [] } = useQuotas()
 
   const contactPaidQuotas = useMemo(() => {
@@ -122,6 +129,7 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
     whatsapp !== (contact?.whatsapp ?? '') ||
     notes !== (contact?.notes ?? '') ||
     isMember !== (contact?.is_member ?? false) ||
+    isActive !== initialIsActive ||
     educando !== (initialMetadata.educando ?? '') ||
     disciplina !== (initialMetadata.disciplina ?? '') ||
     isTurmasDirty
@@ -164,7 +172,11 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
       whatsapp: whatsapp || null,
       notes: notes || null,
       is_member: isMember,
-      metadata,
+      is_active: isActive,
+      metadata: {
+        ...metadata,
+        is_active: isActive,
+      },
     })
   }
 
@@ -210,18 +222,37 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
       <div className="flex-1 overflow-y-auto p-4">
         <form ref={formRef}  id="contact-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           
-          <div className="flex items-center gap-3 rounded-[var(--radius-button)] border border-warm-200 bg-surface px-4 py-3 shadow-sm z-[100] mb-2">
-            <input disabled={!isEditing} 
-              type="checkbox"
-              id="is_member"
-              checked={isMember}
-              onChange={(e) => setIsMember(e.target.checked)}
-              className="h-5 w-5 rounded border-warm-300 text-primary-500 focus:ring-primary-500"
-            />
-            <label htmlFor="is_member" className="flex flex-col">
-              <span className="text-sm font-bold text-foreground">É Associado?</span>
-              <span className="text-xs text-muted">Elegível para pagamento de quotas</span>
-            </label>
+          {/* Status & Member Flags */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+            <div className="flex items-center gap-3 rounded-[var(--radius-button)] border border-warm-200 bg-surface px-4 py-3 shadow-sm">
+              <input disabled={!isEditing} 
+                type="checkbox"
+                id="is_active"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="h-5 w-5 rounded border-warm-300 text-primary-500 focus:ring-primary-500 cursor-pointer"
+              />
+              <label htmlFor="is_active" className="flex flex-col cursor-pointer select-none">
+                <span className="text-sm font-bold text-foreground">Contacto Ativo</span>
+                <span className="text-xs text-muted">
+                  {isActive ? 'Ativo no sistema' : 'Inativo / Arquivado'}
+                </span>
+              </label>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-[var(--radius-button)] border border-warm-200 bg-surface px-4 py-3 shadow-sm">
+              <input disabled={!isEditing} 
+                type="checkbox"
+                id="is_member"
+                checked={isMember}
+                onChange={(e) => setIsMember(e.target.checked)}
+                className="h-5 w-5 rounded border-warm-300 text-primary-500 focus:ring-primary-500 cursor-pointer"
+              />
+              <label htmlFor="is_member" className="flex flex-col cursor-pointer select-none">
+                <span className="text-sm font-bold text-foreground">É Associado?</span>
+                <span className="text-xs text-muted">Elegível para quotas</span>
+              </label>
+            </div>
           </div>
 
 

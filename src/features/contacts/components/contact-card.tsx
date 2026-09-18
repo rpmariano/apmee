@@ -40,16 +40,24 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
     tags.push(metadata.disciplina)
   }
 
+  const isActive = contact.is_active !== undefined
+    ? contact.is_active
+    : (contact.metadata as any)?.is_active !== undefined
+    ? (contact.metadata as any)?.is_active
+    : true
+  const isMember = contact.is_member || contact.category === 'associado'
+
   return (
     <div 
       className={cn(
         "flex flex-col gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md",
+        !isActive && "opacity-80 bg-warm-50/60 border-dashed",
         onEdit && "cursor-pointer active:scale-[0.98]"
       )}
       onClick={() => onEdit && onEdit(contact)}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           {/* Avatar / Initials */}
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700">
             {contact.avatar_url ? (
@@ -60,8 +68,8 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
           </div>
 
           {/* Info */}
-          <div>
-            <h3 className="font-semibold text-foreground">{contact.name}</h3>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-foreground truncate">{contact.name}</h3>
             {tags.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
                 {tags.map((tag) => (
@@ -75,6 +83,20 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Status / Membership Badges */}
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          {!isActive && (
+            <span className="rounded-full bg-red-50 border border-red-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-700">
+              Inativo
+            </span>
+          )}
+          {isMember && (
+            <span className="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+              Associado
+            </span>
+          )}
         </div>
       </div>
 

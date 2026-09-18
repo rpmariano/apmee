@@ -2,16 +2,57 @@ import { useContacts } from '../api/use-contacts'
 import { ContactCard } from './contact-card'
 import type { ContactCategory, Contact } from '@/types/database'
 
-interface ContactListProps {
+export interface ContactListProps {
   category: ContactCategory | 'all'
   onEditContact?: (contact: Contact) => void
   searchQuery?: string
+  statusFilter?: 'active' | 'inactive' | 'all'
+  turmaFilter?: string
+  onlyMembers?: boolean
 }
 
-export function ContactList({ category, onEditContact, searchQuery }: ContactListProps) {
+export function ContactList({
+  category,
+  onEditContact,
+  searchQuery,
+  statusFilter = 'active',
+  turmaFilter = 'all',
+  onlyMembers = false,
+}: ContactListProps) {
   const { data: contacts, isLoading, error } = useContacts(category)
 
   const filteredContacts = (contacts || []).filter((contact) => {
+    // 1. Status Filter (active / inactive / all) - default active
+    const isActive = contact.is_active !== undefined
+      ? contact.is_active
+      : (contact.metadata as any)?.is_active !== undefined
+      ? (contact.metadata as any)?.is_active
+      : true
+
+    if (statusFilter === 'active' && !isActive) return false
+    if (statusFilter === 'inactive' && isActive) return false
+
+    // 2. Associados Filter (only members)
+    const isMember = contact.is_member || contact.category === 'associado'
+    if (onlyMembers && !isMember) return false
+
+    // 3. Turma Filter
+    if (turmaFilter && turmaFilter !== 'all') {
+      const metadata = (contact.metadata as Record<string, any>) || {}
+      const rawTurmas = metadata.turmas ?? metadata.turma
+      let contactTurmas: string[] = []
+      if (Array.isArray(rawTurmas)) {
+        contactTurmas = rawTurmas.map(String)
+      } else if (typeof rawTurmas === 'string') {
+        contactTurmas = rawTurmas.split(',').map((s: string) => s.trim())
+      }
+      const matchesTurma = contactTurmas.some(
+        (t) => t.toLowerCase() === turmaFilter.toLowerCase()
+      )
+      if (!matchesTurma) return false
+    }
+
+    // 4. Search query
     if (!searchQuery?.trim()) return true
     const q = searchQuery.toLowerCase().trim()
     const nameMatch = contact.name?.toLowerCase().includes(q)
@@ -64,6 +105,8 @@ export function ContactList({ category, onEditContact, searchQuery }: ContactLis
         <p className="mt-1 text-xs text-muted">
           {searchQuery
             ? `Não foram encontrados contactos correspondentes a "${searchQuery}".`
+            : statusFilter !== 'all' || turmaFilter !== 'all' || onlyMembers
+            ? 'Não foram encontrados contactos correspondentes aos filtros selecionados.'
             : 'Ainda não existem contactos nesta categoria.'}
         </p>
       </div>

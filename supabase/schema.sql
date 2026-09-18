@@ -65,6 +65,8 @@ CREATE TABLE IF NOT EXISTS contacts (
     avatar_url TEXT,
     metadata JSONB DEFAULT '{}'::jsonb, -- Campos dinâmicos: educando, turma, disciplina, etc.
     notes TEXT,
+    is_member BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true,
     created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),

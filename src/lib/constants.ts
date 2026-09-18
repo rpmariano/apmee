@@ -37,6 +37,15 @@ export const CONTACT_CATEGORY_LABELS: Record<string, string> = {
   associado: 'Associados',
 }
 
+/** Standard school classes (turmas) */
+export const TURMA_OPTIONS = [
+  { label: 'JI', value: 'JI' },
+  { label: '1º ano', value: '1º ano' },
+  { label: '2º ano', value: '2º ano' },
+  { label: '3º ano', value: '3º ano' },
+  { label: '4º ano', value: '4º ano' },
+]
+
 /** Event statuses */
 export const EVENT_STATUSES = {
   PLANNED: 'planned',

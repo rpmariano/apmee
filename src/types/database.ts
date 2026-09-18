@@ -56,6 +56,7 @@ export interface Contact {
   metadata: Record<string, unknown>
   notes: string | null
   is_member: boolean
+  is_active?: boolean
   created_by: string | null
   created_at: string
   updated_at: string
