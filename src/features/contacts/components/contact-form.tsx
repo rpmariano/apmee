@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { X, Trash2 } from 'lucide-react'
 import type { Contact, ContactCategory } from '@/types/database'
 import { CONTACT_CATEGORIES, CONTACT_CATEGORY_LABELS } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
@@ -28,13 +29,14 @@ const DISCIPLINA_OPTIONS = [
 
 interface ContactFormProps {
   contact?: Contact
+  initialCategory?: ContactCategory
   onClose: () => void
   onSubmit: (data: Partial<Contact>) => void
   onDelete?: (id: string) => Promise<void>
   isLoading?: boolean
 }
 
-export function ContactForm({ contact, onClose, onSubmit, onDelete, isLoading }: ContactFormProps) {
+export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDelete, isLoading }: ContactFormProps) {
   const [showUnsaved, setShowUnsaved] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -55,29 +57,63 @@ export function ContactForm({ contact, onClose, onSubmit, onDelete, isLoading }:
   }
 
   const [name, setName] = useState(contact?.name ?? '')
-  const [category, setCategory] = useState<ContactCategory>(contact?.category ?? 'pai')
+  const [category, setCategory] = useState<ContactCategory>(contact?.category ?? initialCategory ?? 'pai')
   const [email, setEmail] = useState(contact?.email ?? '')
   const [phone, setPhone] = useState(contact?.phone ?? '')
   const [whatsapp, setWhatsapp] = useState(contact?.whatsapp ?? '')
   const [notes, setNotes] = useState(contact?.notes ?? '')
   const [isMember, setIsMember] = useState(contact?.is_member ?? false)
 
+  // Metadata
+  const initialMetadata = (contact?.metadata as Record<string, any>) ?? {}
+  const [educando, setEducando] = useState(initialMetadata.educando ?? '')
+  const [disciplina, setDisciplina] = useState(initialMetadata.disciplina ?? '')
+
+  const parsedInitialTurmas = useMemo(() => {
+    const raw = initialMetadata.turmas ?? initialMetadata.turma
+    if (Array.isArray(raw)) return raw.map(String)
+    if (typeof raw === 'string' && raw.trim()) {
+      return raw.split(',').map((s: string) => s.trim()).filter(Boolean)
+    }
+    return []
+  }, [initialMetadata])
+
+  const [selectedTurmas, setSelectedTurmas] = useState<string[]>(parsedInitialTurmas)
+
+  const allTurmaOptions = useMemo(() => {
+    const existingSet = new Set(TURMA_OPTIONS.map((o) => o.value))
+    const customOptions = parsedInitialTurmas
+      .filter((t: string) => !existingSet.has(t))
+      .map((t: string) => ({ label: t, value: t }))
+    return [...TURMA_OPTIONS, ...customOptions]
+  }, [parsedInitialTurmas])
+
+  const toggleTurma = (t: string) => {
+    if (!isEditing) return
+    setSelectedTurmas((prev) =>
+      prev.includes(t) ? prev.filter((item) => item !== t) : [...prev, t]
+    )
+  }
+
+  const isTurmasDirty = useMemo(() => {
+    const a = [...selectedTurmas].sort().join(',')
+    const b = [...parsedInitialTurmas].sort().join(',')
+    return a !== b
+  }, [selectedTurmas, parsedInitialTurmas])
+
   const isDirty = (
     name !== (contact?.name ?? '') ||
-    category !== (contact?.category ?? 'pai') ||
+    category !== (contact?.category ?? initialCategory ?? 'pai') ||
     email !== (contact?.email ?? '') ||
     phone !== (contact?.phone ?? '') ||
     whatsapp !== (contact?.whatsapp ?? '') ||
     notes !== (contact?.notes ?? '') ||
-    isMember !== (contact?.is_member ?? false)
+    isMember !== (contact?.is_member ?? false) ||
+    educando !== (initialMetadata.educando ?? '') ||
+    disciplina !== (initialMetadata.disciplina ?? '') ||
+    isTurmasDirty
   )
 
-
-  // Metadata
-  const initialMetadata = (contact?.metadata as Record<string, string>) ?? {}
-  const [educando, setEducando] = useState(initialMetadata.educando ?? '')
-  const [turma, setTurma] = useState(initialMetadata.turma ?? '')
-  const [disciplina, setDisciplina] = useState(initialMetadata.disciplina ?? '')
   const handlePhoneChange = (val: string) => {
     if (whatsapp === phone || !whatsapp) {
       setWhatsapp(val)
@@ -95,10 +131,17 @@ export function ContactForm({ contact, onClose, onSubmit, onDelete, isLoading }:
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const metadata: Record<string, string> = {}
-    if (turma) metadata.turma = turma
-    if (category === 'pai' && educando) metadata.educando = educando
-    if (category === 'professor' && disciplina) metadata.disciplina = disciplina
+    const metadata: Record<string, any> = {}
+    if (selectedTurmas.length > 0) {
+      metadata.turma = selectedTurmas.join(', ')
+      metadata.turmas = selectedTurmas
+    }
+    if (category === 'pai' && educando.trim()) {
+      metadata.educando = educando.trim()
+    }
+    if (category === 'professor' && disciplina) {
+      metadata.disciplina = disciplina
+    }
 
     onSubmit({
       name,
@@ -233,27 +276,53 @@ export function ContactForm({ contact, onClose, onSubmit, onDelete, isLoading }:
             <>
               <div className="my-2 border-t border-warm-200" />
               
-              <div className="flex flex-col gap-1.5 z-[50]">
-                <label className="text-sm font-medium text-secondary-700">Turma(s)</label>
-                <CustomSelect disabled={!isEditing} 
-                  value={turma}
-                  onChange={(val) => setTurma(val)}
-                  options={TURMA_OPTIONS}
-                  placeholder="Selecione a turma..."
-                />
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-secondary-700">Turma(s)</label>
+                  <span className="text-xs text-muted">
+                    {category === 'pai' ? 'Pode escolher mais que uma turma' : 'Selecione as turmas'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {allTurmaOptions.map((option) => {
+                    const isChecked = selectedTurmas.includes(option.value)
+                    return (
+                      <label
+                        key={option.value}
+                        className={cn(
+                          'flex items-center gap-2.5 rounded-lg border p-2.5 text-xs font-semibold cursor-pointer transition-all select-none',
+                          isChecked
+                            ? 'border-primary-400 bg-primary-50 text-primary-900 shadow-xs ring-1 ring-primary-300'
+                            : 'border-warm-200 bg-surface text-secondary-700 hover:bg-warm-50',
+                          !isEditing && 'cursor-not-allowed opacity-60'
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          disabled={!isEditing}
+                          checked={isChecked}
+                          onChange={() => toggleTurma(option.value)}
+                          className="h-4 w-4 rounded border-warm-300 text-primary-500 focus:ring-primary-400 cursor-pointer"
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    )
+                  })}
+                </div>
               </div>
             </>
           )}
 
           {category === 'pai' && (
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="contact-educando" className="text-sm font-medium text-secondary-700">Nome do Educando</label>
+              <label htmlFor="contact-educando" className="text-sm font-medium text-secondary-700">Nome do(s) Educando(s)</label>
               <input id="contact-educando" disabled={!isEditing} 
                 type="text"
                 value={educando}
                 onChange={(e) => setEducando(e.target.value)}
                 className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-                placeholder="Nome do aluno"
+                placeholder="Ex: Pedro Silva, Ana Silva"
               />
             </div>
           )}

@@ -25,13 +25,16 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
   const hasEmail = !!contact.email
 
   // Extract dynamic metadata based on category
-  const metadata = contact.metadata as Record<string, string>
+  const metadata = (contact.metadata as Record<string, any>) || {}
   const tags = []
   if (contact.category === 'pai' && metadata.educando) {
-    tags.push(`Educando: ${metadata.educando}`)
+    const isMultipleEducandos = metadata.educando.includes(',') || metadata.educando.includes(' e ')
+    tags.push(`${isMultipleEducandos ? 'Educandos' : 'Educando'}: ${metadata.educando}`)
   }
-  if (metadata.turma) {
-    tags.push(`Turma: ${metadata.turma}`)
+  const turmaVal = metadata.turma || (Array.isArray(metadata.turmas) ? metadata.turmas.join(', ') : '')
+  if (turmaVal) {
+    const isMultipleTurmas = turmaVal.includes(',') || (Array.isArray(metadata.turmas) && metadata.turmas.length > 1)
+    tags.push(`${isMultipleTurmas ? 'Turmas' : 'Turma'}: ${turmaVal}`)
   }
   if (contact.category === 'professor' && metadata.disciplina) {
     tags.push(metadata.disciplina)

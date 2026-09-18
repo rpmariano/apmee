@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Plus, Search } from 'lucide-react'
-import { CONTACT_CATEGORIES } from '@/lib/constants'
+import { CONTACT_CATEGORIES, CONTACT_CATEGORY_LABELS } from '@/lib/constants'
 import { ContactList } from '@/features/contacts/components/contact-list'
 import { ContactForm } from '@/features/contacts/components/contact-form'
 import { useCreateContact, useUpdateContact, useDeleteContact } from '@/features/contacts/api/use-contacts'
@@ -18,7 +18,7 @@ const tabs: { value: FilterValue; label: string }[] = [
   { value: 'all', label: 'Todos' },
   ...Object.values(CONTACT_CATEGORIES).map((cat) => ({
     value: cat as ContactCategory,
-    label: cat.charAt(0).toUpperCase() + cat.slice(1) + 's',
+    label: CONTACT_CATEGORY_LABELS[cat] || (cat.charAt(0).toUpperCase() + cat.slice(1) + 's'),
   })),
 ]
 
@@ -155,6 +155,7 @@ export default function ContactsPage() {
       {isFormOpen && (
         <ContactForm
           contact={editingContact}
+          initialCategory={activeTab !== 'all' ? activeTab : 'pai'}
           onClose={handleCloseForm}
           onSubmit={handleSubmitForm}
           onDelete={canWriteContacts ? handleDeleteContact : undefined}

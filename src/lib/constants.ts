@@ -30,7 +30,7 @@ export const CONTACT_CATEGORIES = {
 
 /** Contact category labels (pt-PT) */
 export const CONTACT_CATEGORY_LABELS: Record<string, string> = {
-  pai: 'Pais',
+  pai: 'EE',
   professor: 'Professores',
   parceiro: 'Parceiros',
   fornecedor: 'Fornecedores',

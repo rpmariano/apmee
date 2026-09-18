@@ -17,11 +17,19 @@ export function ContactList({ category, onEditContact, searchQuery }: ContactLis
     const nameMatch = contact.name?.toLowerCase().includes(q)
     const emailMatch = contact.email?.toLowerCase().includes(q)
     const phoneMatch = contact.phone?.includes(q) || contact.whatsapp?.includes(q)
-    const metadata = (contact.metadata as Record<string, string>) || {}
+    const metadata = (contact.metadata as Record<string, any>) || {}
     const educandoMatch = metadata.educando?.toLowerCase().includes(q)
-    const turmaMatch = metadata.turma?.toLowerCase().includes(q)
+    const turmaStr = typeof metadata.turma === 'string'
+      ? metadata.turma
+      : Array.isArray(metadata.turmas)
+      ? metadata.turmas.join(' ')
+      : Array.isArray(metadata.turma)
+      ? metadata.turma.join(' ')
+      : ''
+    const turmaMatch = turmaStr.toLowerCase().includes(q)
     const disciplinaMatch = metadata.disciplina?.toLowerCase().includes(q)
-    return nameMatch || emailMatch || phoneMatch || educandoMatch || turmaMatch || disciplinaMatch
+    const categoryMatch = q === 'ee' && contact.category === 'pai'
+    return nameMatch || emailMatch || phoneMatch || educandoMatch || turmaMatch || disciplinaMatch || categoryMatch
   })
 
   if (isLoading) {
