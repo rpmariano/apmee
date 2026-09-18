@@ -41,7 +41,7 @@ export function BoardForm({ member, onClose, onSubmit, isLoading, onDelete }: Bo
   const [email, setEmail] = useState(member?.email ?? '')
   const [displayName, setDisplayName] = useState(member?.display_name ?? '')
   const [phone, setPhone] = useState(member?.phone ?? '')
-  const [role, setRole] = useState(member?.role ?? 'admin')
+  const [role, setRole] = useState(member?.role ?? 'vogal')
   const [permissionLevel, setPermissionLevel] = useState(member?.permission_level ?? 'nivel_2')
   const [isActive, setIsActive] = useState(member?.is_active ?? true)
 
@@ -136,10 +136,11 @@ export function BoardForm({ member, onClose, onSubmit, isLoading, onDelete }: Bo
               value={role}
               onChange={(val) => setRole(val as any)}
               options={[
-                { label: 'Admin', value: 'admin' },
                 { label: 'Presidente', value: 'presidente' },
                 { label: 'Tesoureiro', value: 'tesoureiro' },
                 { label: 'Gestor Social', value: 'gestor_social' },
+                { label: 'Vogal', value: 'vogal' },
+                { label: 'Admin', value: 'admin' },
               ]}
             />
           </div>

@@ -12,6 +12,7 @@ const ROLE_LABELS: Record<string, string> = {
   presidente: 'Presidente',
   tesoureiro: 'Tesoureiro',
   gestor_social: 'Gestor Social',
+  vogal: 'Vogal',
 }
 
 const PERMISSION_LABELS: Record<string, string> = {

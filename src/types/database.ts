@@ -7,7 +7,7 @@
  */
 
 export type PermissionLevel = 'superadmin' | 'nivel_1' | 'nivel_2'
-export type UserRole = 'admin' | 'presidente' | 'tesoureiro' | 'gestor_social'
+export type UserRole = 'admin' | 'presidente' | 'tesoureiro' | 'gestor_social' | 'vogal'
 export type ContactCategory = 'pai' | 'professor' | 'parceiro' | 'fornecedor' | 'associado'
 export type EventStatus = 'planned' | 'active' | 'completed' | 'cancelled'
 export type EventType = 'festa' | 'reuniao'
