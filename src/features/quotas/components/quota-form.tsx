@@ -26,6 +26,7 @@ function toDateString(isoString?: string | null) {
 
 export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: QuotaFormProps) {
   const isExistingQuota = !!quota
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showUnsaved, setShowUnsaved] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -139,46 +140,55 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    e.stopPropagation()
 
-    let finalReceiptUrl = quota?.receipt_url || null
+    if (isSubmitting || isLoading) return
+    setIsSubmitting(true)
 
-    if (file) {
-      try {
-        setIsUploading(true)
-        const fileExt = file.name.split('.').pop()
-        const fileName = `quotas/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-        
-        const { error: uploadError } = await (supabase as any).storage
-          .from('receipts')
-          .upload(fileName, file)
+    try {
+      let finalReceiptUrl = quota?.receipt_url || null
 
-        if (uploadError) throw uploadError
+      if (file) {
+        try {
+          setIsUploading(true)
+          const fileExt = file.name.split('.').pop()
+          const fileName = `quotas/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+          
+          const { error: uploadError } = await (supabase as any).storage
+            .from('receipts')
+            .upload(fileName, file)
 
-        const { data } = (supabase as any).storage
-          .from('receipts')
-          .getPublicUrl(fileName)
+          if (uploadError) throw uploadError
 
-        finalReceiptUrl = data.publicUrl
-      } catch (err: any) {
-        console.error('Error uploading receipt:', err)
-        setErrorMessage(err?.message || 'Erro ao fazer upload do recibo. Verifique se o bucket "receipts" foi criado no Supabase.')
-        setIsUploading(false)
-        return
+          const { data } = (supabase as any).storage
+            .from('receipts')
+            .getPublicUrl(fileName)
+
+          finalReceiptUrl = data.publicUrl
+        } catch (err: any) {
+          console.error('Error uploading receipt:', err)
+          setErrorMessage(err?.message || 'Erro ao fazer upload do recibo. Verifique se o bucket "receipts" foi criado no Supabase.')
+          setIsUploading(false)
+          return
+        }
       }
+
+      const finalPaidDate = paid && paidDate ? new Date(`${paidDate}T12:00:00Z`).toISOString() : null
+
+      await onSubmit({
+        id: quota?.id,
+        contact_id: contactId,
+        year: Number(year),
+        amount: Number(amount),
+        paid,
+        paid_date: finalPaidDate,
+        payment_method: paymentMethod || null,
+        account: paid ? account : null,
+        receipt_url: finalReceiptUrl,
+      })
+    } finally {
+      setIsSubmitting(false)
     }
-
-    const finalPaidDate = paid && paidDate ? new Date(`${paidDate}T12:00:00Z`).toISOString() : null
-
-    onSubmit({
-      contact_id: contactId,
-      year: Number(year),
-      amount: Number(amount),
-      paid,
-      paid_date: finalPaidDate,
-      payment_method: paymentMethod || null,
-      account: paid ? account : null,
-      receipt_url: finalReceiptUrl,
-    })
   }
 
   return (
@@ -393,11 +403,10 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
           )}
           <button
             type="submit"
-            form="quota-form"
-            disabled={isLoading || isUploading || isLoadingContacts}
+            disabled={isSubmitting || isLoading || isUploading || isLoadingContacts}
             className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
           >
-            {isUploading ? 'A anexar recibo...' : isLoading ? 'A Guardar...' : (quota ? 'Guardar Quota' : 'Registar Quota')}
+            {isUploading ? 'A anexar recibo...' : (isSubmitting || isLoading) ? 'A Guardar...' : (quota ? 'Guardar Quota' : 'Registar Quota')}
           </button>
         </div>
 </form>

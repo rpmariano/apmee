@@ -486,7 +486,6 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
 
           <button
             type="submit"
-            form="contact-form"
             disabled={isLoading || isDeleting}
             className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
           >

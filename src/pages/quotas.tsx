@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Plus } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { QuotaList } from '@/features/quotas/components/quota-list'
@@ -29,6 +29,7 @@ export default function QuotasPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingQuota, setEditingQuota] = useState<QuotaWithContact | undefined>()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const isSubmittingRef = useRef(false)
 
   const queryClient = useQueryClient()
   const { data: quotas, isLoading } = useQuotas()
@@ -57,12 +58,33 @@ export default function QuotasPage() {
   }
 
   const handleSubmitForm = async (data: Partial<Quota>) => {
+    // Guard against duplicate / concurrent submission
+    if (isSubmittingRef.current) return
+    isSubmittingRef.current = true
+
     try {
+      const targetId = (data as any).id || editingQuota?.id
       const contactName = data.contact_id ? getContactName(data.contact_id) : (editingQuota?.contact?.name || 'Associado')
       const targetYear = data.year ?? editingQuota?.year ?? 2026
       const yearFormatted = formatSchoolYear(targetYear)
       const isPaid = !!data.paid
       let movementId = editingQuota?.movement_id || null
+
+      // If movementId is null (e.g. before DB migration), search if an active movement already exists in treasury
+      if (!movementId) {
+        const { data: existingMovs } = await (supabase as any)
+          .from('financial_movements')
+          .select('id')
+          .eq('category', 'Quotas de Sócios')
+          .ilike('description', `Quota ${yearFormatted} — ${contactName}%`)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+
+        if (existingMovs && existingMovs.length > 0) {
+          movementId = existingMovs[0].id
+        }
+      }
 
       if (isPaid) {
         const movementPayload = {
@@ -109,15 +131,16 @@ export default function QuotasPage() {
         movementId = null
       }
 
+      const { id: _ignoredId, ...payloadWithoutId } = data as any
       const quotaPayload: any = {
-        ...data,
+        ...payloadWithoutId,
         movement_id: movementId,
         account: isPaid ? (data.account || 'banco') : null,
       }
 
-      if (editingQuota) {
+      if (targetId) {
         try {
-          await updateMutation.mutateAsync({ id: editingQuota.id, ...quotaPayload } as any)
+          await updateMutation.mutateAsync({ id: targetId, ...quotaPayload } as any)
         } catch (err: any) {
           if (
             err?.code === '42703' ||
@@ -126,7 +149,7 @@ export default function QuotasPage() {
             err?.message?.includes('account')
           ) {
             const { movement_id, account, ...fallbackPayload } = quotaPayload
-            await updateMutation.mutateAsync({ id: editingQuota.id, ...fallbackPayload } as any)
+            await updateMutation.mutateAsync({ id: targetId, ...fallbackPayload } as any)
           } else {
             throw err
           }
@@ -158,18 +181,39 @@ export default function QuotasPage() {
     } catch (error: any) {
       console.error('Failed to save quota:', error)
       setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar quota. Tente novamente.'))
+    } finally {
+      isSubmittingRef.current = false
     }
   }
 
   const handleDeleteQuota = async (id: string) => {
     try {
       const quotaToDelete = quotas?.find((q) => q.id === id)
-      if (quotaToDelete?.movement_id) {
+      let movId = quotaToDelete?.movement_id
+
+      if (!movId && quotaToDelete) {
+        const contactName = quotaToDelete.contact?.name || 'Associado'
+        const yearFormatted = formatSchoolYear(quotaToDelete.year)
+        const { data: existingMovs } = await (supabase as any)
+          .from('financial_movements')
+          .select('id')
+          .eq('category', 'Quotas de Sócios')
+          .ilike('description', `Quota ${yearFormatted} — ${contactName}%`)
+          .is('deleted_at', null)
+          .limit(1)
+
+        if (existingMovs && existingMovs.length > 0) {
+          movId = existingMovs[0].id
+        }
+      }
+
+      if (movId) {
         await (supabase as any)
           .from('financial_movements')
           .update({ deleted_at: new Date().toISOString() })
-          .eq('id', quotaToDelete.movement_id)
+          .eq('id', movId)
       }
+
       await deleteMutation.mutateAsync(id)
       queryClient.invalidateQueries({ queryKey: ['treasury'] })
       queryClient.invalidateQueries({ queryKey: ['quotas'] })
