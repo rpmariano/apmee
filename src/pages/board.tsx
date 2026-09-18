@@ -47,7 +47,8 @@ export default function BoardPage() {
       handleCloseForm()
     } catch (error: any) {
       console.error('Failed to save member:', error)
-      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao guardar membro. Tente novamente.'))
+      const friendlyMsg = getFriendlyErrorMessage(error, '')
+      setErrorMessage(friendlyMsg || error?.message || error?.details || 'Erro ao guardar membro. Tente novamente.')
     }
   }
 

@@ -24,13 +24,28 @@ export function useCreateMember() {
 
   return useMutation({
     mutationFn: async (newMember: any) => {
-      // Strip fields not in the allowed_users schema (e.g. phone)
-      const { phone: _phone, ...payload } = newMember
-      const { data, error } = await (supabase as any)
+      const payload = {
+        ...newMember,
+        email: newMember.email?.trim().toLowerCase(),
+      }
+
+      let { data, error } = await (supabase as any)
         .from('allowed_users')
         .insert(payload)
         .select()
         .single()
+
+      // If database doesn't have 'phone' column yet, retry without phone
+      if (error && (error.message?.includes('phone') || error.details?.includes('phone'))) {
+        const { phone: _phone, ...payloadNoPhone } = payload
+        const retryResult = await (supabase as any)
+          .from('allowed_users')
+          .insert(payloadNoPhone)
+          .select()
+          .single()
+        data = retryResult.data
+        error = retryResult.error
+      }
 
       if (error) throw error
       return data
@@ -46,14 +61,28 @@ export function useUpdateMember() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: any) => {
-      // Strip fields not in the allowed_users schema (e.g. phone)
-      const { phone: _phone, ...payload } = updates
-      const { data, error } = await (supabase as any)
+      // Don't update email (it is the immutable OAuth account identifier)
+      const { email: _email, ...payload } = updates
+
+      let { data, error } = await (supabase as any)
         .from('allowed_users')
         .update(payload)
         .eq('id', id)
         .select()
         .single()
+
+      // If database doesn't have 'phone' column yet, retry without phone
+      if (error && (error.message?.includes('phone') || error.details?.includes('phone'))) {
+        const { phone: _phone, ...payloadNoPhone } = payload
+        const retryResult = await (supabase as any)
+          .from('allowed_users')
+          .update(payloadNoPhone)
+          .eq('id', id)
+          .select()
+          .single()
+        data = retryResult.data
+        error = retryResult.error
+      }
 
       if (error) throw error
       return data

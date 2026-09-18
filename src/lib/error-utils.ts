@@ -19,6 +19,14 @@ export function getFriendlyErrorMessage(error: any, fallback = 'Ocorreu um erro 
     return 'Não tem permissões suficientes para realizar esta ação.'
   }
 
+  if (msg.includes('allowed_users_role_check') || (msg.includes('check constraint') && msg.includes('role'))) {
+    return 'O cargo selecionado não é válido na base de dados. Por favor selecione Presidente, Tesoureiro, Gestor Social ou Vogal.'
+  }
+
+  if (msg.includes('check constraint') || msg.includes('violates check constraint')) {
+    return 'Um dos campos contém um valor não permitido pelo sistema. Verifique os dados introduzidos.'
+  }
+
   if (msg.includes('bucket') || msg.includes('storage') || msg.includes('upload')) {
     return 'Não foi possível carregar o ficheiro. Verifique o tamanho ou o formato.'
   }
