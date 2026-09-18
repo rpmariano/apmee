@@ -1,8 +1,9 @@
-import { CheckCircle2, Clock, User, FileText } from 'lucide-react'
+import { CheckCircle2, Clock, User, FileText, Landmark, Coins } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import type { Quota } from '@/types/database'
 import { cn } from '@/lib/utils'
+import { formatSchoolYear } from '@/lib/school-year'
 
 export type QuotaWithContact = Quota & { contact: { name: string; email: string | null } }
 
@@ -37,9 +38,9 @@ export function QuotaCard({ quota, onEdit }: QuotaCardProps) {
               </span>
             </div>
             
-            <div className="mt-1 flex items-center gap-2">
+            <div className="mt-1 flex items-center gap-2 flex-wrap">
               <span className="rounded-md bg-secondary-100 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider text-secondary-700">
-                Quota {quota.year}
+                Quota {formatSchoolYear(quota.year)}
               </span>
               <span className="text-sm font-black text-foreground">
                 {Number(quota.amount).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
@@ -64,16 +65,33 @@ export function QuotaCard({ quota, onEdit }: QuotaCardProps) {
         </div>
       </div>
 
-      {/* Details Row (Payment Method / Date) */}
-      {(isPaid && (quota.paid_date || quota.payment_method)) && (
+      {/* Details Row (Payment Method / Date / Account) */}
+      {(isPaid && (quota.paid_date || quota.payment_method || quota.account)) && (
         <div className="mt-2 flex flex-col gap-1 border-t border-warm-100 pt-3 text-xs text-secondary-600">
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center flex-wrap gap-1">
             {quota.paid_date && (
               <span>Pago a: {format(parseISO(quota.paid_date), "d 'de' MMMM yyyy", { locale: pt })}</span>
             )}
-            {quota.payment_method && (
-              <span className="capitalize">{quota.payment_method}</span>
-            )}
+            <div className="flex items-center gap-2">
+              {quota.account && (
+                <span className="inline-flex items-center gap-1 font-medium text-secondary-700 rounded bg-warm-100 px-1.5 py-0.5">
+                  {quota.account === 'caixa' ? (
+                    <>
+                      <Coins className="h-3 w-3 text-amber-600" />
+                      Caixa
+                    </>
+                  ) : (
+                    <>
+                      <Landmark className="h-3 w-3 text-sky-600" />
+                      Banco
+                    </>
+                  )}
+                </span>
+              )}
+              {quota.payment_method && (
+                <span className="capitalize">{quota.payment_method}</span>
+              )}
+            </div>
           </div>
         </div>
       )}

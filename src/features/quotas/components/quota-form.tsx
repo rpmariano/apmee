@@ -1,7 +1,9 @@
-import { useState, useRef } from 'react'
-import { X, Upload, Trash2 } from 'lucide-react'
-import type { Quota } from '@/types/database'
-import { useContacts } from '@/features/contacts/api/use-contacts'
+import { useState, useRef, useMemo } from 'react'
+import { X, Upload, Trash2, UserPlus, Landmark, Coins } from 'lucide-react'
+import type { Quota, FinancialAccount } from '@/types/database'
+import { useContacts, useCreateContact } from '@/features/contacts/api/use-contacts'
+import { useQuotas } from '../api/use-quotas'
+import { getCurrentSchoolYear, getSchoolYearOptions, formatSchoolYear } from '@/lib/school-year'
 import { supabase } from '@/lib/supabase'
 
 import { useHardwareBack } from '@/hooks/use-hardware-back'
@@ -38,7 +40,6 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
 
   useHardwareBack(true, handleCloseClick)
 
-
   const handleSaveAndClose = () => {
     setShowUnsaved(false)
     formRef.current?.requestSubmit()
@@ -57,27 +58,84 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
   }
 
   const [contactId, setContactId] = useState(quota?.contact_id ?? '')
-  const [year, setYear] = useState(quota?.year ?? new Date().getFullYear())
+  const [year, setYear] = useState<number>(quota?.year ?? getCurrentSchoolYear())
   const [amount, setAmount] = useState(quota?.amount ?? '15')
   const [paid, setPaid] = useState(quota?.paid ?? false)
   const [paidDate, setPaidDate] = useState(quota?.paid_date ? toDateString(quota.paid_date) : '')
   const [paymentMethod, setPaymentMethod] = useState(quota?.payment_method ?? '')
+  const [account, setAccount] = useState<FinancialAccount>(quota?.account ?? 'banco')
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
 
+  // Quick Create Member Modal State
+  const [showNewMemberDialog, setShowNewMemberDialog] = useState(false)
+  const [newMemberName, setNewMemberName] = useState('')
+  const [isCreatingMember, setIsCreatingMember] = useState(false)
+
+  const schoolYearOptions = useMemo(() => getSchoolYearOptions(4, 1), [])
+
+  // Fetch contacts and all quotas to calculate eligibility
+  const { data: contacts, isLoading: isLoadingContacts } = useContacts('all')
+  const { data: allQuotas = [] } = useQuotas()
+  const createContactMutation = useCreateContact()
+
+  // Find contact IDs that already have a paid quota in the selected school year
+  const paidContactIdsThisYear = useMemo(() => {
+    const set = new Set<string>()
+    allQuotas.forEach((q) => {
+      if (q.year === year && q.paid && q.id !== quota?.id) {
+        set.add(q.contact_id)
+      }
+    })
+    return set
+  }, [allQuotas, year, quota?.id])
+
+  // Filter contacts to only members who have not yet paid quota this school year
+  const eligibleContacts = useMemo(() => {
+    return (contacts || []).filter((c) => {
+      // If editing, always include currently assigned contact
+      if (c.id === contactId) return true
+      // Exclude if already paid in this school year
+      if (paidContactIdsThisYear.has(c.id)) return false
+      // Must be an associado or member
+      return c.is_member || c.category === 'associado'
+    })
+  }, [contacts, contactId, paidContactIdsThisYear])
+
   const isDirty = (
     contactId !== (quota?.contact_id ?? '') ||
-    year !== (quota?.year ?? new Date().getFullYear()) ||
+    year !== (quota?.year ?? getCurrentSchoolYear()) ||
     amount !== (quota?.amount ?? '15') ||
     paid !== (quota?.paid ?? false) ||
     paidDate !== (quota?.paid_date ? toDateString(quota.paid_date) : '') ||
     paymentMethod !== (quota?.payment_method ?? '') ||
+    account !== (quota?.account ?? 'banco') ||
     file !== null
   )
 
 
-  // Fetch contacts to populate the dropdown
-  const { data: contacts, isLoading: isLoadingContacts } = useContacts('all')
+  const handleQuickCreateMember = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newMemberName.trim()) return
+    try {
+      setIsCreatingMember(true)
+      const created = await createContactMutation.mutateAsync({
+        name: newMemberName.trim(),
+        category: 'associado',
+        is_member: true,
+      } as any)
+      if (created?.id) {
+        setContactId(created.id)
+      }
+      setNewMemberName('')
+      setShowNewMemberDialog(false)
+    } catch (err: any) {
+      console.error('Failed to quick create member:', err)
+      setErrorMessage(err?.message || 'Erro ao criar associado.')
+    } finally {
+      setIsCreatingMember(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -118,6 +176,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
       paid,
       paid_date: finalPaidDate,
       payment_method: paymentMethod || null,
+      account: paid ? account : null,
       receipt_url: finalReceiptUrl,
     })
   }
@@ -149,33 +208,47 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
         <form ref={formRef}   id="quota-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           <div className="flex flex-col gap-1.5 z-[60]">
-            <label className="text-sm font-medium text-secondary-700">Associado <span className="text-primary-500">*</span></label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-secondary-700">
+                Associado <span className="text-primary-500">*</span>
+              </label>
+              {!isExistingQuota && (
+                <button
+                  type="button"
+                  onClick={() => setShowNewMemberDialog(true)}
+                  className="flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700 hover:underline"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  <span>+ Novo Associado</span>
+                </button>
+              )}
+            </div>
             <CustomSelect disabled={!isEditing || !!quota} 
               value={contactId}
               onChange={(val) => setContactId(val)}
-              options={(contacts || []).map(c => ({ 
+              options={eligibleContacts.map(c => ({ 
                 label: `${c.name}${c.metadata?.educando ? ` (${c.metadata.educando})` : ''}${c.is_member ? ' [Sócio]' : ''}`, 
                 value: c.id 
               }))}
-              placeholder={isLoadingContacts ? 'A carregar contactos...' : 'Selecione o encarregado / associado'}
+              placeholder={isLoadingContacts ? 'A carregar associados...' : eligibleContacts.length === 0 ? 'Sem associados pendentes para este ano' : 'Selecione o associado'}
               required
             />
             <span className="text-xs text-muted">
-              Pode selecionar qualquer encarregado de educação ou associado registado.
+              Apenas surgem associados que ainda não pagaram quota no ano letivo {formatSchoolYear(year)}.
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="quota-year" className="text-sm font-medium text-secondary-700">Ano Letivo / Civil <span className="text-primary-500">*</span></label>
-              <input id="quota-year" disabled={!isEditing} 
-                type="number"
-                min="2000"
-                max="2100"
-                value={year}
-                onChange={(e) => setYear(Number(e.target.value))}
+            <div className="flex flex-col gap-1.5 z-[55]">
+              <label className="text-sm font-medium text-secondary-700">Ano Letivo <span className="text-primary-500">*</span></label>
+              <CustomSelect disabled={!isEditing} 
+                value={String(year)}
+                onChange={(val) => setYear(Number(val))}
+                options={schoolYearOptions.map(opt => ({
+                  label: opt.label,
+                  value: String(opt.value),
+                }))}
                 required
-                className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
               />
             </div>
             
@@ -204,35 +277,79 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
             />
             <div className="flex flex-col">
               <span className="font-bold text-foreground">Quota Paga</span>
-              <span className="text-xs text-muted">Marcar esta quota como regularizada.</span>
+              <span className="text-xs text-muted">Marcar esta quota como regularizada e registar na tesouraria.</span>
             </div>
           </label>
 
           {paid && (
-            <div className="grid grid-cols-2 gap-4 rounded-[var(--radius-card)] bg-warm-50 p-4">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="quota-paid-date" className="text-xs font-medium text-secondary-700">Data de Pagamento</label>
-                <input id="quota-paid-date" disabled={!isEditing} 
-                  type="date"
-                  value={paidDate}
-                  onChange={(e) => setPaidDate(e.target.value)}
-                  required={paid}
-                  className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-                />
+            <div className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-warm-50 p-4 border border-warm-200/80">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="quota-paid-date" className="text-xs font-medium text-secondary-700">Data de Pagamento</label>
+                  <input id="quota-paid-date" disabled={!isEditing} 
+                    type="date"
+                    value={paidDate}
+                    onChange={(e) => setPaidDate(e.target.value)}
+                    required={paid}
+                    className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5 z-[50]">
+                  <label className="text-xs font-medium text-secondary-700">Método</label>
+                  <CustomSelect disabled={!isEditing} 
+                    value={paymentMethod}
+                    onChange={(val) => {
+                      setPaymentMethod(val)
+                      if (val === 'numerario') setAccount('caixa')
+                      else if (val === 'transferencia' || val === 'mbway') setAccount('banco')
+                    }}
+                    options={[
+                      { label: '(Não definido)', value: '' },
+                      { label: 'Numerário', value: 'numerario' },
+                      { label: 'MB Way', value: 'mbway' },
+                      { label: 'Transferência Bancária', value: 'transferencia' },
+                    ]}
+                    placeholder="(Não definido)"
+                  />
+                </div>
               </div>
-              <div className="flex flex-col gap-1.5 z-[50]">
-                <label className="text-xs font-medium text-secondary-700">Método</label>
-                <CustomSelect disabled={!isEditing} 
-                  value={paymentMethod}
-                  onChange={(val) => setPaymentMethod(val)}
-                  options={[
-                    { label: '(Não definido)', value: '' },
-                    { label: 'Numerário', value: 'numerario' },
-                    { label: 'MB Way', value: 'mbway' },
-                    { label: 'Transferência Bancária', value: 'transferencia' },
-                  ]}
-                  placeholder="(Não definido)"
-                />
+
+              {/* Conta de Tesouraria */}
+              <div className="flex flex-col gap-1.5 pt-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-secondary-600">
+                  Conta de Tesouraria <span className="text-primary-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-2 rounded-[var(--radius-button)] bg-warm-200/70 p-1">
+                  <button
+                    type="button"
+                    disabled={!isEditing}
+                    onClick={() => setAccount('banco')}
+                    className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold transition-all ${
+                      account === 'banco'
+                        ? 'bg-white text-secondary-900 shadow-sm'
+                        : 'text-secondary-600 hover:text-foreground'
+                    }`}
+                  >
+                    <Landmark className="h-4 w-4 text-blue-600" />
+                    <span>Banco</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!isEditing}
+                    onClick={() => setAccount('caixa')}
+                    className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold transition-all ${
+                      account === 'caixa'
+                        ? 'bg-white text-secondary-900 shadow-sm'
+                        : 'text-secondary-600 hover:text-foreground'
+                    }`}
+                  >
+                    <Coins className="h-4 w-4 text-amber-600" />
+                    <span>Caixa</span>
+                  </button>
+                </div>
+                <span className="text-xs text-secondary-500">
+                  O valor entra diretamente na conta {account === 'banco' ? 'Bancária' : 'de Caixa'} na Tesouraria.
+                </span>
               </div>
             </div>
           )}
@@ -318,7 +435,67 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
         onConfirm={handleConfirmDelete}
         onCancel={() => setShowDeleteConfirm(false)}
       />
-</div>
-</div>
+
+      {/* Quick Add Member Modal */}
+      {showNewMemberDialog && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-[var(--radius-card)] bg-surface p-5 shadow-2xl border border-warm-200 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-base font-bold text-foreground">Criar Novo Associado</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowNewMemberDialog(false)
+                  setNewMemberName('')
+                }}
+                className="rounded-full p-1 text-muted hover:bg-warm-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-xs text-secondary-500 mb-4">
+              Introduza o nome do associado. O contacto será criado imediatamente e poderá completar os restantes dados mais tarde nos Contactos.
+            </p>
+            <form onSubmit={handleQuickCreateMember} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="new-member-name" className="text-xs font-semibold text-secondary-700">
+                  Nome do Associado <span className="text-primary-500">*</span>
+                </label>
+                <input
+                  id="new-member-name"
+                  type="text"
+                  autoFocus
+                  required
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  placeholder="Nome completo"
+                  className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                />
+              </div>
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-warm-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNewMemberDialog(false)
+                    setNewMemberName('')
+                  }}
+                  className="rounded-lg px-3 py-1.5 text-xs font-medium text-secondary-600 hover:bg-warm-100"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingMember || !newMemberName.trim()}
+                  className="rounded-lg bg-primary-500 px-4 py-1.5 text-xs font-bold text-white hover:bg-primary-600 disabled:opacity-50"
+                >
+                  {isCreatingMember ? 'A criar...' : 'Criar e Selecionar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
   )
 }

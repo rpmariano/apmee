@@ -1,8 +1,12 @@
 import { useState, useRef, useMemo } from 'react'
-import { X, Trash2 } from 'lucide-react'
+import { X, Trash2, CheckCircle2, Landmark, Coins, FileText } from 'lucide-react'
+import { format, parseISO } from 'date-fns'
+import { pt } from 'date-fns/locale'
 import type { Contact, ContactCategory } from '@/types/database'
 import { CONTACT_CATEGORIES, CONTACT_CATEGORY_LABELS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
+import { useQuotas } from '@/features/quotas/api/use-quotas'
+import { formatSchoolYear } from '@/lib/school-year'
 
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
@@ -63,6 +67,15 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
   const [whatsapp, setWhatsapp] = useState(contact?.whatsapp ?? '')
   const [notes, setNotes] = useState(contact?.notes ?? '')
   const [isMember, setIsMember] = useState(contact?.is_member ?? false)
+
+  const { data: allQuotas = [] } = useQuotas()
+
+  const contactPaidQuotas = useMemo(() => {
+    if (!contact?.id) return []
+    return allQuotas
+      .filter((q) => q.contact_id === contact.id && q.paid)
+      .sort((a, b) => b.year - a.year)
+  }, [contact?.id, allQuotas])
 
   // Metadata
   const initialMetadata = (contact?.metadata as Record<string, any>) ?? {}
@@ -351,6 +364,81 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
               placeholder="Informação adicional relevante..."
             />
           </div>
+
+          {/* Paid Quotas Listing (if contact has paid quotas) */}
+          {contact?.id && contactPaidQuotas.length > 0 && (
+            <div className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-green-200 bg-green-50/40 p-3.5 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-green-800">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <span>Quotas Pagas</span>
+                </div>
+                <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-800">
+                  {contactPaidQuotas.length} {contactPaidQuotas.length === 1 ? 'ano' : 'anos'}
+                </span>
+              </div>
+
+              <div className="mt-1 flex flex-col gap-1.5">
+                {contactPaidQuotas.map((q) => (
+                  <div
+                    key={q.id}
+                    className="flex items-center justify-between rounded-lg border border-green-100 bg-surface p-2.5 shadow-xs"
+                  >
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="rounded bg-secondary-100 px-1.5 py-0.5 text-xs font-bold text-secondary-800">
+                        {formatSchoolYear(q.year)}
+                      </span>
+                      <span className="text-xs font-bold text-foreground">
+                        {Number(q.amount).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
+                      </span>
+                      {q.account && (
+                        <span className="inline-flex items-center gap-1 rounded bg-warm-100 px-1.5 py-0.5 text-[11px] font-medium text-secondary-700">
+                          {q.account === 'caixa' ? (
+                            <>
+                              <Coins className="h-3 w-3 text-amber-600" />
+                              Caixa
+                            </>
+                          ) : (
+                            <>
+                              <Landmark className="h-3 w-3 text-sky-600" />
+                              Banco
+                            </>
+                          )}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs">
+                      {q.paid_date && (
+                        <span className="text-muted">
+                          {format(parseISO(q.paid_date), "d MMM yyyy", { locale: pt })}
+                        </span>
+                      )}
+                      {q.receipt_url && (
+                        <a
+                          href={q.receipt_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 font-medium text-primary-500 hover:text-primary-600"
+                          title="Ver Recibo"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          <span className="text-[11px] underline">Recibo</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {contact?.id && (contact.is_member || contact.category === 'associado') && contactPaidQuotas.length === 0 && (
+            <div className="flex items-center gap-2 rounded-[var(--radius-card)] border border-warm-200 bg-warm-50/60 p-3 text-xs text-muted">
+              <CheckCircle2 className="h-4 w-4 text-warm-400 shrink-0" />
+              <span>Nenhuma quota paga registada para este associado.</span>
+            </div>
+          )}
         
         <div className="border-t border-warm-200 bg-surface p-4 flex flex-col gap-2.5">
           {contact && onDelete && (

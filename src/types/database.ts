@@ -158,6 +158,8 @@ export interface Quota {
   paid: boolean
   paid_date: string | null
   payment_method: string | null
+  account?: FinancialAccount | null
+  movement_id?: string | null
   receipt_url: string | null
   created_by: string | null
   created_at: string

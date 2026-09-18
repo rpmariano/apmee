@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { QuotaList } from '@/features/quotas/components/quota-list'
 import { QuotaForm } from '@/features/quotas/components/quota-form'
 import { useQuotas, useCreateQuota, useUpdateQuota, useDeleteQuota } from '@/features/quotas/api/use-quotas'
+import { useContacts } from '@/features/contacts/api/use-contacts'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { QuotaWithContact } from '@/features/quotas/components/quota-card'
 import type { Quota } from '@/types/database'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
+import { formatSchoolYear } from '@/lib/school-year'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
 import { getFriendlyErrorMessage } from '@/lib/error-utils'
@@ -26,7 +30,9 @@ export default function QuotasPage() {
   const [editingQuota, setEditingQuota] = useState<QuotaWithContact | undefined>()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  const queryClient = useQueryClient()
   const { data: quotas, isLoading } = useQuotas()
+  const { data: contacts } = useContacts('all')
   const createMutation = useCreateQuota()
   const updateMutation = useUpdateQuota()
   const deleteMutation = useDeleteQuota()
@@ -46,17 +52,108 @@ export default function QuotasPage() {
     setEditingQuota(undefined)
   }
 
+  const getContactName = (contactId: string) => {
+    return contacts?.find((c) => c.id === contactId)?.name || editingQuota?.contact?.name || 'Associado'
+  }
+
   const handleSubmitForm = async (data: Partial<Quota>) => {
     try {
+      const contactName = data.contact_id ? getContactName(data.contact_id) : (editingQuota?.contact?.name || 'Associado')
+      const targetYear = data.year ?? editingQuota?.year ?? 2026
+      const yearFormatted = formatSchoolYear(targetYear)
+      const isPaid = !!data.paid
+      let movementId = editingQuota?.movement_id || null
+
+      if (isPaid) {
+        const movementPayload = {
+          type: 'income',
+          account: data.account || 'banco',
+          category: 'Quotas de Sócios',
+          description: `Quota ${yearFormatted} — ${contactName}`,
+          amount: Number(data.amount),
+          date: data.paid_date || new Date().toISOString(),
+          receipt_url: data.receipt_url || null,
+          deleted_at: null,
+        }
+
+        if (movementId) {
+          // Update linked financial movement
+          const { error: movErr } = await (supabase as any)
+            .from('financial_movements')
+            .update(movementPayload)
+            .eq('id', movementId)
+
+          if (movErr) console.warn('Aviso ao atualizar movimento financeiro associado:', movErr)
+        } else {
+          // Create new financial movement
+          const { data: newMov, error: movErr } = await (supabase as any)
+            .from('financial_movements')
+            .insert(movementPayload)
+            .select('id')
+            .single()
+
+          if (!movErr && newMov?.id) {
+            movementId = newMov.id
+          } else if (movErr) {
+            console.warn('Aviso ao criar movimento financeiro da quota:', movErr)
+          }
+        }
+      } else if (movementId) {
+        // Quota marked unpaid: soft delete linked financial movement
+        const { error: movDelErr } = await (supabase as any)
+          .from('financial_movements')
+          .update({ deleted_at: new Date().toISOString() })
+          .eq('id', movementId)
+
+        if (movDelErr) console.warn('Aviso ao anular movimento financeiro:', movDelErr)
+        movementId = null
+      }
+
+      const quotaPayload: any = {
+        ...data,
+        movement_id: movementId,
+        account: isPaid ? (data.account || 'banco') : null,
+      }
+
       if (editingQuota) {
-        // @ts-ignore
-        await updateMutation.mutateAsync({ id: editingQuota.id, ...data } as any)
+        try {
+          await updateMutation.mutateAsync({ id: editingQuota.id, ...quotaPayload } as any)
+        } catch (err: any) {
+          if (
+            err?.code === '42703' ||
+            err?.message?.includes('column') ||
+            err?.message?.includes('movement_id') ||
+            err?.message?.includes('account')
+          ) {
+            const { movement_id, account, ...fallbackPayload } = quotaPayload
+            await updateMutation.mutateAsync({ id: editingQuota.id, ...fallbackPayload } as any)
+          } else {
+            throw err
+          }
+        }
         toast.success('Quota atualizada com sucesso!')
       } else {
-        // @ts-ignore
-        await createMutation.mutateAsync(data as any)
+        try {
+          await createMutation.mutateAsync(quotaPayload as any)
+        } catch (err: any) {
+          if (
+            err?.code === '42703' ||
+            err?.message?.includes('column') ||
+            err?.message?.includes('movement_id') ||
+            err?.message?.includes('account')
+          ) {
+            const { movement_id, account, ...fallbackPayload } = quotaPayload
+            await createMutation.mutateAsync(fallbackPayload as any)
+          } else {
+            throw err
+          }
+        }
         toast.success('Quota registada com sucesso!')
       }
+
+      // Invalidate both treasury and quotas queries so balances & lists reflect immediately
+      queryClient.invalidateQueries({ queryKey: ['treasury'] })
+      queryClient.invalidateQueries({ queryKey: ['quotas'] })
       handleCloseForm()
     } catch (error: any) {
       console.error('Failed to save quota:', error)
@@ -65,8 +162,22 @@ export default function QuotasPage() {
   }
 
   const handleDeleteQuota = async (id: string) => {
-    await deleteMutation.mutateAsync(id)
-    toast.success('Quota eliminada com sucesso!')
+    try {
+      const quotaToDelete = quotas?.find((q) => q.id === id)
+      if (quotaToDelete?.movement_id) {
+        await (supabase as any)
+          .from('financial_movements')
+          .update({ deleted_at: new Date().toISOString() })
+          .eq('id', quotaToDelete.movement_id)
+      }
+      await deleteMutation.mutateAsync(id)
+      queryClient.invalidateQueries({ queryKey: ['treasury'] })
+      queryClient.invalidateQueries({ queryKey: ['quotas'] })
+      toast.success('Quota eliminada com sucesso!')
+    } catch (error: any) {
+      console.error('Failed to delete quota:', error)
+      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao eliminar quota.'))
+    }
   }
 
   return (

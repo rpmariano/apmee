@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Plus, Search } from 'lucide-react'
-import { CONTACT_CATEGORIES, CONTACT_CATEGORY_LABELS } from '@/lib/constants'
 import { ContactList } from '@/features/contacts/components/contact-list'
 import { ContactForm } from '@/features/contacts/components/contact-form'
 import { useCreateContact, useUpdateContact, useDeleteContact } from '@/features/contacts/api/use-contacts'
