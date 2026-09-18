@@ -1,15 +1,26 @@
+import { Users, CheckCircle2, Search } from 'lucide-react'
 import { QuotaCard, type QuotaWithContact } from './quota-card'
+import { formatSchoolYear } from '@/lib/school-year'
 
 type FilterValue = 'all' | 'paid' | 'unpaid'
 
 interface QuotaListProps {
   quotas?: QuotaWithContact[]
   filter: FilterValue
+  searchQuery?: string
+  selectedYear?: number
   isLoading: boolean
   onEdit?: (quota: QuotaWithContact) => void
 }
 
-export function QuotaList({ quotas, filter, isLoading, onEdit }: QuotaListProps) {
+export function QuotaList({
+  quotas,
+  filter,
+  searchQuery = '',
+  selectedYear,
+  isLoading,
+  onEdit,
+}: QuotaListProps) {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-3 py-4">
@@ -20,29 +31,73 @@ export function QuotaList({ quotas, filter, isLoading, onEdit }: QuotaListProps)
     )
   }
 
+  const query = searchQuery.trim().toLowerCase()
+
   const filteredQuotas = (quotas || []).filter((q) => {
-    if (filter === 'all') return true
-    if (filter === 'paid') return q.paid === true
-    if (filter === 'unpaid') return q.paid === false
+    // 1. Year filter
+    if (selectedYear !== undefined && q.year !== selectedYear) return false
+
+    // 2. Tab status filter
+    if (filter === 'paid' && !q.paid) return false
+    if (filter === 'unpaid' && q.paid) return false
+
+    // 3. Search query filter
+    if (query) {
+      const contactName = (q.contact?.name || '').toLowerCase()
+      const metadata = q.contact?.metadata || {}
+      const educando = String(metadata.educando || '').toLowerCase()
+      const turma = String(metadata.turma || (Array.isArray(metadata.turmas) ? metadata.turmas.join(' ') : '')).toLowerCase()
+
+      const matches =
+        contactName.includes(query) ||
+        educando.includes(query) ||
+        turma.includes(query)
+
+      if (!matches) return false
+    }
+
     return true
   })
 
   if (filteredQuotas.length === 0) {
+    const isSearching = !!query
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-warm-100">
-          <svg className="h-8 w-8 text-secondary-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
-          </svg>
+      <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-warm-100 text-secondary-400 mb-3">
+          {isSearching ? (
+            <Search className="h-8 w-8 text-secondary-400" />
+          ) : filter === 'unpaid' ? (
+            <CheckCircle2 className="h-8 w-8 text-green-600" />
+          ) : (
+            <Users className="h-8 w-8 text-secondary-400" />
+          )}
         </div>
-        <p className="mt-4 text-sm font-medium text-foreground">Sem Quotas</p>
-        <p className="mt-1 text-xs text-muted">Não existem quotas com este estado.</p>
+
+        <p className="text-base font-bold text-foreground">
+          {isSearching
+            ? 'Nenhum resultado encontrado'
+            : filter === 'unpaid'
+            ? 'Quotas em dia!'
+            : filter === 'paid'
+            ? 'Sem pagamentos registados'
+            : 'Sem quotas registadas'}
+        </p>
+
+        <p className="mt-1 text-xs text-secondary-600 max-w-xs leading-relaxed">
+          {isSearching
+            ? `Não encontrámos quotas que correspondam a "${searchQuery}". Tente outro termo.`
+            : filter === 'unpaid'
+            ? `Todas as quotas registadas no ano letivo ${selectedYear ? formatSchoolYear(selectedYear) : ''} já se encontram regularizadas.`
+            : filter === 'paid'
+            ? `Ainda não existem quotas liquidadas no ano letivo ${selectedYear ? formatSchoolYear(selectedYear) : ''}.`
+            : `Ainda não foram registadas quotas para o ano letivo ${selectedYear ? formatSchoolYear(selectedYear) : ''}. Toque em "+" para registar.`}
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-3 py-4">
+    <div className="flex flex-col gap-3 py-3">
       {filteredQuotas.map((quota) => (
         <QuotaCard key={quota.id} quota={quota} onEdit={onEdit} />
       ))}

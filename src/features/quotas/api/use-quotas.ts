@@ -8,16 +8,16 @@ export function useQuotas() {
   return useQuery({
     queryKey: [QUOTAS_QUERY_KEY],
     queryFn: async () => {
-      // Fetch quotas AND the related contact name
+      // Fetch quotas AND the related contact name + metadata (educando, turma)
       const { data, error } = await (supabase as any)
         .from('quotas')
-        .select('*, contact:contacts(name, email)')
+        .select('*, contact:contacts(name, email, metadata)')
         .is('deleted_at', null)
         .order('year', { ascending: false })
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      return data as (Quota & { contact: { name: string; email: string | null } })[]
+      return data as (Quota & { contact: { name: string; email: string | null; metadata?: Record<string, any> } })[]
     },
   })
 }

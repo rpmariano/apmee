@@ -201,16 +201,6 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
           {quota ? 'Editar Quota' : 'Nova Quota'}
         </h2>
         <div className="flex items-center gap-1">
-          {isExistingQuota && onDelete && (
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              aria-label="Eliminar quota"
-              className="rounded-full p-2 text-red-400 hover:bg-red-50"
-            >
-              <Trash2 className="h-5 w-5" />
-            </button>
-          )}
           <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
             <X className="h-5 w-5" />
           </button>
@@ -218,7 +208,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        <form ref={formRef}   id="quota-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form ref={formRef} id="quota-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           
           <div className="flex flex-col gap-1.5 z-[60]">
             <div className="flex items-center justify-between">
@@ -236,7 +226,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
                 </button>
               )}
             </div>
-            <CustomSelect disabled={!isEditing || !!quota} 
+            <CustomSelect disabled={!isEditing} 
               value={contactId}
               onChange={(val) => setContactId(val)}
               options={eligibleContacts.map(c => ({ 
@@ -266,16 +256,19 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
             </div>
             
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="quota-amount" className="text-sm font-medium text-secondary-700">Valor (€) <span className="text-primary-500">*</span></label>
-              <input id="quota-amount" disabled={!isEditing} 
-                type="number"
-                step="0.01"
-                min="0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-                className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-              />
+              <label htmlFor="quota-amount" className="text-sm font-medium text-secondary-700">Valor <span className="text-primary-500">*</span></label>
+              <div className="relative flex items-center">
+                <input id="quota-amount" disabled={!isEditing} 
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
+                  className="w-full rounded-[var(--radius-button)] border border-warm-200 bg-surface pl-3 pr-7 py-2 text-sm font-semibold focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                />
+                <span className="pointer-events-none absolute right-3 text-sm font-bold text-secondary-500">€</span>
+              </div>
             </div>
           </div>
 

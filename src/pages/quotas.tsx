@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react'
-import { Plus } from 'lucide-react'
+import { useState, useRef, useMemo } from 'react'
+import { Plus, Search } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { QuotaList } from '@/features/quotas/components/quota-list'
 import { QuotaForm } from '@/features/quotas/components/quota-form'
+import { QuotaSummary } from '@/features/quotas/components/quota-summary'
 import { useQuotas, useCreateQuota, useUpdateQuota, useDeleteQuota } from '@/features/quotas/api/use-quotas'
 import { useContacts } from '@/features/contacts/api/use-contacts'
 import { usePermissions } from '@/hooks/use-permissions'
@@ -10,7 +11,7 @@ import type { QuotaWithContact } from '@/features/quotas/components/quota-card'
 import type { Quota } from '@/types/database'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
-import { formatSchoolYear } from '@/lib/school-year'
+import { formatSchoolYear, getCurrentSchoolYear, getSchoolYearOptions } from '@/lib/school-year'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
 import { getFriendlyErrorMessage } from '@/lib/error-utils'
@@ -26,10 +27,15 @@ const tabs: { value: FilterValue; label: string }[] = [
 
 export default function QuotasPage() {
   const [activeTab, setActiveTab] = useState<FilterValue>('all')
+  const [selectedYear, setSelectedYear] = useState<number>(getCurrentSchoolYear())
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingQuota, setEditingQuota] = useState<QuotaWithContact | undefined>()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const isSubmittingRef = useRef(false)
+
+  const schoolYearOptions = useMemo(() => getSchoolYearOptions(4, 1), [])
 
   const queryClient = useQueryClient()
   const { data: quotas, isLoading } = useQuotas()
@@ -65,7 +71,7 @@ export default function QuotasPage() {
     try {
       const targetId = (data as any).id || editingQuota?.id
       const contactName = data.contact_id ? getContactName(data.contact_id) : (editingQuota?.contact?.name || 'Associado')
-      const targetYear = data.year ?? editingQuota?.year ?? 2026
+      const targetYear = data.year ?? editingQuota?.year ?? getCurrentSchoolYear()
       const yearFormatted = formatSchoolYear(targetYear)
       const isPaid = !!data.paid
       let movementId = editingQuota?.movement_id || null
@@ -238,40 +244,104 @@ export default function QuotasPage() {
   return (
     <div className="relative min-h-[calc(100vh-4rem)] bg-background pb-20">
       <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="px-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-foreground">Quotas</h1>
-            {isFinancialReadOnly() && (
-              <span className="rounded-full bg-warm-200 px-2 py-0.5 text-xs font-medium text-secondary-600">
-                Apenas leitura
-              </span>
-            )}
+        <div className="px-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-foreground">Quotas</h1>
+              {isFinancialReadOnly() && (
+                <span className="rounded-full bg-warm-200 px-2 py-0.5 text-xs font-medium text-secondary-600">
+                  Apenas leitura
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !isSearchOpen
+                  setIsSearchOpen(next)
+                  if (!next) setSearchQuery('')
+                }}
+                aria-label={isSearchOpen ? "Fechar pesquisa" : "Abrir pesquisa"}
+                className={cn(
+                  "rounded-full p-2 transition-colors hover:bg-warm-100",
+                  isSearchOpen ? "bg-warm-200 text-primary-600" : "text-muted hover:text-foreground"
+                )}
+              >
+                <Search className="h-5 w-5" />
+              </button>
+              <MenuAlerts />
+            </div>
           </div>
-          <MenuAlerts />
+
+          {/* Search Bar (Expandable) */}
+          {isSearchOpen && (
+            <div className="mt-3 animate-in fade-in slide-in-from-top-2">
+              <input
+                type="search"
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Pesquisar quotas"
+                placeholder="Pesquisar por associado, educando ou turma..."
+                className="w-full rounded-[var(--radius-button)] border border-warm-200 bg-surface px-4 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200"
+              />
+            </div>
+          )}
         </div>
 
-        <div className="mt-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide">
-          {tabs.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setActiveTab(tab.value)}
-              className={cn(
-                'whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
-                activeTab === tab.value
-                  ? 'bg-secondary-900 text-white shadow-sm'
-                  : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
-              )}
+        {/* Tabs & School Year Row */}
+        <div className="mt-4 flex items-center justify-between gap-2 px-4 pb-2">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+            {tabs.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={cn(
+                  'whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                  activeTab === tab.value
+                    ? 'bg-primary-500 text-white shadow-xs font-semibold'
+                    : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Seletor de Ano Letivo */}
+          <div className="shrink-0">
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              aria-label="Filtrar por Ano Letivo"
+              className="rounded-full border border-warm-200 bg-surface px-3 py-1 text-xs font-bold text-secondary-800 shadow-2xs focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-300"
             >
-              {tab.label}
-            </button>
-          ))}
+              {schoolYearOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
+      </div>
+
+      {/* Quota Summary Card */}
+      <div className="px-4 pt-3 pb-1">
+        <QuotaSummary
+          quotas={quotas || []}
+          selectedYear={selectedYear}
+          isLoading={isLoading}
+        />
       </div>
 
       <div className="px-4">
         <QuotaList 
           quotas={quotas} 
           filter={activeTab} 
+          searchQuery={searchQuery}
+          selectedYear={selectedYear}
           isLoading={isLoading} 
           onEdit={canWriteQuotas ? handleEditQuota : undefined} 
         />
@@ -281,7 +351,7 @@ export default function QuotasPage() {
         <button
           type="button"
           aria-label="Registar nova quota"
-          className="fixed bottom-24 right-6 min-[430px]:right-[calc(50%-215px+1.5rem)] z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary-400 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-500 active:scale-95"
+          className="fixed bottom-24 right-6 min-[430px]:right-[calc(50%-215px+1.5rem)] z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-600 active:scale-95"
           onClick={() => setIsFormOpen(true)}
         >
           <Plus className="h-6 w-6" />
