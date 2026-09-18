@@ -27,6 +27,10 @@ export function getFriendlyErrorMessage(error: any, fallback = 'Ocorreu um erro 
     return 'Um dos campos contém um valor não permitido pelo sistema. Verifique os dados introduzidos.'
   }
 
+  if (msg.includes('account') && (msg.includes('column') || msg.includes('42703') || msg.includes('PGRST204'))) {
+    return 'A coluna "account" (Banco / Caixa) ainda não foi criada na base de dados. Por favor execute a migração SQL no Supabase.'
+  }
+
   if (msg.includes('bucket') || msg.includes('storage') || msg.includes('upload')) {
     return 'Não foi possível carregar o ficheiro. Verifique o tamanho ou o formato.'
   }

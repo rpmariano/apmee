@@ -37,38 +37,13 @@ export function useCreateMovement() {
         account: newMovement.account || 'banco',
       }
 
-      // Try inserting with account
-      let { data, error } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from('financial_movements')
         .insert(payload)
         .select()
         .single()
 
-      // Resilience fallback: if account column does not exist yet in database
-      if (error) {
-        const errMsg = error.message || ''
-        if (
-          error.code === '42703' ||
-          error.code === 'PGRST204' ||
-          errMsg.includes('account') ||
-          errMsg.includes('column')
-        ) {
-          const fallbackPayload = { ...payload }
-          delete fallbackPayload.account
-          const retry = await (supabase as any)
-            .from('financial_movements')
-            .insert(fallbackPayload)
-            .select()
-            .single()
-
-          if (retry.error) throw retry.error
-          data = { ...retry.data, account: payload.account || 'banco' }
-          error = null
-        } else {
-          throw error
-        }
-      }
-
+      if (error) throw error
       return data
     },
     onSuccess: () => {
@@ -84,39 +59,14 @@ export function useUpdateMovement() {
     mutationFn: async ({ id, ...updates }: any) => {
       const payload = { ...updates }
 
-      let { data, error } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from('financial_movements')
         .update(payload)
         .eq('id', id)
         .select()
         .single()
 
-      // Resilience fallback: if account column does not exist yet in database
-      if (error) {
-        const errMsg = error.message || ''
-        if (
-          error.code === '42703' ||
-          error.code === 'PGRST204' ||
-          errMsg.includes('account') ||
-          errMsg.includes('column')
-        ) {
-          const fallbackPayload = { ...payload }
-          delete fallbackPayload.account
-          const retry = await (supabase as any)
-            .from('financial_movements')
-            .update(fallbackPayload)
-            .eq('id', id)
-            .select()
-            .single()
-
-          if (retry.error) throw retry.error
-          data = { ...retry.data, account: payload.account || 'banco' }
-          error = null
-        } else {
-          throw error
-        }
-      }
-
+      if (error) throw error
       return data
     },
     onSuccess: () => {

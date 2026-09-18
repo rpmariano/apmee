@@ -294,24 +294,26 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, onDe
             <div className="grid grid-cols-2 gap-2 rounded-[var(--radius-button)] bg-warm-100 p-1">
               <button
                 type="button"
+                disabled={!isEditing}
                 onClick={() => setAccount('banco')}
                 className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold transition-all ${
                   account === 'banco'
                     ? 'bg-white text-secondary-900 shadow-sm'
                     : 'text-secondary-600 hover:text-foreground'
-                }`}
+                } ${!isEditing ? 'cursor-not-allowed opacity-60' : ''}`}
               >
                 <Landmark className="h-4 w-4 text-blue-600" />
                 <span>Banco</span>
               </button>
               <button
                 type="button"
+                disabled={!isEditing}
                 onClick={() => setAccount('caixa')}
                 className={`flex items-center justify-center gap-2 rounded-md py-2 text-sm font-semibold transition-all ${
                   account === 'caixa'
                     ? 'bg-white text-secondary-900 shadow-sm'
                     : 'text-secondary-600 hover:text-foreground'
-                }`}
+                } ${!isEditing ? 'cursor-not-allowed opacity-60' : ''}`}
               >
                 <Coins className="h-4 w-4 text-amber-600" />
                 <span>Caixa</span>
