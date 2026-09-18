@@ -26,10 +26,11 @@ export interface EventDocument {
 
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
 export type TaskStatus = 'todo' | 'in_progress' | 'done'
-export type InventoryCategory = 'consumivel' | 'alimento' | 'mobilizado'
+export type InventoryCategory = 'consumivel' | 'alimento' | 'mobilizado' | 'equipamento'
 export type InventoryTransactionType = 'in' | 'out'
 export type FinancialType = 'income' | 'expense'
 export type FinancialAccount = 'banco' | 'caixa'
+export type FinancialCategory = 'transferencia' | string | null
 
 export interface AllowedUser {
   id: string
@@ -139,6 +140,7 @@ export interface FinancialMovement {
   amount: number
   description: string
   category: string | null
+  transfer_id: string | null
   event_id: string | null
   receipt_url: string | null
   date: string

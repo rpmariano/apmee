@@ -9,6 +9,8 @@ import { CustomSelect } from '@/components/ui/custom-select'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useEvents } from '@/features/events/api/use-events'
 
+import { useInventory } from '@/features/inventory/api/use-inventory'
+
 const INCOME_CATEGORIES = [
   { label: 'Quotas de Sócios', value: 'Quotas de Sócios' },
   { label: 'Eventos / Festas', value: 'Eventos / Festas' },
@@ -19,20 +21,29 @@ const INCOME_CATEGORIES = [
 ]
 
 const EXPENSE_CATEGORIES = [
-  { label: 'Material Escolar / Didático', value: 'Material Escolar / Didático' },
-  { label: 'Eventos / Festas', value: 'Eventos / Festas' },
-  { label: 'Bens e Equipamentos', value: 'Bens e Equipamentos' },
-  { label: 'Serviços Administrativos', value: 'Serviços Administrativos' },
-  { label: 'Manutenção / Obras', value: 'Manutenção / Obras' },
-  { label: 'Comunicação / Marketing', value: 'Comunicação / Marketing' },
-  { label: 'Outras Despesas', value: 'Outras Despesas' }
+  { label: 'Consumíveis', value: 'Consumíveis' },
+  { label: 'Alimentos', value: 'Alimentos' },
+  { label: 'Equipamento', value: 'Equipamento' },
+  { label: 'Material escolar', value: 'Material escolar' },
+  { label: 'Serviços', value: 'Serviços' },
 ]
+
+export interface InventoryEntryPayload {
+  name: string
+  category: 'consumivel' | 'alimento' | 'mobilizado'
+  quantity: number
+  unit?: string
+}
+
+export type MovementFormData = Partial<FinancialMovement> & {
+  inventoryItem?: InventoryEntryPayload
+}
 
 interface MovementFormProps {
   movement?: FinancialMovement
   initialEventId?: string
   onClose: () => void
-  onSubmit: (data: Partial<FinancialMovement>) => void
+  onSubmit: (data: MovementFormData) => void
   onDelete?: (id: string) => Promise<void>
   isLoading?: boolean
   readOnly?: boolean
@@ -73,6 +84,18 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, onDe
   const [category, setCategory] = useState(movement?.category ?? '')
   const [eventId, setEventId] = useState(movement?.event_id ?? initialEventId ?? '')
   const { data: events = [] } = useEvents()
+  const { data: inventoryItems = [] } = useInventory()
+
+  const isInventoryCategory = type === 'expense' && (
+    category === 'Consumíveis' || category === 'Alimentos' || category === 'Equipamento'
+  )
+
+  const mappedInventoryCategory: 'consumivel' | 'alimento' | 'mobilizado' =
+    category === 'Consumíveis' ? 'consumivel' : category === 'Alimentos' ? 'alimento' : 'mobilizado'
+
+  const [inventoryItemName, setInventoryItemName] = useState('')
+  const [inventoryQuantity, setInventoryQuantity] = useState(1)
+  const [inventoryUnit, setInventoryUnit] = useState('un')
 
   // Format and sort events: Festas first (main cost centers), then Reuniões
   const eventOptions = useMemo(() => {
@@ -86,6 +109,15 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, onDe
       value: e.id,
     }))
   }, [events])
+
+  // Filter inventory items matching the selected category
+  const filteredInventoryOptions = useMemo(() => {
+    if (!isInventoryCategory) return []
+    return inventoryItems
+      .filter((i) => i.category === mappedInventoryCategory || (mappedInventoryCategory === 'mobilizado' && (i.category as any) === 'equipamento'))
+      .map((i) => ({ label: `${i.name} (Stock atual: ${i.quantity} ${i.unit || 'un'})`, value: i.name }))
+  }, [inventoryItems, isInventoryCategory, mappedInventoryCategory])
+
   const [date, setDate] = useState(toDateString(movement?.date))
   const [file, setFile] = useState<File | null>(null)
 
@@ -97,6 +129,7 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, onDe
     category !== (movement?.category ?? '') ||
     eventId !== (movement?.event_id ?? '') ||
     date !== toDateString(movement?.date) ||
+    inventoryItemName !== '' ||
     file !== null
   )
 
@@ -104,6 +137,18 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, onDe
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Required inventory item validation when inventory category is picked
+    if (type === 'expense' && isInventoryCategory && !isExistingMovement) {
+      if (!inventoryItemName.trim()) {
+        setErrorMessage('Para despesas de inventário, é obrigatório selecionar ou criar o artigo adquirido.')
+        return
+      }
+      if (inventoryQuantity <= 0) {
+        setErrorMessage('A quantidade adquirida de inventário deve ser maior que zero.')
+        return
+      }
+    }
     
     // Add time part to make it a valid TIMESTAMPTZ
     const dateIso = date ? new Date(`${date}T12:00:00Z`).toISOString() : new Date().toISOString()
@@ -135,15 +180,25 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, onDe
       }
     }
 
+    const effectiveDesc = description.trim() || (isInventoryCategory ? `Aquisição de ${inventoryItemName.trim()}` : '')
+
     onSubmit({
       type,
       account,
       amount: Number(amount),
-      description,
+      description: effectiveDesc,
       category: category || null,
       event_id: eventId || null,
       date: dateIso,
       receipt_url: finalReceiptUrl,
+      ...(isInventoryCategory && !isExistingMovement ? {
+        inventoryItem: {
+          name: inventoryItemName.trim(),
+          category: mappedInventoryCategory,
+          quantity: inventoryQuantity,
+          unit: inventoryUnit || 'un',
+        },
+      } : {}),
     })
   }
 
@@ -313,6 +368,74 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, onDe
               />
             </div>
           </div>
+
+          {/* Artigo de Inventário (Obrigatório para categorias de inventário) */}
+          {isInventoryCategory && (
+            <div className="rounded-xl border border-primary-200 bg-primary-50/50 p-3.5 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-primary-900">
+                  📦 Entrada em Inventário
+                </span>
+                <span className="text-[11px] font-semibold text-primary-700 bg-primary-100 px-2 py-0.5 rounded-full">
+                  {category}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-1.5 z-[55]">
+                <label className="text-xs font-medium text-secondary-700">
+                  Artigo de Inventário <span className="text-primary-500">*</span>
+                </label>
+                <CustomSelect
+                  disabled={!isEditing}
+                  value={inventoryItemName}
+                  onChange={(val) => setInventoryItemName(val)}
+                  options={filteredInventoryOptions}
+                  placeholder="Selecione existente ou digite novo..."
+                  creatable
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="inv-entry-qty" className="text-xs font-medium text-secondary-700">
+                    Quantidade <span className="text-primary-500">*</span>
+                  </label>
+                  <input
+                    id="inv-entry-qty"
+                    disabled={!isEditing}
+                    type="number"
+                    min="1"
+                    value={inventoryQuantity}
+                    onChange={(e) => setInventoryQuantity(Math.max(1, Number(e.target.value)))}
+                    required
+                    className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm font-bold text-center focus:border-primary-400 focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="inv-entry-unit" className="text-xs font-medium text-secondary-700">
+                    Unidade
+                  </label>
+                  <input
+                    id="inv-entry-unit"
+                    disabled={!isEditing}
+                    type="text"
+                    value={inventoryUnit}
+                    onChange={(e) => setInventoryUnit(e.target.value)}
+                    placeholder="un, cx, kg..."
+                    className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <p className="text-[11px] text-secondary-600 leading-tight">
+                {inventoryItemName
+                  ? `Serão adicionadas ${inventoryQuantity} ${inventoryUnit} de "${inventoryItemName}" ao inventário.`
+                  : 'Ao gravar, o artigo será criado ou atualizado no inventário.'}
+                {eventId ? ' Como selecionou um evento, o artigo será também associado à lista desse evento.' : ''}
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1.5 z-[50]">
               <label className="text-sm font-medium text-secondary-700">Evento (Opcional)</label>

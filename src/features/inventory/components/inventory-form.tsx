@@ -10,13 +10,14 @@ import { CustomDialog } from '@/components/ui/custom-dialog'
 const INVENTORY_CATEGORIES = [
   { label: 'Consumíveis', value: 'consumivel' },
   { label: 'Alimentos', value: 'alimento' },
-  { label: 'Mobilizado', value: 'mobilizado' }
+  { label: 'Equipamento', value: 'mobilizado' }
 ]
 
 const ITEMS_BY_CATEGORY: Record<string, string[]> = {
   'consumivel': ['Pratos de papel', 'Pratos de Plástico', 'Talheres', 'Guardanapos', 'Copos de plástico'],
   'alimento': ['Pacote batata frita', 'Pacote de pipocas', 'Sumos Naturais', 'Refrigerantes', 'Água', 'Pão cachorro', 'Salsicha'],
-  'mobilizado': ['Microfone', 'Coluna', 'Máquina Café']
+  'mobilizado': ['Microfone', 'Coluna', 'Máquina Café'],
+  'equipamento': ['Microfone', 'Coluna', 'Máquina Café']
 }
 
 interface InventoryFormProps {

@@ -12,13 +12,14 @@ import { cn } from '@/lib/utils'
 const INVENTORY_CATEGORIES_OPTIONS = [
   { label: 'Consumíveis', value: 'consumivel' },
   { label: 'Alimentos', value: 'alimento' },
-  { label: 'Mobilizado', value: 'mobilizado' },
+  { label: 'Equipamento', value: 'mobilizado' },
 ]
 
 const CATEGORY_LABELS: Record<string, string> = {
   consumivel: 'Consumíveis',
   alimento: 'Alimentos',
-  mobilizado: 'Mobilizado',
+  mobilizado: 'Equipamento',
+  equipamento: 'Equipamento',
 }
 
 interface EventInventoryManagerProps {

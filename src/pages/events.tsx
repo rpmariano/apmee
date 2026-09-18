@@ -9,6 +9,8 @@ import { EventForm } from '@/features/events/components/event-form'
 import { useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent } from '@/features/events/api/use-events'
 import { useMovements } from '@/features/treasury/api/use-treasury'
 import type { EventFinanceSummary } from '@/features/events/components/event-card'
+import { useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase'
 import { useBoardMembers } from '@/features/board/api/use-board'
 import { useAuth } from '@/providers/auth-provider'
 import { usePermissions } from '@/hooks/use-permissions'
@@ -26,6 +28,7 @@ export default function EventsPage() {
   const { data: events = [], isLoading } = useEvents()
   const { data: boardMembers = [] } = useBoardMembers()
   const { user } = useAuth()
+  const queryClient = useQueryClient()
 
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [activeTab, setActiveTab] = useState<EventFilterType>('day')
@@ -211,6 +214,50 @@ export default function EventsPage() {
         throw lastErr
       }
 
+      // If event marked as completed, deduct consumables and food stock (Equipamento stays in inventory without deduction)
+      if (data.status === 'completed' && current && current.status !== 'completed') {
+        try {
+          const { data: reqs } = await (supabase as any)
+            .from('event_inventory')
+            .select('*, item:inventory_items(*)')
+            .eq('event_id', current.id)
+
+          if (reqs && reqs.length > 0) {
+            for (const req of reqs) {
+              const item = req.item
+              if (!item) continue
+              const cat = item.category
+              // Regra de negócio: Equipamento NÃO tem baixa, apenas consumíveis e alimentos
+              if (cat === 'consumivel' || cat === 'alimento') {
+                const usedQty = Number(req.quantity) || 0
+                const currentQty = Number(item.quantity) || 0
+                const newQty = Math.max(0, currentQty - usedQty)
+
+                await (supabase as any)
+                  .from('inventory_items')
+                  .update({ quantity: newQty })
+                  .eq('id', item.id)
+
+                await (supabase as any)
+                  .from('inventory_transactions')
+                  .insert({
+                    item_id: item.id,
+                    type: 'out',
+                    quantity: usedQty,
+                    event_id: current.id,
+                    notes: `Baixa por conclusão do evento: ${current.title}`,
+                  })
+              }
+            }
+            queryClient.invalidateQueries({ queryKey: ['inventory'] })
+            queryClient.invalidateQueries({ queryKey: ['inventory-transactions'] })
+            queryClient.invalidateQueries({ queryKey: ['captive-stock'] })
+          }
+        } catch (invErr) {
+          console.warn('Erro ao processar baixa de stock do evento:', invErr)
+        }
+      }
+
       if (data.start_date) {
         try {
           setSelectedDate(parseISO(data.start_date))
@@ -219,7 +266,7 @@ export default function EventsPage() {
           // ignore
         }
       }
-      toast.success(activeEvent ? 'Evento atualizado com sucesso!' : 'Evento criado com sucesso!')
+      toast.success(current ? 'Evento atualizado com sucesso!' : 'Evento criado com sucesso!')
       handleCloseForm()
     } catch (error: any) {
       console.error('Failed to save event:', error)

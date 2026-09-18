@@ -1,6 +1,7 @@
 import {
   ArrowDownRight,
   ArrowUpRight,
+  ArrowLeftRight,
   Landmark,
   Coins,
 } from 'lucide-react'
@@ -16,20 +17,18 @@ interface MovementCardProps {
 }
 
 export function MovementCard({ movement, onEdit, eventName }: MovementCardProps) {
+  const isTransfer = movement.category === 'transferencia'
   const isIncome = movement.type === 'income'
   const isBanco = (movement.account || 'banco') === 'banco'
 
   const parsedDate = parseISO(movement.date)
   const compactDate = format(parsedDate, "d 'de' MMM", { locale: pt })
 
-  // If there is an associated event, display the event's name in place of generic category;
-  // otherwise fallback to category
-  const eventOrCategory = eventName || movement.category
+  // Determine label shown below description
+  const subLabel = isTransfer ? null : (eventName || movement.category)
 
   const handleClick = () => {
-    if (onEdit) {
-      onEdit(movement)
-    }
+    if (onEdit) onEdit(movement)
   }
 
   return (
@@ -46,7 +45,10 @@ export function MovementCard({ movement, onEdit, eventName }: MovementCardProps)
       aria-label={`Ver detalhes de ${movement.description}`}
       className={cn(
         'group flex items-center justify-between gap-3 p-3 rounded-[var(--radius-card)] border bg-surface transition-all duration-150 outline-none',
-        'border-warm-200 shadow-xs hover:border-warm-300 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-primary-400',
+        isTransfer
+          ? 'border-secondary-200 bg-secondary-50/40 shadow-xs hover:border-secondary-300'
+          : 'border-warm-200 shadow-xs hover:border-warm-300 hover:shadow-sm',
+        'focus-visible:ring-2 focus-visible:ring-primary-400',
         onEdit && 'cursor-pointer active:scale-[0.99] hover:bg-warm-50/70'
       )}
     >
@@ -55,10 +57,18 @@ export function MovementCard({ movement, onEdit, eventName }: MovementCardProps)
         <div
           className={cn(
             'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-transform',
-            isIncome ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600'
+            isTransfer
+              ? 'bg-secondary-100 text-secondary-600'
+              : isIncome
+              ? 'bg-green-100 text-green-700'
+              : 'bg-red-50 text-red-600'
           )}
         >
-          {isIncome ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+          {isTransfer
+            ? <ArrowLeftRight className="h-4 w-4" />
+            : isIncome
+            ? <ArrowUpRight className="h-4 w-4" />
+            : <ArrowDownRight className="h-4 w-4" />}
         </div>
 
         <div className="flex flex-col min-w-0 flex-1">
@@ -81,12 +91,19 @@ export function MovementCard({ movement, onEdit, eventName }: MovementCardProps)
               </span>
             )}
 
-            {eventOrCategory && (
+            {isTransfer && (
+              <span className="inline-flex items-center gap-1 rounded bg-secondary-100 px-1.5 py-0.2 text-xs font-semibold text-secondary-600 border border-secondary-200">
+                <ArrowLeftRight className="h-2.5 w-2.5" />
+                Transferência
+              </span>
+            )}
+
+            {!isTransfer && subLabel && (
               <span className={cn(
                 "truncate max-w-[180px] text-xs font-medium",
                 eventName ? "text-primary-700 font-semibold" : "text-secondary-500"
               )}>
-                • {eventOrCategory}
+                • {subLabel}
               </span>
             )}
           </div>
@@ -97,10 +114,15 @@ export function MovementCard({ movement, onEdit, eventName }: MovementCardProps)
       <div
         className={cn(
           'text-right font-black text-sm min-[380px]:text-base tracking-tight shrink-0',
-          isIncome ? 'text-green-600' : 'text-foreground'
+          isTransfer
+            ? 'text-secondary-500'
+            : isIncome
+            ? 'text-green-600'
+            : 'text-foreground'
         )}
       >
-        {isIncome ? '+' : '-'}
+        {isTransfer ? '⇄' : isIncome ? '+' : '-'}
+        {' '}
         {Number(movement.amount).toLocaleString('pt-PT', {
           style: 'currency',
           currency: 'EUR',

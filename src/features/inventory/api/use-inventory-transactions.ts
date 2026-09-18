@@ -27,6 +27,7 @@ export function useCreateInventoryTransaction() {
 
   return useMutation({
     mutationFn: async (transaction: Omit<InventoryTransaction, 'id' | 'created_at' | 'created_by'>) => {
+      // 1. Insert transaction record
       const { data, error } = await supabase
         .from('inventory_transactions')
         .insert(transaction as any)
@@ -34,6 +35,25 @@ export function useCreateInventoryTransaction() {
         .single()
 
       if (error) throw error
+
+      // 2. Update stock quantity in inventory_items
+      const { data: itemData, error: itemError } = await (supabase as any)
+        .from('inventory_items')
+        .select('quantity')
+        .eq('id', transaction.item_id)
+        .single()
+
+      if (!itemError && itemData) {
+        const currentQty = itemData.quantity || 0
+        const delta = transaction.type === 'in' ? transaction.quantity : -transaction.quantity
+        const newQty = Math.max(0, currentQty + delta)
+
+        await (supabase as any)
+          .from('inventory_items')
+          .update({ quantity: newQty })
+          .eq('id', transaction.item_id)
+      }
+
       return data
     },
     onSuccess: () => {

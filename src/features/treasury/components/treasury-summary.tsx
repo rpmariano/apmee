@@ -35,30 +35,39 @@ export function TreasurySummary({
     return <div className="h-44 w-full animate-pulse rounded-[var(--radius-card)] bg-warm-100" />
   }
 
-  // Calculate Banco metrics
-  const bancoMovements = movements.filter((m) => (m.account || 'banco') === 'banco')
-  const bancoIncome = bancoMovements
+  // Separate transfer movements — they affect per-account balance but NOT consolidated income/expense
+  const nonTransferMovements = movements.filter((m) => m.category !== 'transferencia')
+
+  // Calculate Banco metrics (transfers count for balance, not for income/expense display)
+  const bancoAll = movements.filter((m) => (m.account || 'banco') === 'banco')
+  const bancoIncome = bancoAll
     .filter((m) => m.type === 'income')
     .reduce((sum, m) => sum + Number(m.amount), 0)
-  const bancoExpense = bancoMovements
+  const bancoExpense = bancoAll
     .filter((m) => m.type === 'expense')
     .reduce((sum, m) => sum + Number(m.amount), 0)
   const bancoBalance = bancoIncome - bancoExpense
 
-  // Calculate Caixa metrics
-  const caixaMovements = movements.filter((m) => m.account === 'caixa')
-  const caixaIncome = caixaMovements
+  // Calculate Caixa metrics (transfers count for balance, not for income/expense display)
+  const caixaAll = movements.filter((m) => m.account === 'caixa')
+  const caixaIncome = caixaAll
     .filter((m) => m.type === 'income')
     .reduce((sum, m) => sum + Number(m.amount), 0)
-  const caixaExpense = caixaMovements
+  const caixaExpense = caixaAll
     .filter((m) => m.type === 'expense')
     .reduce((sum, m) => sum + Number(m.amount), 0)
   const caixaBalance = caixaIncome - caixaExpense
 
-  // Calculate Consolidated metrics
-  const totalIncome = bancoIncome + caixaIncome
-  const totalExpense = bancoExpense + caixaExpense
-  const totalBalance = totalIncome - totalExpense
+  // Calculate Consolidated metrics — exclude transfers to avoid double-counting
+  const consolidatedNonTransfer = nonTransferMovements
+  const totalIncome = consolidatedNonTransfer
+    .filter((m) => m.type === 'income')
+    .reduce((sum, m) => sum + Number(m.amount), 0)
+  const totalExpense = consolidatedNonTransfer
+    .filter((m) => m.type === 'expense')
+    .reduce((sum, m) => sum + Number(m.amount), 0)
+  // Consolidated balance = sum of both account balances (transfers cancel out)
+  const totalBalance = bancoBalance + caixaBalance
 
   // Percentages of positive liquidity
   const positiveLiquidity = Math.max(0, bancoBalance) + Math.max(0, caixaBalance)
