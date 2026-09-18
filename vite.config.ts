@@ -44,6 +44,9 @@ export default defineConfig({
         ],
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         // Cache static assets
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpeg,jpg,woff2}'],
         runtimeCaching: [
