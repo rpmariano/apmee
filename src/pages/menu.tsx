@@ -2,10 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Users,
-  CalendarDays,
-  ListTodo,
   Package,
-  Wallet,
   Receipt,
   Eye,
   Shield,
@@ -24,10 +21,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { to: '/contactos', label: 'Contactos', icon: Users, color: 'bg-primary-100 text-primary-600' },
-  { to: '/agenda', label: 'Agenda & Eventos', icon: CalendarDays, color: 'bg-warm-200 text-secondary-600' },
-  { to: '/tarefas', label: 'Tarefas', icon: ListTodo, color: 'bg-secondary-100 text-secondary-600' },
   { to: '/inventario', label: 'Inventário', icon: Package, color: 'bg-warm-100 text-secondary-700' },
-  { to: '/tesouraria', label: 'Tesouraria', icon: Wallet, color: 'bg-primary-200 text-primary-700', module: 'treasury' },
   { to: '/quotas', label: 'Quotas', icon: Receipt, color: 'bg-warm-300 text-secondary-700', module: 'quotas' },
   { to: '/board', label: 'Direção', icon: Shield, color: 'bg-secondary-200 text-secondary-700', superadminOnly: true },
 ]
@@ -64,7 +58,7 @@ export default function MenuPage() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           aria-label="Pesquisar no menu"
-          placeholder="Pesquisar módulos (ex: Quotas, Tarefas, Agenda)..."
+          placeholder="Pesquisar módulos (ex: Quotas, Inventário, Contactos)..."
           className="w-full rounded-[var(--radius-button)] border border-warm-200 bg-surface px-4 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200"
         />
       </div>
