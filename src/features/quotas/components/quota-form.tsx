@@ -51,10 +51,13 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
     setIsDeleting(true)
     try {
       await onDelete(quota.id)
+      setShowDeleteConfirm(false)
       onClose()
+    } catch (err: any) {
+      console.error('Failed to delete quota:', err)
+      setShowDeleteConfirm(false)
     } finally {
       setIsDeleting(false)
-      setShowDeleteConfirm(false)
     }
   }
 

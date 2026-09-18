@@ -68,16 +68,30 @@ export function useDeleteQuota() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase as any)
+      // 1. Attempt soft delete
+      const { error: softError } = await (supabase as any)
         .from('quotas')
         .update({ deleted_at: new Date().toISOString() })
         .eq('id', id)
 
-      if (error) throw error
+      if (softError) {
+        console.warn('Soft delete failed on quotas, attempting hard delete fallback:', softError)
+        // 2. Fallback to hard delete if soft delete errors
+        const { error: hardError } = await (supabase as any)
+          .from('quotas')
+          .delete()
+          .eq('id', id)
+
+        if (hardError) {
+          throw softError || hardError
+        }
+      }
       return id
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUOTAS_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['treasury'] })
+      queryClient.invalidateQueries({ queryKey: ['contacts'] })
     },
   })
 }

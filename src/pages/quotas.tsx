@@ -189,38 +189,49 @@ export default function QuotasPage() {
   const handleDeleteQuota = async (id: string) => {
     try {
       const quotaToDelete = quotas?.find((q) => q.id === id)
-      let movId = quotaToDelete?.movement_id
 
-      if (!movId && quotaToDelete) {
-        const contactName = quotaToDelete.contact?.name || 'Associado'
-        const yearFormatted = formatSchoolYear(quotaToDelete.year)
-        const { data: existingMovs } = await (supabase as any)
-          .from('financial_movements')
-          .select('id')
-          .eq('category', 'Quotas de Sócios')
-          .ilike('description', `Quota ${yearFormatted} — ${contactName}%`)
-          .is('deleted_at', null)
-          .limit(1)
+      // Best-effort cleanup of linked treasury movement (must never block quota deletion)
+      try {
+        let movId = quotaToDelete?.movement_id
 
-        if (existingMovs && existingMovs.length > 0) {
-          movId = existingMovs[0].id
+        if (!movId && quotaToDelete?.paid) {
+          const contactName = quotaToDelete.contact?.name
+          if (contactName) {
+            const { data: existingMovs } = await (supabase as any)
+              .from('financial_movements')
+              .select('id')
+              .eq('category', 'Quotas de Sócios')
+              .ilike('description', `%${contactName}%`)
+              .is('deleted_at', null)
+              .order('created_at', { ascending: false })
+              .limit(1)
+
+            if (existingMovs && existingMovs.length > 0) {
+              movId = existingMovs[0].id
+            }
+          }
         }
-      }
 
-      if (movId) {
-        await (supabase as any)
-          .from('financial_movements')
-          .update({ deleted_at: new Date().toISOString() })
-          .eq('id', movId)
+        if (movId) {
+          await (supabase as any)
+            .from('financial_movements')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('id', movId)
+        }
+      } catch (movErr) {
+        console.warn('Aviso ao anular movimento financeiro associado:', movErr)
       }
 
       await deleteMutation.mutateAsync(id)
       queryClient.invalidateQueries({ queryKey: ['treasury'] })
       queryClient.invalidateQueries({ queryKey: ['quotas'] })
+      queryClient.invalidateQueries({ queryKey: ['contacts'] })
       toast.success('Quota eliminada com sucesso!')
+      handleCloseForm()
     } catch (error: any) {
       console.error('Failed to delete quota:', error)
       setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao eliminar quota.'))
+      throw error
     }
   }
 
@@ -289,7 +300,7 @@ export default function QuotasPage() {
 
       <CustomDialog
         isOpen={!!errorMessage}
-        title="Erro ao guardar quota"
+        title={errorMessage?.toLowerCase().includes('eliminar') ? 'Erro ao eliminar quota' : 'Erro ao guardar quota'}
         description={errorMessage || ''}
         variant="danger"
         confirmLabel="OK"
