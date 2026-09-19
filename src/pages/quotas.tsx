@@ -91,7 +91,7 @@ export default function QuotasPage() {
             .order('created_at', { ascending: false }),
           (supabase as any)
             .from('quotas')
-            .select('id, contact_id, year, paid, amount, paid_date, movement_id, deleted_at, contact:contacts(name)'),
+            .select('*, contact:contacts(name)'),
         ])
 
         if (!activeMovs || activeMovs.length === 0) return

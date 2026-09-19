@@ -35,7 +35,7 @@ export function useDashboardStats() {
           .is('deleted_at', null),
         (supabase as any)
           .from('quotas')
-          .select('id, contact_id, year, paid, amount, paid_date, movement_id, deleted_at, contact:contacts(name)'),
+          .select('*, contact:contacts(name)'),
       ])
       
       let balance = 0

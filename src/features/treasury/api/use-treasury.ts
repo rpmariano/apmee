@@ -22,10 +22,18 @@ export function useMovements() {
       // 2. Fetch quotas to reconcile against the Single Source of Truth
       let quotas: any[] = []
       try {
-        const { data: qData } = await (supabase as any)
+        const { data: qData, error: qErr } = await (supabase as any)
           .from('quotas')
-          .select('id, contact_id, year, paid, amount, paid_date, movement_id, deleted_at, contact:contacts(name)')
-        if (qData) quotas = qData
+          .select('*, contact:contacts(name)')
+        if (!qErr && qData) {
+          quotas = qData
+        } else {
+          // Fallback in case relation fails
+          const { data: fallbackData } = await (supabase as any)
+            .from('quotas')
+            .select('*')
+          if (fallbackData) quotas = fallbackData
+        }
       } catch (qErr) {
         console.warn('Aviso ao carregar quotas para reconciliação:', qErr)
       }

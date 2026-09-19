@@ -150,9 +150,41 @@ export interface ReconcileResult {
 }
 
 /**
+ * Checks if a movement description corresponds to an anonymous/generic quota
+ * without any member name (e.g. "Pagamento de Quota 2026", "Quota 25/26", "Pagamento de Quota").
+ * Legitimate quota movements must ALWAYS be attributed to an individual member.
+ */
+export function isGenericOrphanQuota(description: string): boolean {
+  if (!description) return true
+  const clean = description
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+
+  // 1. Key ends with :__geral__ (meaning no individual member name could be extracted)
+  const key = getQuotaDeduplicationKey(description)
+  if (!key || key.endsWith(':__geral__')) {
+    return true
+  }
+
+  // 2. Generic description without member name
+  if (
+    clean === 'pagamento de quota' ||
+    /^pagamento\s*(?:de\s*)?quotas?\s*(?:\d{2}[/-]\d{2}|\d{4}[/-]\d{4}|\d{4}[/-]\d{2}|\b20\d{2}\b)?$/i.test(clean) ||
+    /^quotas?\s*(?:de\s*socios?|de\s*associados?)?\s*(?:\d{2}[/-]\d{2}|\d{4}[/-]\d{4}|\d{4}[/-]\d{2}|\b20\d{2}\b)?$/i.test(clean)
+  ) {
+    return true
+  }
+
+  return false
+}
+
+/**
  * Reconciles financial movements against the quotas table as the Single Source of Truth.
  * Enforces strict 1-to-1 parity:
  * - Each active paid quota has at most 1 movement in treasury.
+ * - Anonymous/generic quota movements (e.g. "Pagamento de Quota 2026") are purged (soft-deleted).
  * - Duplicate movements for the same paid quota are purged (soft-deleted).
  * - Movements matching deleted or unpaid quotas are purged (soft-deleted).
  * - Orphan quota movements (no matching active paid quota) are purged (soft-deleted).
@@ -172,6 +204,11 @@ export function reconcileQuotasAndMovements(
     for (const m of allMovements) {
       const item = { ...m, account: m.account || 'banco' }
       if (m.category === 'Quotas de Sócios') {
+        // Purge any anonymous/generic quota movement without a member
+        if (isGenericOrphanQuota(m.description)) {
+          idsToSoftDelete.push(m.id)
+          continue
+        }
         const key = getQuotaDeduplicationKey(m.description)
         if (key) {
           if (seenKeys.has(key)) {
@@ -201,6 +238,11 @@ export function reconcileQuotasAndMovements(
       account: m.account || 'banco',
     }
     if (m.category === 'Quotas de Sócios') {
+      // Purge any anonymous/generic quota movement without a member
+      if (isGenericOrphanQuota(m.description)) {
+        idsToSoftDelete.push(m.id)
+        continue
+      }
       availableQuotaMovements.set(m.id, item)
     } else {
       validMovements.push(item)
