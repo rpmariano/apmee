@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEvents } from '@/features/events/api/use-events'
-import { SlidersHorizontal, X, ArrowLeftRight } from 'lucide-react'
+import { Plus, SlidersHorizontal, X, ArrowLeftRight } from 'lucide-react'
 import { TreasurySummary, type TreasuryViewMode } from '@/features/treasury/components/treasury-summary'
 import { MovementList } from '@/features/treasury/components/movement-list'
 import { MovementForm } from '@/features/treasury/components/movement-form'
@@ -301,26 +301,43 @@ export default function TreasuryPage() {
             )}
           </div>
 
-          {/* Filter Menu Trigger (Homebanking Style) */}
-          <button
-            type="button"
-            onClick={() => setIsFilterOpen(true)}
-            aria-label="Abrir filtros de extrato"
-            className={cn(
-              'relative flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-95',
-              isFilterActive
-                ? 'border-primary-500 bg-primary-50 text-primary-800 shadow-xs'
-                : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50 shadow-xs'
+          {/* Filters & Create Action */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsFilterOpen(true)}
+              aria-label="Abrir filtros de extrato"
+              className={cn(
+                'relative flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-95',
+                isFilterActive
+                  ? 'border-primary-500 bg-primary-50 text-primary-800 shadow-xs'
+                  : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50 shadow-xs'
+              )}
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span>Filtros</span>
+              {isFilterActive && (
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-500 px-1 text-xs font-bold text-white leading-none">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
+
+            {canWriteTreasury && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingMovement(undefined)
+                  setIsFormOpen(true)
+                }}
+                aria-label="+ Criar movimento financeiro"
+                className="flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-primary-600 transition-all active:scale-95 shrink-0"
+              >
+                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                <span>Criar</span>
+              </button>
             )}
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            <span>Filtros</span>
-            {isFilterActive && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-500 px-1 text-xs font-bold text-white leading-none">
-                {activeFiltersCount}
-              </span>
-            )}
-          </button>
+          </div>
         </div>
 
         {/* Active Filter Chips Bar */}

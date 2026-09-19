@@ -81,11 +81,15 @@ export default function BoardPage() {
             {isSuperAdmin && (
               <button
                 type="button"
-                onClick={() => setIsFormOpen(true)}
-                className="flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-primary-600 active:scale-95 transition-all"
+                onClick={() => {
+                  setEditingMember(undefined)
+                  setIsFormOpen(true)
+                }}
+                aria-label="+ Criar membro da direção"
+                className="flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-primary-600 transition-all active:scale-95 shrink-0"
               >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Adicionar</span>
+                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                <span>Criar</span>
               </button>
             )}
             <MenuAlerts />

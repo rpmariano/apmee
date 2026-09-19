@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { X, Calendar, ArrowLeft } from 'lucide-react'
+import { Plus, X, Calendar, ArrowLeft } from 'lucide-react'
 import { InventoryList } from '@/features/inventory/components/inventory-list'
 import { InventoryForm } from '@/features/inventory/components/inventory-form'
 import { TransactionForm } from '@/features/inventory/components/transaction-form'
@@ -136,26 +136,43 @@ export default function InventoryPage() {
             ))}
           </div>
 
-          {/* Event Filter Trigger */}
-          <button
-            type="button"
-            onClick={() => setIsEventSelectorOpen((prev) => !prev)}
-            aria-label="Filtrar inventário por evento"
-            className={cn(
-              'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold shrink-0 transition-all active:scale-95',
-              selectedEventId !== 'all'
-                ? 'border-primary-500 bg-primary-50 text-primary-800 shadow-xs'
-                : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50 shadow-xs'
+          {/* Event Filter & Create Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsEventSelectorOpen((prev) => !prev)}
+              aria-label="Filtrar inventário por evento"
+              className={cn(
+                'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold shrink-0 transition-all active:scale-95',
+                selectedEventId !== 'all'
+                  ? 'border-primary-500 bg-primary-50 text-primary-800 shadow-xs'
+                  : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50 shadow-xs'
+              )}
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              <span>{selectedEventId !== 'all' ? 'Evento' : 'Filtro Evento'}</span>
+              {selectedEventId !== 'all' && (
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-500 px-1 text-xs font-bold text-white leading-none">
+                  1
+                </span>
+              )}
+            </button>
+
+            {canWriteInventory && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingItem(undefined)
+                  setIsFormOpen(true)
+                }}
+                aria-label="+ Criar artigo de inventário"
+                className="flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-primary-600 transition-all active:scale-95 shrink-0"
+              >
+                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                <span>Criar</span>
+              </button>
             )}
-          >
-            <Calendar className="h-3.5 w-3.5" />
-            <span>{selectedEventId !== 'all' ? 'Evento' : 'Filtro Evento'}</span>
-            {selectedEventId !== 'all' && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-500 px-1 text-xs font-bold text-white leading-none">
-                1
-              </span>
-            )}
-          </button>
+          </div>
         </div>
 
         {/* Active Event Filter Chip */}

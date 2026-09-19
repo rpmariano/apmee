@@ -6,7 +6,6 @@ import {
   Receipt,
   Eye,
   Shield,
-  ListTodo,
 } from 'lucide-react'
 import { usePermissions } from '@/hooks/use-permissions'
 import { useAuth } from '@/providers/auth-provider'
@@ -25,7 +24,6 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { to: '/tarefas', label: 'Tarefas', icon: ListTodo, color: 'bg-emerald-100 text-emerald-700', module: 'tasks' },
   { to: '/contactos', label: 'Contactos', icon: Users, color: 'bg-primary-100 text-primary-600' },
   { to: '/inventario', label: 'Inventário', icon: Package, color: 'bg-warm-100 text-secondary-700' },
   { to: '/quotas', label: 'Quotas', icon: Receipt, color: 'bg-warm-300 text-secondary-700', module: 'quotas' },

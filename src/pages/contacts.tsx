@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Search, ChevronDown, Star, RotateCcw, ArrowLeft } from 'lucide-react'
+import { Plus, Search, ChevronDown, Star, RotateCcw, ArrowLeft } from 'lucide-react'
 import { ContactList } from '@/features/contacts/components/contact-list'
 import { ContactForm } from '@/features/contacts/components/contact-form'
 import { useContacts, useCreateContact, useUpdateContact, useDeleteContact } from '@/features/contacts/api/use-contacts'
@@ -143,7 +143,18 @@ export default function ContactsPage() {
               </Link>
               <h1 className="text-xl font-bold text-foreground">Contactos</h1>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
+              {canWriteContacts && (
+                <button
+                  type="button"
+                  onClick={() => setIsFormOpen(true)}
+                  aria-label="+ Criar novo contacto"
+                  className="flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-primary-600 transition-all active:scale-95 shrink-0"
+                >
+                  <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  <span>Criar</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {

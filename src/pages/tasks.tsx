@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { Plus } from 'lucide-react'
 import { TaskList } from '@/features/tasks/components/task-list'
 import { TaskForm } from '@/features/tasks/components/task-form'
 import { useCreateTask, useUpdateTask, useDeleteTask, useTasks } from '@/features/tasks/api/use-tasks'
@@ -117,17 +117,24 @@ export default function TasksPage() {
     <div className="relative min-h-[calc(100vh-4rem)] bg-background">
       <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="px-4 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <Link
-              to="/menu"
-              aria-label="Voltar ao Menu"
-              className="flex h-9 w-9 items-center justify-center rounded-full text-secondary-600 hover:bg-warm-100 hover:text-foreground active:scale-95 transition-all -ml-1"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <h1 className="text-xl font-bold text-foreground">Tarefas</h1>
+          <h1 className="text-xl font-bold text-foreground">Tarefas</h1>
+          <div className="flex items-center gap-2">
+            {canWriteTasks && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingTask(undefined)
+                  setIsFormOpen(true)
+                }}
+                aria-label="+ Criar nova tarefa"
+                className="flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-primary-600 transition-all active:scale-95 shrink-0"
+              >
+                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                <span>Criar</span>
+              </button>
+            )}
+            <MenuAlerts />
           </div>
-          <MenuAlerts />
         </div>
 
         <div className="mt-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide">

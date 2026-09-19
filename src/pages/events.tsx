@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { SlidersHorizontal, X, RotateCcw } from 'lucide-react'
+import { Plus, SlidersHorizontal, X, RotateCcw } from 'lucide-react'
 import { format, isToday, isSameDay, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import { MobileCalendar } from '@/features/calendar/components/mobile-calendar'
@@ -435,6 +435,19 @@ export default function EventsPage() {
                 <span className="flex h-2 w-2 rounded-full bg-primary-500 ring-2 ring-white" />
               )}
             </button>
+
+            {/* Create Event Pill Button */}
+            {canWriteEvents && (
+              <button
+                type="button"
+                onClick={handleCreateEvent}
+                aria-label="+ Criar evento ou reunião"
+                className="flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-primary-600 transition-all active:scale-95 shrink-0"
+              >
+                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                <span>Criar</span>
+              </button>
+            )}
           </div>
         </div>
 
