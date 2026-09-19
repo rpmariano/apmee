@@ -109,5 +109,8 @@ export const FINANCIAL_TYPES = {
   EXPENSE: 'expense',
 } as const
 
+/** Default annual quota fee in euros */
+export const DEFAULT_QUOTA_AMOUNT = '10'
+
 /** Modules that are restricted for nivel_2 users (read-only) */
 export const FINANCIAL_MODULES = ['treasury', 'quotas'] as const

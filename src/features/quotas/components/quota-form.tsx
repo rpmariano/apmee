@@ -10,6 +10,7 @@ import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { DEFAULT_QUOTA_AMOUNT } from '@/lib/constants'
 
 interface QuotaFormProps {
   quota?: Quota
@@ -63,7 +64,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
 
   const [contactId, setContactId] = useState(quota?.contact_id ?? '')
   const [year, setYear] = useState<number>(quota?.year ?? getCurrentSchoolYear())
-  const [amount, setAmount] = useState(quota?.amount ?? '15')
+  const [amount, setAmount] = useState(quota?.amount ? String(quota.amount) : DEFAULT_QUOTA_AMOUNT)
   const [paid, setPaid] = useState(quota?.paid ?? false)
   const [paidDate, setPaidDate] = useState(quota?.paid_date ? toDateString(quota.paid_date) : '')
   const [paymentMethod, setPaymentMethod] = useState(quota?.payment_method ?? '')
@@ -109,7 +110,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
   const isDirty = (
     contactId !== (quota?.contact_id ?? '') ||
     year !== (quota?.year ?? getCurrentSchoolYear()) ||
-    amount !== (quota?.amount ?? '15') ||
+    amount !== (quota?.amount ? String(quota.amount) : DEFAULT_QUOTA_AMOUNT) ||
     paid !== (quota?.paid ?? false) ||
     paidDate !== (quota?.paid_date ? toDateString(quota.paid_date) : '') ||
     paymentMethod !== (quota?.payment_method ?? '') ||
@@ -266,6 +267,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   required
+                  placeholder={DEFAULT_QUOTA_AMOUNT}
                   className="w-full rounded-[var(--radius-button)] border border-warm-200 bg-surface pl-3 pr-7 py-2 text-sm font-semibold focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
                 />
                 <span className="pointer-events-none absolute right-3 text-sm font-bold text-secondary-500">€</span>
