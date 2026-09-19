@@ -1,5 +1,5 @@
 import { isSameDay, parseISO, compareAsc, compareDesc } from 'date-fns'
-import { Plus } from 'lucide-react'
+import { Plus, Calendar } from 'lucide-react'
 import { useEvents } from '../api/use-events'
 import { EventCard, type EventFinanceSummary } from './event-card'
 import type { Event } from '@/types/database'
@@ -101,9 +101,7 @@ export function EventList({
     return (
       <div className="flex flex-col items-center justify-center rounded-[var(--radius-card)] border border-dashed border-warm-200 bg-surface/50 py-10 px-4 text-center my-2">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-warm-100">
-          <svg className="h-6 w-6 text-secondary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
+          <Calendar className="h-6 w-6 text-secondary-400" />
         </div>
         <p className="mt-3 text-sm font-medium text-foreground">
           {filter === 'day'

@@ -53,12 +53,21 @@ export function TaskCard({ task, assigneeName, onEdit, onToggleStatus }: TaskCar
 
   return (
     <div 
+      role="button"
+      tabIndex={0}
+      aria-label={`Editar tarefa ${task.title}`}
       className={cn(
-        "flex items-start gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md",
+        "flex items-start gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary-400",
         isDone && "opacity-75 bg-warm-50/70",
         onEdit && "cursor-pointer active:scale-[0.99]"
       )}
       onClick={() => onEdit && onEdit(task)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onEdit && onEdit(task)
+        }
+      }}
     >
       {/* 1-Tap Completion Checkbox (44x44px Accessible Touch Target) */}
       <button

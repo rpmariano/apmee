@@ -49,12 +49,21 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
 
   return (
     <div 
+      role="button"
+      tabIndex={0}
+      aria-label={`Editar contacto ${contact.name}`}
       className={cn(
-        "flex flex-col gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md",
+        "flex flex-col gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary-400",
         !isActive && "opacity-80 bg-warm-50/60 border-dashed",
         onEdit && "cursor-pointer active:scale-[0.98]"
       )}
       onClick={() => onEdit && onEdit(contact)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onEdit && onEdit(contact)
+        }
+      }}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -106,7 +115,7 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
           href={hasPhone ? `tel:${contact.phone}` : undefined}
           onClick={(e) => e.stopPropagation()}
           className={cn(
-            'flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-xs font-medium transition-colors',
+            'flex flex-1 items-center justify-center gap-2 rounded-lg min-h-[40px] py-2 text-xs font-medium transition-all active:scale-95',
             hasPhone
               ? 'bg-secondary-50 text-secondary-700 hover:bg-secondary-100'
               : 'pointer-events-none text-muted opacity-50'
@@ -122,7 +131,7 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           className={cn(
-            'flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-xs font-medium transition-colors',
+            'flex flex-1 items-center justify-center gap-2 rounded-lg min-h-[40px] py-2 text-xs font-medium transition-all active:scale-95',
             hasWhatsapp
               ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
               : 'pointer-events-none text-muted opacity-50'
@@ -136,7 +145,7 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
           href={hasEmail ? `mailto:${contact.email}` : undefined}
           onClick={(e) => e.stopPropagation()}
           className={cn(
-            'flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-xs font-medium transition-colors',
+            'flex flex-1 items-center justify-center gap-2 rounded-lg min-h-[40px] py-2 text-xs font-medium transition-all active:scale-95',
             hasEmail
               ? 'bg-primary-50 text-primary-700 hover:bg-primary-100'
               : 'pointer-events-none text-muted opacity-50'

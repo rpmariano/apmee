@@ -40,11 +40,20 @@ export function QuotaCard({ quota, onEdit }: QuotaCardProps) {
   
   return (
     <div 
+      role="button"
+      tabIndex={0}
+      aria-label={`Editar quota de ${contactName}, ano ${formatSchoolYear(quota.year)}`}
       className={cn(
-        "flex flex-col gap-2 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:border-warm-300",
+        "flex flex-col gap-2 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:border-warm-300 outline-none focus-visible:ring-2 focus-visible:ring-primary-400",
         onEdit && "cursor-pointer active:scale-[0.98] hover:shadow-md"
       )}
       onClick={() => onEdit && onEdit(quota)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onEdit && onEdit(quota)
+        }
+      }}
     >
       <div className="flex items-start justify-between gap-4">
         
@@ -72,7 +81,7 @@ export function QuotaCard({ quota, onEdit }: QuotaCardProps) {
               <span className="rounded-md bg-secondary-100 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider text-secondary-700">
                 Quota {formatSchoolYear(quota.year)}
               </span>
-              <span className="text-sm font-black text-foreground">
+              <span className="text-sm font-black text-foreground tabular-nums">
                 {Number(quota.amount).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
               </span>
             </div>

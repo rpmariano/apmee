@@ -113,7 +113,7 @@ export function MovementCard({ movement, onEdit, eventName }: MovementCardProps)
       {/* Right: Amount */}
       <div
         className={cn(
-          'text-right font-black text-sm min-[380px]:text-base tracking-tight shrink-0',
+          'text-right font-black text-sm min-[380px]:text-base tracking-tight shrink-0 tabular-nums',
           isTransfer
             ? 'text-secondary-500'
             : isIncome

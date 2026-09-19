@@ -151,7 +151,7 @@ export function TreasurySummary({
           )}
         </div>
 
-        <div className="mt-1 text-3xl font-black tracking-tight text-white">
+        <div className="mt-1 text-3xl font-black tracking-tight text-white tabular-nums">
           {currentBalance.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
         </div>
       </div>
@@ -171,7 +171,7 @@ export function TreasurySummary({
               </span>
               <span className="text-secondary-400 font-mono text-xs">{bancoPct}%</span>
             </div>
-            <span className="mt-1 text-sm font-bold text-white">
+            <span className="mt-1 text-sm font-bold text-white tabular-nums">
               {bancoBalance.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
             </span>
           </button>
@@ -188,7 +188,7 @@ export function TreasurySummary({
               </span>
               <span className="text-secondary-400 font-mono text-xs">{caixaPct}%</span>
             </div>
-            <span className="mt-1 text-sm font-bold text-white">
+            <span className="mt-1 text-sm font-bold text-white tabular-nums">
               {caixaBalance.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
             </span>
           </button>
@@ -202,7 +202,7 @@ export function TreasurySummary({
             <ArrowUpRight className="h-3.5 w-3.5 text-green-400" />
             <span>Receitas {mode !== 'consolidado' ? `(${mode})` : ''}</span>
           </div>
-          <span className="mt-1 text-sm font-bold text-green-400">
+          <span className="mt-1 text-sm font-bold text-green-400 tabular-nums">
             +{currentIncome.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
           </span>
         </div>
@@ -212,7 +212,7 @@ export function TreasurySummary({
             <ArrowDownRight className="h-3.5 w-3.5 text-red-400" />
             <span>Despesas {mode !== 'consolidado' ? `(${mode})` : ''}</span>
           </div>
-          <span className="mt-1 text-sm font-bold text-red-400">
+          <span className="mt-1 text-sm font-bold text-red-400 tabular-nums">
             -{currentExpense.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
           </span>
         </div>

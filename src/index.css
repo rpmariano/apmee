@@ -105,7 +105,7 @@
   }
 }
 
-/* Utilities */
+/* Utilities & Browser Surfaces */
 @layer utilities {
   .scrollbar-hide {
     /* IE and Edge */
@@ -117,6 +117,45 @@
     /* Chrome, Safari and Opera */
     display: none;
   }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Browser Surfaces & Native Affordances */
+::selection {
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-900);
+}
+
+input, textarea, select, [contenteditable="true"] {
+  caret-color: var(--color-primary-500);
+}
+
+html, body {
+  -webkit-tap-highlight-color: transparent;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary-400);
+  outline-offset: 2px;
+}
+
+/* Subtle Warm Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-warm-300);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-warm-400);
 }
 
 

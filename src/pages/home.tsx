@@ -58,6 +58,9 @@ export default function HomePage() {
 
       {/* Hero - Next Event */}
       <div 
+        role="button"
+        tabIndex={0}
+        aria-label={stats?.nextEvent?.id ? `Ver detalhes do próximo evento: ${stats.nextEvent.title}` : 'Abrir Agenda'}
         onClick={() => {
           if (stats?.nextEvent?.id) {
             navigate(`/agenda?edit=${stats.nextEvent.id}`)
@@ -65,8 +68,18 @@ export default function HomePage() {
             navigate('/agenda')
           }
         }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            if (stats?.nextEvent?.id) {
+              navigate(`/agenda?edit=${stats.nextEvent.id}`)
+            } else {
+              navigate('/agenda')
+            }
+          }
+        }}
         className={cn(
-          "mt-6 rounded-[var(--radius-card)] bg-primary-500 p-6 text-white shadow-md transition-all cursor-pointer active:scale-[0.98] hover:bg-primary-600 hover:shadow-lg"
+          "mt-6 rounded-[var(--radius-card)] bg-primary-500 p-6 text-white shadow-md transition-all cursor-pointer active:scale-[0.98] hover:bg-primary-600 hover:shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
         )}
       >
         <div className="flex items-center justify-between">
@@ -170,8 +183,17 @@ export default function HomePage() {
             {topTasks.map((task) => (
               <div
                 key={task.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Ver tarefa ${task.title}`}
                 onClick={() => navigate(`/tarefas?edit=${task.id}`)}
-                className="group flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-3.5 shadow-xs transition-all duration-200 hover:border-primary-200 hover:shadow-sm cursor-pointer active:scale-[0.98]"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    navigate(`/tarefas?edit=${task.id}`)
+                  }
+                }}
+                className="group flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-3.5 shadow-xs transition-all duration-200 hover:border-primary-200 hover:shadow-sm cursor-pointer active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -248,7 +270,7 @@ function StatCard({
       to={to}
       className={`flex flex-col rounded-[var(--radius-card)] ${color} p-4 shadow-sm transition-all duration-150 active:scale-95`}
     >
-      <p className={`text-2xl font-bold ${textColor}`}>{value}</p>
+      <p className={`text-2xl font-bold ${textColor} tabular-nums`}>{value}</p>
       <p className="mt-1 text-xs text-muted">{label}</p>
     </Link>
   )

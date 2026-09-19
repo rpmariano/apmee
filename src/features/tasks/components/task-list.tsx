@@ -1,3 +1,4 @@
+import { ListTodo } from 'lucide-react'
 import { useTasks } from '../api/use-tasks'
 import { TaskCard } from './task-card'
 import type { Task, TaskStatus } from '@/types/database'
@@ -46,9 +47,7 @@ export function TaskList({ filter, assigneeFilter = 'all', onEditTask, onToggleS
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-warm-100">
-          <svg className="h-8 w-8 text-secondary-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-          </svg>
+          <ListTodo className="h-8 w-8 text-secondary-400" />
         </div>
         <p className="mt-4 text-sm font-medium text-foreground">
           {isMyTasksEmpty ? 'Sem tarefas atribuídas' : 'Sem tarefas'}

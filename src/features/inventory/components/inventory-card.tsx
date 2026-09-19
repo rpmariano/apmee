@@ -25,12 +25,23 @@ export function InventoryCard({ item, onEdit, onTransaction, captiveInfo, eventR
   const hasCaptive = !!(captiveInfo && captiveInfo.captiveQuantity > 0)
 
   return (
-    <div className={cn(
-      "flex flex-col gap-2 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md",
-      isLowStock && "border-orange-200 bg-orange-50/60",
-      onEdit && "cursor-pointer active:scale-[0.98]"
-    )}
-    onClick={() => onEdit && onEdit(item)}>
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Editar artigo ${item.name}`}
+      className={cn(
+        "flex flex-col gap-2 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-4 shadow-sm transition-all hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-primary-400",
+        isLowStock && "border-orange-200 bg-orange-50/60",
+        onEdit && "cursor-pointer active:scale-[0.98]"
+      )}
+      onClick={() => onEdit && onEdit(item)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onEdit && onEdit(item)
+        }
+      }}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-1 items-start gap-3">
           <div className={cn(
@@ -81,7 +92,7 @@ export function InventoryCard({ item, onEdit, onTransaction, captiveInfo, eventR
       <div className="mt-2 flex items-center justify-between border-t border-warm-200 pt-3">
         <div className="flex flex-col">
           <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-black text-foreground">
+            <span className="text-2xl font-black text-foreground tabular-nums">
               {item.quantity}
             </span>
             <span className="text-sm font-medium text-muted">
@@ -93,10 +104,10 @@ export function InventoryCard({ item, onEdit, onTransaction, captiveInfo, eventR
           {/* Captive Stock Badges */}
           {hasCaptive && captiveInfo && (
             <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-800 border border-amber-200">
+              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-800 border border-amber-200 tabular-nums">
                 {isEquipment ? `Reservado: ${captiveInfo.captiveQuantity}` : `Cativo: ${captiveInfo.captiveQuantity}`}
               </span>
-              <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-bold text-emerald-800 border border-emerald-200">
+              <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-bold text-emerald-800 border border-emerald-200 tabular-nums">
                 Disp.: {captiveInfo.availableQuantity}
               </span>
             </div>

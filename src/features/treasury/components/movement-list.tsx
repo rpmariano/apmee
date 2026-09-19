@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Wallet } from 'lucide-react'
 import { MovementCard } from './movement-card'
 import { useEvents } from '@/features/events/api/use-events'
 import type { FinancialMovement } from '@/types/database'
@@ -44,14 +44,7 @@ export function MovementList({
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center rounded-[var(--radius-card)] border border-dashed border-warm-200 bg-warm-50/50">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-warm-100">
-          <svg className="h-6 w-6 text-secondary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+          <Wallet className="h-6 w-6 text-secondary-400" />
         </div>
         <p className="mt-3 text-sm font-bold text-foreground">
           {isFiltered ? 'Nenhum movimento encontrado' : 'Sem Movimentos Registados'}
