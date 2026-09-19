@@ -32,7 +32,7 @@ export default function EventsPage() {
   const queryClient = useQueryClient()
 
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [activeTab, setActiveTab] = useState<EventFilterType>('day')
+  const [activeTab, setActiveTab] = useState<EventFilterType>('upcoming')
   const [typeFilter, setTypeFilter] = useState<'all' | 'festa' | 'reuniao'>('all')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -342,10 +342,10 @@ export default function EventsPage() {
       ? pastCount
       : allCount
 
-  const isFilterActive = activeTab !== 'day' || typeFilter !== 'all'
+  const isFilterActive = activeTab !== 'upcoming' || typeFilter !== 'all'
 
   const handleResetFilter = () => {
-    setActiveTab('day')
+    setActiveTab('upcoming')
     setTypeFilter('all')
     setSelectedDate(new Date())
   }
@@ -407,16 +407,13 @@ export default function EventsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {!isToday(selectedDate) && activeTab === 'day' && (
+            {activeTab === 'day' && (
               <button
                 type="button"
-                onClick={() => {
-                  setSelectedDate(new Date())
-                  setActiveTab('day')
-                }}
-                className="rounded-full bg-warm-100 px-2.5 py-1 text-xs font-semibold text-secondary-700 hover:bg-warm-200 transition-colors active:scale-95"
+                onClick={() => setActiveTab('upcoming')}
+                className="rounded-full bg-primary-50 border border-primary-200/80 px-2.5 py-1 text-xs font-semibold text-primary-700 hover:bg-primary-100 transition-colors active:scale-95"
               >
-                Voltar a Hoje
+                Ver Próximos
               </button>
             )}
 
@@ -444,11 +441,13 @@ export default function EventsPage() {
         {/* Active Filter Chips (if non-standard view) */}
         {isFilterActive && (
           <div className="flex flex-wrap items-center gap-1.5">
-            {activeTab !== 'day' && (
+            {activeTab !== 'upcoming' && (
               <span className="inline-flex items-center gap-1 rounded-full bg-secondary-100 px-2.5 py-0.5 text-xs font-semibold text-secondary-800">
                 <span>
-                  {activeTab === 'upcoming'
-                    ? 'Próximos'
+                  {activeTab === 'day'
+                    ? isToday(selectedDate)
+                      ? 'Hoje'
+                      : `Dia: ${format(selectedDate, "d 'de' MMM", { locale: pt })}`
                     : activeTab === 'past'
                     ? 'Terminados'
                     : 'Todos os Dias'}
@@ -456,8 +455,7 @@ export default function EventsPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveTab('day')
-                    setSelectedDate(new Date())
+                    setActiveTab('upcoming')
                   }}
                   aria-label="Remover filtro de data"
                   className="rounded-full p-0.5 hover:bg-secondary-200"
@@ -546,16 +544,16 @@ export default function EventsPage() {
                   <div className="grid grid-cols-1 gap-2">
                     {[
                       {
-                        value: 'day',
-                        label: isToday(selectedDate) ? 'Hoje' : `Dia Selecionado (${format(selectedDate, "d 'de' MMM", { locale: pt })})`,
-                        desc: isToday(selectedDate) ? 'Apresenta a agenda do dia de hoje (predefinição)' : `Apresenta os eventos de ${format(selectedDate, "d 'de' MMMM", { locale: pt })}`,
-                        count: dayCount,
-                      },
-                      {
                         value: 'upcoming',
                         label: 'Próximos Eventos',
-                        desc: 'Eventos futuros a partir de hoje',
+                        desc: 'Eventos futuros a partir de hoje (predefinição)',
                         count: upcomingCount,
+                      },
+                      {
+                        value: 'day',
+                        label: isToday(selectedDate) ? 'Hoje' : `Dia Selecionado (${format(selectedDate, "d 'de' MMM", { locale: pt })})`,
+                        desc: isToday(selectedDate) ? 'Apresenta a agenda do dia de hoje' : `Apresenta os eventos de ${format(selectedDate, "d 'de' MMMM", { locale: pt })}`,
+                        count: dayCount,
                       },
                       {
                         value: 'past',
