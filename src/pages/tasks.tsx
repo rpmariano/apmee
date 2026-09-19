@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { useSearchParams, Link } from 'react-router-dom'
+import { Plus, ArrowLeft } from 'lucide-react'
 import { TaskList } from '@/features/tasks/components/task-list'
 import { TaskForm } from '@/features/tasks/components/task-form'
 import { useCreateTask, useUpdateTask, useDeleteTask, useTasks } from '@/features/tasks/api/use-tasks'
@@ -26,6 +26,7 @@ const tabs: { value: FilterValue; label: string }[] = [
 export default function TasksPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const editTaskId = searchParams.get('edit')
+  const isNew = searchParams.get('new') === 'true' || searchParams.get('new') === '1'
   const [activeTab, setActiveTab] = useState<FilterValue>('todo')
   const [scopeFilter, setScopeFilter] = useState<'all' | 'my'>('all')
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -45,8 +46,11 @@ export default function TasksPage() {
         setEditingTask(target)
         setIsFormOpen(true)
       }
+    } else if (isNew && !isFormOpen) {
+      setEditingTask(undefined)
+      setIsFormOpen(true)
     }
-  }, [editTaskId, allTasks, isFormOpen])
+  }, [editTaskId, isNew, allTasks, isFormOpen])
 
   const createMutation = useCreateTask()
   const updateMutation = useUpdateTask()
@@ -74,8 +78,11 @@ export default function TasksPage() {
   const handleCloseForm = () => {
     setIsFormOpen(false)
     setEditingTask(undefined)
-    if (searchParams.get('edit')) {
-      setSearchParams({})
+    if (searchParams.get('edit') || searchParams.get('new')) {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('edit')
+      nextParams.delete('new')
+      setSearchParams(nextParams, { replace: true })
     }
   }
 
@@ -110,7 +117,16 @@ export default function TasksPage() {
     <div className="relative min-h-[calc(100vh-4rem)] bg-background">
       <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="px-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-foreground">Tarefas</h1>
+          <div className="flex items-center gap-1.5">
+            <Link
+              to="/menu"
+              aria-label="Voltar ao Menu"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-secondary-600 hover:bg-warm-100 hover:text-foreground active:scale-95 transition-all -ml-1"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <h1 className="text-xl font-bold text-foreground">Tarefas</h1>
+          </div>
           <MenuAlerts />
         </div>
 

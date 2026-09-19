@@ -29,6 +29,7 @@ export default function TreasuryPage() {
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const urlEventId = searchParams.get('event')
+  const isNew = searchParams.get('new') === '1' || searchParams.get('new') === 'true'
   const { data: events = [] } = useEvents()
 
   const [summaryMode, setSummaryMode] = useState<TreasuryViewMode>('consolidado')
@@ -42,12 +43,19 @@ export default function TreasuryPage() {
       setFilters((prev) => ({ ...prev, eventId: urlEventId }))
     }
   }, [urlEventId, filters.eventId])
+
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isTransferOpen, setIsTransferOpen] = useState(false)
   const [editingMovement, setEditingMovement] = useState<FinancialMovement | undefined>()
   const [viewingTransfer, setViewingTransfer] = useState<FinancialMovement | undefined>()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isNew && !isFormOpen && !editingMovement) {
+      setIsFormOpen(true)
+    }
+  }, [isNew, isFormOpen, editingMovement])
 
   const { data: movements = [], isLoading } = useMovements()
   const createMutation = useCreateMovement()
@@ -105,6 +113,11 @@ export default function TreasuryPage() {
   const handleCloseForm = () => {
     setIsFormOpen(false)
     setEditingMovement(undefined)
+    if (searchParams.get('new')) {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('new')
+      setSearchParams(nextParams, { replace: true })
+    }
   }
 
   const handleClearFilters = () => {

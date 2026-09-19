@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Plus, Search, ChevronDown, Star, RotateCcw, ArrowLeft } from 'lucide-react'
 import { ContactList } from '@/features/contacts/components/contact-list'
 import { ContactForm } from '@/features/contacts/components/contact-form'
@@ -24,6 +24,8 @@ const tabs: { value: FilterValue; label: string }[] = [
 ]
 
 export default function ContactsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const isNew = searchParams.get('new') === '1' || searchParams.get('new') === 'true'
   const [activeTab, setActiveTab] = useState<FilterValue>('all')
   const [statusFilter, setStatusFilter] = useState<'active' | 'inactive' | 'all'>('active')
   const [turmaFilter, setTurmaFilter] = useState<string>('all')
@@ -59,6 +61,12 @@ export default function ContactsPage() {
     return Array.from(set)
   }, [allContacts])
 
+  useEffect(() => {
+    if (isNew && !isFormOpen && !editingContact) {
+      setIsFormOpen(true)
+    }
+  }, [isNew, isFormOpen, editingContact])
+
   const handleEditContact = (contact: Contact) => {
     setEditingContact(contact)
     setIsFormOpen(true)
@@ -67,6 +75,11 @@ export default function ContactsPage() {
   const handleCloseForm = () => {
     setIsFormOpen(false)
     setEditingContact(undefined)
+    if (searchParams.get('new')) {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('new')
+      setSearchParams(nextParams, { replace: true })
+    }
   }
 
   const handleSubmitForm = async (data: Partial<Contact>) => {

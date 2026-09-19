@@ -27,6 +27,7 @@ const tabs: { value: FilterValue; label: string }[] = [
 export default function InventoryPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const urlEventId = searchParams.get('event')
+  const isNew = searchParams.get('new') === '1' || searchParams.get('new') === 'true'
 
   const [activeTab, setActiveTab] = useState<FilterValue>('all')
   const [selectedEventId, setSelectedEventId] = useState<string>(urlEventId || 'all')
@@ -50,6 +51,12 @@ export default function InventoryPage() {
     }
   }, [urlEventId, selectedEventId])
 
+  useEffect(() => {
+    if (isNew && !isFormOpen && !editingItem) {
+      setIsFormOpen(true)
+    }
+  }, [isNew, isFormOpen, editingItem])
+
   const selectedEventTitle = events.find((e) => e.id === selectedEventId)?.title
 
   const handleEditItem = (item: InventoryItem) => {
@@ -60,6 +67,11 @@ export default function InventoryPage() {
   const handleCloseForm = () => {
     setIsFormOpen(false)
     setEditingItem(undefined)
+    if (searchParams.get('new')) {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('new')
+      setSearchParams(nextParams, { replace: true })
+    }
   }
 
   const handleClearEventFilter = () => {

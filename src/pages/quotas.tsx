@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Plus, Search, ArrowLeft } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { QuotaList } from '@/features/quotas/components/quota-list'
@@ -28,6 +28,8 @@ const tabs: { value: FilterValue; label: string }[] = [
 ]
 
 export default function QuotasPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const isNew = searchParams.get('new') === '1' || searchParams.get('new') === 'true'
   const [activeTab, setActiveTab] = useState<FilterValue>('all')
   const [selectedYear, setSelectedYear] = useState<number>(getCurrentSchoolYear())
   const [searchQuery, setSearchQuery] = useState('')
@@ -50,6 +52,12 @@ export default function QuotasPage() {
   const { canWrite, isFinancialReadOnly } = usePermissions()
   const canWriteQuotas = canWrite('quotas')
 
+  useEffect(() => {
+    if (isNew && !isFormOpen && !editingQuota) {
+      setIsFormOpen(true)
+    }
+  }, [isNew, isFormOpen, editingQuota])
+
   const handleEditQuota = (quota: QuotaWithContact) => {
     if (!canWriteQuotas) return
     setEditingQuota(quota)
@@ -59,6 +67,11 @@ export default function QuotasPage() {
   const handleCloseForm = () => {
     setIsFormOpen(false)
     setEditingQuota(undefined)
+    if (searchParams.get('new')) {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('new')
+      setSearchParams(nextParams, { replace: true })
+    }
   }
 
   const getContactName = (contactId: string) => {

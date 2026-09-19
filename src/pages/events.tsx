@@ -25,7 +25,7 @@ import { cn, getInitials } from '@/lib/utils'
 export default function EventsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const editId = searchParams.get('edit')
-  const isNew = searchParams.get('new') === 'true'
+  const isNew = searchParams.get('new') === 'true' || searchParams.get('new') === '1'
   const { data: events = [], isLoading } = useEvents()
   const { data: boardMembers = [] } = useBoardMembers()
   const { user } = useAuth()
