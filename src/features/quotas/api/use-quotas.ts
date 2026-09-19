@@ -38,6 +38,8 @@ export function useCreateQuota() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUOTAS_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['treasury'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 }
@@ -59,6 +61,8 @@ export function useUpdateQuota() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUOTAS_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['treasury'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 }
@@ -92,6 +96,7 @@ export function useDeleteQuota() {
       queryClient.invalidateQueries({ queryKey: [QUOTAS_QUERY_KEY] })
       queryClient.invalidateQueries({ queryKey: ['treasury'] })
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 }

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { getQuotaDeduplicationKey } from '@/lib/quota-utils'
 
 export function useDashboardStats() {
   return useQuery({
@@ -25,7 +26,7 @@ export function useDashboardStats() {
         .neq('status', 'done')
         .is('deleted_at', null)
 
-      // Fetch treasury balance (Incomes - Expenses, deduplicating any duplicate quotas)
+      // Fetch treasury balance (Incomes - Expenses, deduplicating any duplicate quotas identically to Treasury)
       const { data: movements } = await (supabase as any)
         .from('financial_movements')
         .select('id, type, amount, category, description')
@@ -36,12 +37,17 @@ export function useDashboardStats() {
         const seenQuotas = new Set<string>()
         balance = movements.reduce((acc: number, mov: any) => {
           if (mov.category === 'Quotas de Sócios' && mov.description) {
-            const key = mov.description.toLowerCase().replace(/\s+/g, ' ').trim()
-            if (seenQuotas.has(key)) return acc
-            seenQuotas.add(key)
+            const key = getQuotaDeduplicationKey(mov.description)
+            if (key) {
+              if (seenQuotas.has(key)) return acc
+              seenQuotas.add(key)
+            }
           }
-          return mov.type === 'income' ? acc + Number(mov.amount) : acc - Number(mov.amount)
+          const val = Number(mov.amount) || 0
+          return mov.type === 'income' ? acc + val : acc - val
         }, 0)
+        const rounded = Math.round((balance + Number.EPSILON) * 100) / 100
+        balance = Object.is(rounded, -0) ? 0 : rounded
       }
 
       // Fetch next event
@@ -63,6 +69,6 @@ export function useDashboardStats() {
         nextEvent: nextEvent as { id: string, title: string, start_date: string } | null
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 1, // 1 minute
   })
 }

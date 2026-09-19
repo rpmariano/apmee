@@ -393,11 +393,13 @@ export default function TreasuryPage() {
       <div className="px-4 mt-3 space-y-5">
         {/* Demonstração de Resultados (Consolidado, Banco e Caixa) */}
         <TreasurySummary
+          allMovements={movements}
           movements={filteredMovements}
           isLoading={isLoading}
           viewMode={summaryMode}
           onViewModeChange={setSummaryMode}
           periodLabel={periodLabel}
+          isFiltered={isFilterActive}
         />
 
         {/* Extrato de Movimentos */}

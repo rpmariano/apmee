@@ -245,9 +245,10 @@ export default function QuotasPage() {
         toast.success('Quota registada com sucesso!')
       }
 
-      // Invalidate both treasury and quotas queries so balances & lists reflect immediately
+      // Invalidate treasury, quotas, and dashboard queries so balances & lists reflect immediately
       queryClient.invalidateQueries({ queryKey: ['treasury'] })
       queryClient.invalidateQueries({ queryKey: ['quotas'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
       handleCloseForm()
     } catch (error: any) {
       console.error('Failed to save quota:', error)

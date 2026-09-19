@@ -83,6 +83,7 @@ export function useCreateTransfer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TREASURY_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 }
@@ -106,6 +107,7 @@ export function useDeleteTransfer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TREASURY_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 }

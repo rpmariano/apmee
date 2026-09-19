@@ -83,6 +83,7 @@ export function useCreateMovement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TREASURY_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 }
@@ -106,6 +107,7 @@ export function useUpdateMovement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TREASURY_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 }
@@ -125,6 +127,7 @@ export function useDeleteMovement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TREASURY_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 }
