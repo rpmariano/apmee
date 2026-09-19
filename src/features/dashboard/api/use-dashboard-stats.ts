@@ -25,15 +25,21 @@ export function useDashboardStats() {
         .neq('status', 'done')
         .is('deleted_at', null)
 
-      // Fetch treasury balance (Incomes - Expenses)
+      // Fetch treasury balance (Incomes - Expenses, deduplicating any duplicate quotas)
       const { data: movements } = await (supabase as any)
         .from('financial_movements')
-        .select('type, amount')
+        .select('id, type, amount, category, description')
         .is('deleted_at', null)
       
       let balance = 0
       if (movements) {
+        const seenQuotas = new Set<string>()
         balance = movements.reduce((acc: number, mov: any) => {
+          if (mov.category === 'Quotas de Sócios' && mov.description) {
+            const key = mov.description.toLowerCase().replace(/\s+/g, ' ').trim()
+            if (seenQuotas.has(key)) return acc
+            seenQuotas.add(key)
+          }
           return mov.type === 'income' ? acc + Number(mov.amount) : acc - Number(mov.amount)
         }, 0)
       }

@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Search, ArrowLeft } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
@@ -9,10 +9,11 @@ import { useQuotas, useCreateQuota, useUpdateQuota, useDeleteQuota } from '@/fea
 import { useContacts } from '@/features/contacts/api/use-contacts'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { QuotaWithContact } from '@/features/quotas/components/quota-card'
-import type { Quota } from '@/types/database'
+import type { Quota, FinancialMovement } from '@/types/database'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { formatSchoolYear, getCurrentSchoolYear, getSchoolYearOptions } from '@/lib/school-year'
+import { isMovementMatchingQuota, getQuotaDeduplicationKey } from '@/lib/quota-utils'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
 import { getFriendlyErrorMessage } from '@/lib/error-utils'
@@ -64,6 +65,52 @@ export default function QuotasPage() {
     return contacts?.find((c) => c.id === contactId)?.name || editingQuota?.contact?.name || 'Associado'
   }
 
+  // Auto-cleanup on mount: detect and soft-delete any legacy duplicate quota movements in database
+  useEffect(() => {
+    async function runDeduplication() {
+      try {
+        const { data: activeMovs } = await (supabase as any)
+          .from('financial_movements')
+          .select('id, category, description, created_at, updated_at')
+          .eq('category', 'Quotas de Sócios')
+          .is('deleted_at', null)
+          .order('updated_at', { ascending: false })
+          .order('created_at', { ascending: false })
+
+        if (!activeMovs || activeMovs.length === 0) return
+
+        const seenKeys = new Set<string>()
+        const duplicateIds: string[] = []
+
+        for (const mov of activeMovs) {
+          const key = getQuotaDeduplicationKey(mov.description)
+          if (key) {
+            if (seenKeys.has(key)) {
+              duplicateIds.push(mov.id)
+            } else {
+              seenKeys.add(key)
+            }
+          }
+        }
+
+        if (duplicateIds.length > 0) {
+          const { error } = await (supabase as any)
+            .from('financial_movements')
+            .update({ deleted_at: new Date().toISOString() })
+            .in('id', duplicateIds)
+
+          if (!error) {
+            queryClient.invalidateQueries({ queryKey: ['treasury'] })
+          }
+        }
+      } catch (err) {
+        console.warn('Aviso na deduplicação em segundo plano:', err)
+      }
+    }
+
+    runDeduplication()
+  }, [queryClient])
+
   const handleSubmitForm = async (data: Partial<Quota>) => {
     // Guard against duplicate / concurrent submission
     if (isSubmittingRef.current) return
@@ -71,27 +118,25 @@ export default function QuotasPage() {
 
     try {
       const targetId = (data as any).id || editingQuota?.id
-      const contactName = data.contact_id ? getContactName(data.contact_id) : (editingQuota?.contact?.name || 'Associado')
+      const contactName = (data.contact_id ? getContactName(data.contact_id) : (editingQuota?.contact?.name || 'Associado')).trim()
       const targetYear = data.year ?? editingQuota?.year ?? getCurrentSchoolYear()
       const yearFormatted = formatSchoolYear(targetYear)
       const isPaid = !!data.paid
       let movementId = editingQuota?.movement_id || null
 
-      // If movementId is null (e.g. before DB migration), search if an active movement already exists in treasury
-      if (!movementId) {
-        const { data: existingMovs } = await (supabase as any)
-          .from('financial_movements')
-          .select('id')
-          .eq('category', 'Quotas de Sócios')
-          .ilike('description', `Quota ${yearFormatted} — ${contactName}%`)
-          .is('deleted_at', null)
-          .order('created_at', { ascending: false })
-          .limit(1)
+      // Fetch all active quota movements in treasury to find matches and prevent any duplicates
+      const { data: allActiveQuotaMovs } = await (supabase as any)
+        .from('financial_movements')
+        .select('*')
+        .eq('category', 'Quotas de Sócios')
+        .is('deleted_at', null)
+        .order('updated_at', { ascending: false })
+        .order('created_at', { ascending: false })
 
-        if (existingMovs && existingMovs.length > 0) {
-          movementId = existingMovs[0].id
-        }
-      }
+      // Find all movements matching this quota (either by direct movementId or by member name + school year)
+      const matchingMovs: FinancialMovement[] = (allActiveQuotaMovs || []).filter((m: FinancialMovement) =>
+        isMovementMatchingQuota(m, movementId, contactName, targetYear)
+      )
 
       if (isPaid) {
         const movementPayload = {
@@ -105,16 +150,32 @@ export default function QuotasPage() {
           deleted_at: null,
         }
 
-        if (movementId) {
-          // Update linked financial movement
+        if (matchingMovs.length > 0) {
+          // Identify primary movement: prefer existing linked movementId, otherwise the most recent match
+          const primaryMov = matchingMovs.find((m) => m.id === movementId) || matchingMovs[0]
+          movementId = primaryMov.id
+
+          // Update primary movement with latest details
           const { error: movErr } = await (supabase as any)
             .from('financial_movements')
             .update(movementPayload)
             .eq('id', movementId)
 
           if (movErr) console.warn('Aviso ao atualizar movimento financeiro associado:', movErr)
+
+          // Soft delete any duplicate movements found for this member/year!
+          const duplicateIds = matchingMovs
+            .filter((m) => m.id !== movementId)
+            .map((m) => m.id)
+
+          if (duplicateIds.length > 0) {
+            await (supabase as any)
+              .from('financial_movements')
+              .update({ deleted_at: new Date().toISOString() })
+              .in('id', duplicateIds)
+          }
         } else {
-          // Create new financial movement
+          // No movement exists yet: create single new movement
           const { data: newMov, error: movErr } = await (supabase as any)
             .from('financial_movements')
             .insert(movementPayload)
@@ -127,14 +188,17 @@ export default function QuotasPage() {
             console.warn('Aviso ao criar movimento financeiro da quota:', movErr)
           }
         }
-      } else if (movementId) {
-        // Quota marked unpaid: soft delete linked financial movement
-        const { error: movDelErr } = await (supabase as any)
-          .from('financial_movements')
-          .update({ deleted_at: new Date().toISOString() })
-          .eq('id', movementId)
+      } else {
+        // Quota is unpaid or marked unpaid: soft delete ALL matching movements
+        if (matchingMovs.length > 0) {
+          const idsToDelete = matchingMovs.map((m) => m.id)
+          const { error: movDelErr } = await (supabase as any)
+            .from('financial_movements')
+            .update({ deleted_at: new Date().toISOString() })
+            .in('id', idsToDelete)
 
-        if (movDelErr) console.warn('Aviso ao anular movimento financeiro:', movDelErr)
+          if (movDelErr) console.warn('Aviso ao anular movimento financeiro:', movDelErr)
+        }
         movementId = null
       }
 
@@ -197,36 +261,31 @@ export default function QuotasPage() {
     try {
       const quotaToDelete = quotas?.find((q) => q.id === id)
 
-      // Best-effort cleanup of linked treasury movement (must never block quota deletion)
+      // Best-effort cleanup of ALL linked treasury movements (must never block quota deletion)
       try {
-        let movId = quotaToDelete?.movement_id
+        const contactName = quotaToDelete?.contact?.name || 'Associado'
+        const targetYear = quotaToDelete?.year ?? getCurrentSchoolYear()
+        const movId = quotaToDelete?.movement_id
 
-        if (!movId && quotaToDelete?.paid) {
-          const contactName = quotaToDelete.contact?.name
-          if (contactName) {
-            const { data: existingMovs } = await (supabase as any)
-              .from('financial_movements')
-              .select('id')
-              .eq('category', 'Quotas de Sócios')
-              .ilike('description', `%${contactName}%`)
-              .is('deleted_at', null)
-              .order('created_at', { ascending: false })
-              .limit(1)
+        const { data: allActiveQuotaMovs } = await (supabase as any)
+          .from('financial_movements')
+          .select('*')
+          .eq('category', 'Quotas de Sócios')
+          .is('deleted_at', null)
 
-            if (existingMovs && existingMovs.length > 0) {
-              movId = existingMovs[0].id
-            }
-          }
-        }
+        const matchingMovs = (allActiveQuotaMovs || []).filter((m: FinancialMovement) =>
+          isMovementMatchingQuota(m, movId, contactName, targetYear)
+        )
 
-        if (movId) {
+        if (matchingMovs.length > 0) {
+          const idsToDelete = matchingMovs.map((m: FinancialMovement) => m.id)
           await (supabase as any)
             .from('financial_movements')
             .update({ deleted_at: new Date().toISOString() })
-            .eq('id', movId)
+            .in('id', idsToDelete)
         }
       } catch (movErr) {
-        console.warn('Aviso ao anular movimento financeiro associado:', movErr)
+        console.warn('Aviso ao anular movimentos financeiros associados:', movErr)
       }
 
       await deleteMutation.mutateAsync(id)
