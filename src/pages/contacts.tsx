@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
-import { Plus, Search, ChevronDown, Star, RotateCcw } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Plus, Search, ChevronDown, Star, RotateCcw, ArrowLeft } from 'lucide-react'
 import { ContactList } from '@/features/contacts/components/contact-list'
 import { ContactForm } from '@/features/contacts/components/contact-form'
 import { useContacts, useCreateContact, useUpdateContact, useDeleteContact } from '@/features/contacts/api/use-contacts'
@@ -119,7 +120,16 @@ export default function ContactsPage() {
       <div className="sticky top-0 z-10 bg-background/95 pb-1 pt-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-100">
         <div className="px-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-foreground">Contactos</h1>
+            <div className="flex items-center gap-1.5">
+              <Link
+                to="/menu"
+                aria-label="Voltar ao Menu"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-secondary-600 hover:bg-warm-100 hover:text-foreground active:scale-95 transition-all -ml-1"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+              <h1 className="text-xl font-bold text-foreground">Contactos</h1>
+            </div>
             <div className="flex items-center gap-1">
               <button
                 type="button"

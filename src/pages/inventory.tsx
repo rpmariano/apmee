@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Plus, X, Calendar } from 'lucide-react'
+import { useSearchParams, Link } from 'react-router-dom'
+import { Plus, X, Calendar, ArrowLeft } from 'lucide-react'
 import { InventoryList } from '@/features/inventory/components/inventory-list'
 import { InventoryForm } from '@/features/inventory/components/inventory-form'
 import { TransactionForm } from '@/features/inventory/components/transaction-form'
@@ -92,7 +92,16 @@ export default function InventoryPage() {
     <div className="relative min-h-[calc(100vh-4rem)] bg-background">
       <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="px-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-foreground">Inventário</h1>
+          <div className="flex items-center gap-1.5">
+            <Link
+              to="/menu"
+              aria-label="Voltar ao Menu"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-secondary-600 hover:bg-warm-100 hover:text-foreground active:scale-95 transition-all -ml-1"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <h1 className="text-xl font-bold text-foreground">Inventário</h1>
+          </div>
           <MenuAlerts />
         </div>
 

@@ -3,6 +3,8 @@ import { useAuth } from '@/providers/auth-provider'
 import { APP_NAME } from '@/lib/constants'
 import { Calendar, ChevronRight, Plus, CheckSquare, Clock } from 'lucide-react'
 import { MenuAlerts } from '@/components/ui/menu-alerts'
+import { UserHeaderProfile } from '@/components/ui/user-header-profile'
+import { getCurrentSchoolYear, formatSchoolYear } from '@/lib/school-year'
 import { useDashboardStats } from '@/features/dashboard/api/use-dashboard-stats'
 import { useTasks } from '@/features/tasks/api/use-tasks'
 import { cn } from '@/lib/utils'
@@ -43,17 +45,42 @@ export default function HomePage() {
     .slice(0, 3)
 
   return (
-    <div className="px-4 pt-6 pb-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="px-4 pt-4 pb-4">
+      {/* Institutional Top Strip: Logo + APMEE EB Cobre + Active Year Badge + Alerts + User Profile */}
+      <div className="flex items-center justify-between border-b border-warm-200/80 pb-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <img
+            src={`${import.meta.env.BASE_URL}logo_cropped.jpeg`}
+            alt="Logótipo APMEE EB Cobre"
+            className="h-10 w-10 rounded-full object-cover border border-warm-200 shadow-xs shrink-0"
+          />
+          <div className="flex flex-col min-w-0">
+            <span className="text-xs font-black tracking-tight text-foreground truncate">
+              APMEE · EB Cobre
+            </span>
+            <span className="text-xs font-semibold text-primary-600">
+              Ano Letivo {formatSchoolYear(getCurrentSchoolYear())}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          <MenuAlerts />
+          <UserHeaderProfile />
+        </div>
+      </div>
+
+      {/* Greeting & Date */}
+      <div className="mt-4 flex items-center justify-between">
         <div>
-          <p className="text-sm text-muted">Olá,</p>
+          <p className="text-xs font-medium text-secondary-500">Olá,</p>
           <h1 className="text-xl font-bold text-foreground">
             {user?.displayName ?? user?.email?.split('@')[0] ?? 'Utilizador'}
           </h1>
         </div>
-        
-        <MenuAlerts />
+        <span className="rounded-full bg-warm-100 border border-warm-200/70 px-2.5 py-1 text-xs font-medium text-secondary-600 capitalize">
+          {new Date().toLocaleDateString('pt-PT', { weekday: 'short', day: 'numeric', month: 'short' })}
+        </span>
       </div>
 
       {/* Hero - Next Event */}

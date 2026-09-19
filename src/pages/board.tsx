@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Plus, ArrowLeft } from 'lucide-react'
 import { BoardList } from '@/features/board/components/board-list'
 import { BoardForm } from '@/features/board/components/board-form'
 import { useBoardMembers, useCreateMember, useUpdateMember, useDeleteMember } from '@/features/board/api/use-board'
@@ -61,7 +62,14 @@ export default function BoardPage() {
     <div className="relative min-h-[calc(100vh-4rem)] bg-background pb-4">
       <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="px-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <Link
+              to="/menu"
+              aria-label="Voltar ao Menu"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-secondary-600 hover:bg-warm-100 hover:text-foreground active:scale-95 transition-all -ml-1"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
             <h1 className="text-xl font-bold text-foreground">Direção</h1>
             {!isSuperAdmin && (
               <span className="rounded-full bg-warm-200 px-2 py-0.5 text-xs font-medium text-secondary-600">
