@@ -217,11 +217,11 @@ export function EventDocumentsManager({
                       {doc.size ? <span>{formatFileSize(doc.size)}</span> : null}
                       {formattedDate ? <span>{formattedDate}</span> : null}
                       {doc.provider === 'google_drive' || (doc.url && doc.url.includes('drive.google.com')) ? (
-                        <span className="inline-flex items-center rounded-full bg-blue-50 px-1.5 py-0.2 text-xs font-semibold text-blue-700 border border-blue-200">
+                        <span className="inline-flex items-center rounded-full bg-blue-50 px-1.5 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200">
                           Google Drive
                         </span>
                       ) : doc.type === 'link' ? (
-                        <span className="inline-flex items-center rounded-full bg-warm-100 px-1.5 py-0.2 text-xs font-semibold text-secondary-600">
+                        <span className="inline-flex items-center rounded-full bg-warm-100 px-1.5 py-0.5 text-xs font-semibold text-secondary-600">
                           Link externo
                         </span>
                       ) : null}

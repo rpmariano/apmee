@@ -6,6 +6,7 @@ import { pt } from 'date-fns/locale'
 import { MobileCalendar } from '@/features/calendar/components/mobile-calendar'
 import { EventList, type EventFilterType } from '@/features/events/components/event-list'
 import { EventForm } from '@/features/events/components/event-form'
+import { EventDetailsModal } from '@/features/events/components/event-details-modal'
 import { useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent } from '@/features/events/api/use-events'
 import { useMovements } from '@/features/treasury/api/use-treasury'
 import type { EventFinanceSummary } from '@/features/events/components/event-card'
@@ -36,6 +37,7 @@ export default function EventsPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>()
+  const [viewingEvent, setViewingEvent] = useState<Event | undefined>()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const { data: movements = [] } = useMovements()
@@ -498,7 +500,7 @@ export default function EventsPage() {
           isLoading={isLoading}
           creatorMap={creatorMap}
           financesMap={eventFinancesMap}
-          onEditEvent={handleEditEvent}
+          onEditEvent={setViewingEvent}
           onCreateEvent={handleCreateEvent}
         />
       </div>
@@ -507,7 +509,7 @@ export default function EventsPage() {
       <button
         type="button"
         aria-label="Criar novo evento ou reunião"
-        className="fixed bottom-24 right-6 min-[430px]:right-[calc(50%-215px+1.5rem)] z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary-400 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-500 active:scale-95"
+        className="fixed bottom-24 right-6 min-[430px]:right-[calc(50%-215px+1.5rem)] z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-600 active:scale-95"
         onClick={handleCreateEvent}
       >
         <Plus className="h-6 w-6" />
@@ -630,7 +632,7 @@ export default function EventsPage() {
                         >
                           <span className="text-xs font-semibold">{t.label}</span>
                           <span className={cn(
-                            "rounded-full px-1.5 py-0.2 text-xs font-bold",
+                            "rounded-full px-1.5 py-0.5 text-xs font-bold",
                             isSelected ? "bg-white/20 text-white" : "bg-warm-100 text-secondary-600"
                           )}>
                             {t.count}
@@ -664,6 +666,21 @@ export default function EventsPage() {
           </div>
         </div>
       )}
+
+      {/* Event Details / Consultation Modal (Reading Minutes & Documents) */}
+      <EventDetailsModal
+        event={viewingEvent || null}
+        isOpen={Boolean(viewingEvent)}
+        onClose={() => setViewingEvent(undefined)}
+        canEdit={canWriteEvents}
+        creatorName={viewingEvent ? (creatorMap[viewingEvent.created_by || ''] || viewingEvent.created_by_name) : undefined}
+        financeSummary={viewingEvent ? eventFinancesMap[viewingEvent.id] : undefined}
+        onEdit={() => {
+          const ev = viewingEvent
+          setViewingEvent(undefined)
+          if (ev) handleEditEvent(ev)
+        }}
+      />
 
       {/* Form Modal */}
       {isFormOpen && (

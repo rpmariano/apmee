@@ -84,10 +84,10 @@ export function TreasurySummary({
     mode === 'consolidado' ? totalExpense : mode === 'banco' ? bancoExpense : caixaExpense
 
   return (
-    <div className="rounded-[var(--radius-card)] bg-secondary-900 p-5 text-white shadow-lg transition-all">
+    <div className="rounded-[var(--radius-card)] bg-gradient-to-br from-secondary-800 to-secondary-900 border border-secondary-700/70 p-5 text-white shadow-lg transition-all">
       {/* Top Segmented Controls: Consolidado | Banco | Caixa */}
-      <div className="flex items-center justify-between gap-2 border-b border-secondary-800 pb-3">
-        <div className="flex rounded-lg bg-secondary-800/80 p-1 text-xs">
+      <div className="flex items-center justify-between gap-2 border-b border-secondary-700/60 pb-3">
+        <div className="flex rounded-lg bg-secondary-900/60 p-1 text-xs border border-secondary-700/40">
           <button
             type="button"
             onClick={() => setMode('consolidado')}
@@ -158,11 +158,11 @@ export function TreasurySummary({
 
       {/* No modo Consolidado: Distribuição entre Banco e Caixa */}
       {mode === 'consolidado' && (
-        <div className="mt-4 grid grid-cols-2 gap-2 rounded-lg bg-secondary-800/50 p-2.5">
+        <div className="mt-4 grid grid-cols-2 gap-2 rounded-lg bg-secondary-900/40 border border-secondary-700/50 p-2.5">
           <button
             type="button"
             onClick={() => setMode('banco')}
-            className="flex flex-col rounded-md bg-secondary-800/80 p-2 text-left transition-colors hover:bg-secondary-800"
+            className="flex flex-col rounded-md bg-secondary-800/90 border border-secondary-700/40 p-2 text-left transition-colors hover:bg-secondary-700/90"
           >
             <div className="flex items-center justify-between text-xs text-secondary-300">
               <span className="flex items-center gap-1 font-semibold text-blue-300">
@@ -179,7 +179,7 @@ export function TreasurySummary({
           <button
             type="button"
             onClick={() => setMode('caixa')}
-            className="flex flex-col rounded-md bg-secondary-800/80 p-2 text-left transition-colors hover:bg-secondary-800"
+            className="flex flex-col rounded-md bg-secondary-800/90 border border-secondary-700/40 p-2 text-left transition-colors hover:bg-secondary-700/90"
           >
             <div className="flex items-center justify-between text-xs text-secondary-300">
               <span className="flex items-center gap-1 font-semibold text-amber-300">

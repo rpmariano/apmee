@@ -80,19 +80,19 @@ export function MovementCard({ movement, onEdit, eventName }: MovementCardProps)
             <span>{compactDate}</span>
             <span>•</span>
             {isBanco ? (
-              <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.2 text-xs font-semibold text-blue-700 border border-blue-200/80">
+              <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200/80">
                 <Landmark className="h-2.5 w-2.5" />
                 Banco
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.2 text-xs font-semibold text-amber-700 border border-amber-200/80">
+              <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200/80">
                 <Coins className="h-2.5 w-2.5" />
                 Caixa
               </span>
             )}
 
             {isTransfer && (
-              <span className="inline-flex items-center gap-1 rounded bg-secondary-100 px-1.5 py-0.2 text-xs font-semibold text-secondary-600 border border-secondary-200">
+              <span className="inline-flex items-center gap-1 rounded bg-secondary-100 px-1.5 py-0.5 text-xs font-semibold text-secondary-600 border border-secondary-200">
                 <ArrowLeftRight className="h-2.5 w-2.5" />
                 Transferência
               </span>

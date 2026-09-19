@@ -16,9 +16,9 @@ const ROLE_LABELS: Record<string, string> = {
 }
 
 const PERMISSION_LABELS: Record<string, string> = {
-  superadmin: 'Admin',
-  nivel_1: 'Nível 1',
-  nivel_2: 'Nível 2',
+  superadmin: 'Administração',
+  nivel_1: 'Executivo & Finanças',
+  nivel_2: 'Operacional',
 }
 
 export function BoardCard({ member, onEdit }: BoardCardProps) {

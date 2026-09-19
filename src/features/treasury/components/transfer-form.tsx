@@ -147,7 +147,7 @@ export function TransferForm({
                 >
                   {fromIcon}
                   <span className="text-xs font-bold">{fromLabel}</span>
-                  <span className="text-[11px] text-muted">De</span>
+                  <span className="text-xs text-muted">De</span>
                 </button>
 
                 {/* Swap Button */}
@@ -157,7 +157,7 @@ export function TransferForm({
                   disabled={isExisting}
                   aria-label="Inverter direção"
                   className={`
-                    flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-warm-200 bg-surface text-secondary-500 transition-all
+                    flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-warm-200 bg-surface text-secondary-500 transition-all
                     ${isExisting ? 'cursor-default opacity-40' : 'hover:bg-warm-100 active:scale-95'}
                   `}
                 >
@@ -173,7 +173,7 @@ export function TransferForm({
                 `}>
                   {toIcon}
                   <span className="text-xs font-bold">{toLabel}</span>
-                  <span className="text-[11px] text-muted">Para</span>
+                  <span className="text-xs text-muted">Para</span>
                 </div>
               </div>
 

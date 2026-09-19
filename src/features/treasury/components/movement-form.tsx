@@ -378,7 +378,7 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, onDe
                 <span className="text-xs font-bold uppercase tracking-wider text-primary-900">
                   📦 Entrada em Inventário
                 </span>
-                <span className="text-[11px] font-semibold text-primary-700 bg-primary-100 px-2 py-0.5 rounded-full">
+                <span className="text-xs font-semibold text-primary-700 bg-primary-100 px-2 py-0.5 rounded-full">
                   {category}
                 </span>
               </div>
@@ -430,7 +430,7 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, onDe
                 </div>
               </div>
 
-              <p className="text-[11px] text-secondary-600 leading-tight">
+              <p className="text-xs text-secondary-600 leading-tight">
                 {inventoryItemName
                   ? `Serão adicionadas ${inventoryQuantity} ${inventoryUnit} de "${inventoryItemName}" ao inventário.`
                   : 'Ao gravar, o artigo será criado ou atualizado no inventário.'}

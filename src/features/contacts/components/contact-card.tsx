@@ -88,12 +88,12 @@ export function ContactCard({ contact, onEdit }: ContactCardProps) {
         {/* Status / Membership Badges */}
         <div className="flex flex-col items-end gap-1 shrink-0">
           {!isActive && (
-            <span className="rounded-full bg-red-50 border border-red-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-700">
+            <span className="rounded-full bg-red-50 border border-red-200 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-red-700">
               Inativo
             </span>
           )}
           {isMember && (
-            <span className="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+            <span className="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-xs font-bold text-amber-800">
               Associado
             </span>
           )}

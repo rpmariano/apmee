@@ -65,7 +65,7 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-background/80 backdrop-blur-sm">
       <div className="flex flex-1 flex-col justify-end sm:justify-center sm:items-center p-4">
-        <div className="w-full max-w-md rounded-3xl bg-surface shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-8">
+        <div className="w-full max-w-[430px] rounded-3xl bg-surface shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-8">
           
           <div className="flex items-center justify-between border-b border-warm-200 bg-surface px-6 py-4">
             <h2 className="text-lg font-bold text-foreground">
@@ -130,7 +130,7 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
                   <HeartHandshake className="h-5 w-5 text-green-700 shrink-0" />
                   <div>
                     <p className="text-xs font-bold text-green-900">Motivo de Entrada: Doação</p>
-                    <p className="text-[11px] text-green-800 leading-tight mt-0.5">
+                    <p className="text-xs text-green-800 leading-tight mt-0.5">
                       Entradas diretas em inventário correspondem a doações à associação.
                     </p>
                   </div>
@@ -152,7 +152,7 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
                       `}
                     >
                       <span className="block font-bold">Quebra de stock</span>
-                      <span className="text-[11px] text-muted font-normal mt-0.5 block">Danos, perda ou validade</span>
+                      <span className="text-xs text-muted font-normal mt-0.5 block">Danos, perda ou validade</span>
                     </button>
                     <button
                       type="button"
@@ -165,7 +165,7 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
                       `}
                     >
                       <span className="block font-bold">Doação</span>
-                      <span className="text-[11px] text-muted font-normal mt-0.5 block">Cedência / oferta</span>
+                      <span className="text-xs text-muted font-normal mt-0.5 block">Cedência / oferta</span>
                     </button>
                   </div>
                 </div>

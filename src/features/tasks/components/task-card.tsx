@@ -1,4 +1,4 @@
-import { Calendar, Circle, CheckCircle2, Clock } from 'lucide-react'
+import { Calendar, Circle, CheckCircle2, Clock, User } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import type { Task, TaskPriority, TaskStatus } from '@/types/database'
@@ -7,6 +7,7 @@ import { TASK_STATUSES, TASK_PRIORITIES } from '@/lib/constants'
 
 interface TaskCardProps {
   task: Task
+  assigneeName?: string
   onEdit?: (task: Task) => void
   onToggleStatus?: (task: Task) => void
 }
@@ -36,7 +37,7 @@ const statusConfig: Record<TaskStatus, { label: string; icon: any; badgeColor: s
   },
 }
 
-export function TaskCard({ task, onEdit, onToggleStatus }: TaskCardProps) {
+export function TaskCard({ task, assigneeName, onEdit, onToggleStatus }: TaskCardProps) {
   const priority = priorityConfig[task.priority]
   const status = statusConfig[task.status]
   const StatusIcon = status.icon
@@ -59,21 +60,25 @@ export function TaskCard({ task, onEdit, onToggleStatus }: TaskCardProps) {
       )}
       onClick={() => onEdit && onEdit(task)}
     >
-      {/* 1-Tap Completion Checkbox Micro-Interaction */}
+      {/* 1-Tap Completion Checkbox (44x44px Accessible Touch Target) */}
       <button
         type="button"
         role="checkbox"
         aria-checked={isDone}
         aria-label={isDone ? "Marcar tarefa como a fazer" : "Marcar tarefa como concluída"}
         onClick={handleToggle}
-        className={cn(
-          "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-all active:scale-90",
-          isDone
-            ? "border-green-600 bg-green-500 text-white shadow-sm"
-            : "border-secondary-300 bg-white hover:border-green-500 hover:text-green-500 text-transparent"
-        )}
+        className="flex min-h-[44px] min-w-[44px] items-center justify-center -ml-2.5 -mt-2.5 rounded-full focus:outline-none shrink-0"
       >
-        <CheckCircle2 className={cn("h-4 w-4 transition-all", isDone ? "scale-100 animate-[pop_300ms_ease-out]" : "scale-75")} />
+        <span
+          className={cn(
+            "flex h-6 w-6 items-center justify-center rounded-full border transition-all active:scale-90",
+            isDone
+              ? "border-green-600 bg-green-500 text-white shadow-sm"
+              : "border-secondary-300 bg-white hover:border-green-500 hover:text-green-500 text-transparent"
+          )}
+        >
+          <CheckCircle2 className={cn("h-4 w-4 transition-all", isDone ? "scale-100 animate-[pop_300ms_ease-out]" : "scale-75")} />
+        </span>
       </button>
 
       {/* Main Content */}
@@ -97,6 +102,14 @@ export function TaskCard({ task, onEdit, onToggleStatus }: TaskCardProps) {
             <StatusIcon className="h-3 w-3" />
             {status.label}
           </span>
+
+          {/* Assignee Badge */}
+          {assigneeName && assigneeName !== 'Sem atribuição' && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-warm-100 px-1.5 py-0.5 font-medium text-secondary-700">
+              <User className="h-3 w-3 text-secondary-500" />
+              <span className="truncate max-w-[120px]">{assigneeName}</span>
+            </span>
+          )}
 
           {/* Due Date */}
           {task.due_date && (

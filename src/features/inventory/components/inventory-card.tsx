@@ -93,10 +93,10 @@ export function InventoryCard({ item, onEdit, onTransaction, captiveInfo, eventR
           {/* Captive Stock Badges */}
           {hasCaptive && captiveInfo && (
             <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-              <span className="rounded bg-amber-100 px-1.5 py-0.2 text-[11px] font-semibold text-amber-800 border border-amber-200">
+              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-800 border border-amber-200">
                 {isEquipment ? `Reservado: ${captiveInfo.captiveQuantity}` : `Cativo: ${captiveInfo.captiveQuantity}`}
               </span>
-              <span className="rounded bg-emerald-50 px-1.5 py-0.2 text-[11px] font-bold text-emerald-800 border border-emerald-200">
+              <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-bold text-emerald-800 border border-emerald-200">
                 Disp.: {captiveInfo.availableQuantity}
               </span>
             </div>

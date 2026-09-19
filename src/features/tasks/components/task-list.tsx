@@ -1,6 +1,7 @@
 import { useTasks } from '../api/use-tasks'
 import { TaskCard } from './task-card'
 import type { Task, TaskStatus } from '@/types/database'
+import { TASK_STATUSES } from '@/lib/constants'
 import { useBoardMembers } from '@/features/board/api/use-board'
 
 interface TaskListProps {
@@ -59,6 +60,38 @@ export function TaskList({ filter, assigneeFilter = 'all', onEditTask, onToggleS
     )
   }
 
+  const priorityOrder: Record<string, number> = {
+    urgente: 0,
+    alta: 1,
+    media: 2,
+    baixa: 3,
+  }
+
+  const sortTasks = (a: Task, b: Task) => {
+    // 1. Tarefas não concluídas primeiro
+    const aDone = a.status === TASK_STATUSES.DONE ? 1 : 0
+    const bDone = b.status === TASK_STATUSES.DONE ? 1 : 0
+    if (aDone !== bDone) return aDone - bDone
+
+    // 2. Data limite mais próxima primeiro
+    if (a.due_date && b.due_date) {
+      const dateDiff = new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+      if (dateDiff !== 0) return dateDiff
+    } else if (a.due_date && !b.due_date) {
+      return -1
+    } else if (!a.due_date && b.due_date) {
+      return 1
+    }
+
+    // 3. Prioridade (urgente > alta > media > baixa)
+    const aPrio = priorityOrder[a.priority] ?? 2
+    const bPrio = priorityOrder[b.priority] ?? 2
+    if (aPrio !== bPrio) return aPrio - bPrio
+
+    // 4. Data de criação decrescente
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  }
+
   // Group tasks by assignee
   const groupedTasks = filteredTasks.reduce((acc, task) => {
     const assigneeId = task.assigned_to || 'unassigned'
@@ -66,6 +99,9 @@ export function TaskList({ filter, assigneeFilter = 'all', onEditTask, onToggleS
     acc[assigneeId].push(task)
     return acc
   }, {} as Record<string, Task[]>)
+
+  // Sort tasks within each group
+  Object.values(groupedTasks).forEach(list => list.sort(sortTasks))
 
   // Helper to get assignee name
   const getAssigneeName = (id: string) => {
@@ -93,6 +129,7 @@ export function TaskList({ filter, assigneeFilter = 'all', onEditTask, onToggleS
               <TaskCard 
                 key={task.id} 
                 task={task} 
+                assigneeName={getAssigneeName(assigneeId)}
                 onEdit={onEditTask}
                 onToggleStatus={onToggleStatus} 
               />

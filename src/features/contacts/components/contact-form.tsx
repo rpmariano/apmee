@@ -423,7 +423,7 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
                         {Number(q.amount).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
                       </span>
                       {q.account && (
-                        <span className="inline-flex items-center gap-1 rounded bg-warm-100 px-1.5 py-0.5 text-[11px] font-medium text-secondary-700">
+                        <span className="inline-flex items-center gap-1 rounded bg-warm-100 px-1.5 py-0.5 text-xs font-medium text-secondary-700">
                           {q.account === 'caixa' ? (
                             <>
                               <Coins className="h-3 w-3 text-amber-600" />
@@ -454,7 +454,7 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
                           title="Ver Recibo"
                         >
                           <FileText className="h-3.5 w-3.5" />
-                          <span className="text-[11px] underline">Recibo</span>
+                          <span className="text-xs underline">Recibo</span>
                         </a>
                       )}
                     </div>
