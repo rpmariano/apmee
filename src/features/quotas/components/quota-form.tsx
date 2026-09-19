@@ -229,6 +229,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
             <CustomSelect disabled={!isEditing} 
               value={contactId}
               onChange={(val) => setContactId(val)}
+              searchable
               options={eligibleContacts.map(c => ({ 
                 label: `${c.name}${c.metadata?.educando ? ` (${c.metadata.educando})` : ''}${c.is_member ? ' [Sócio]' : ''}`, 
                 value: c.id 

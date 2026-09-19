@@ -13,6 +13,8 @@ export interface AuthContextType {
   user: AuthUser | null
   isLoading: boolean
   isAuthenticated: boolean
+  authError: string | null
+  clearAuthError: () => void
   signIn: () => Promise<void>
   signOut: () => Promise<void>
 }

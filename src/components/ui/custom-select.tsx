@@ -15,6 +15,7 @@ interface CustomSelectProps {
   disabled?: boolean
   required?: boolean
   creatable?: boolean
+  searchable?: boolean
 }
 
 export function CustomSelect({
@@ -24,10 +25,12 @@ export function CustomSelect({
   placeholder = 'Selecione...',
   disabled,
   required,
-  creatable = false
+  creatable = false,
+  searchable = false,
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const showSearch = searchable || creatable || options.length > 6
   
   // If creatable, allow the value itself to be displayed even if not in options
   const selectedOption = options.find((o) => o.value === value) || (creatable && value ? { label: value, value: value } : undefined)
@@ -92,7 +95,7 @@ export function CustomSelect({
           {/* Dropdown menu */}
           <div className="absolute left-0 top-full z-[70] mt-1 max-h-60 w-full overflow-y-auto rounded-[var(--radius-card)] border border-warm-200 bg-surface py-1 shadow-xl animate-in fade-in slide-in-from-top-2 flex flex-col">
             
-            {creatable && (
+            {showSearch && (
               <div className="p-2 border-b border-warm-100">
                 <input
                   type="text"
@@ -104,7 +107,7 @@ export function CustomSelect({
                     if (e.key === 'Enter') {
                       e.preventDefault()
                       e.stopPropagation()
-                      const filtered = creatable && search 
+                      const filtered = search.trim()
                         ? options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()))
                         : options;
                       const exactMatch = filtered.find(o => o.label.toLowerCase() === search.toLowerCase());
@@ -120,7 +123,7 @@ export function CustomSelect({
                       }
                     }
                   }}
-                  placeholder="Procurar ou criar novo..."
+                  placeholder={creatable ? "Procurar ou criar novo..." : "Pesquisar..."}
                   className="w-full rounded-md border border-warm-200 bg-warm-50 px-3 py-1.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
                 />
               </div>
@@ -128,11 +131,19 @@ export function CustomSelect({
 
             <div className="flex-1 overflow-y-auto">
               {(() => {
-                const filtered = creatable && search 
+                const filtered = search.trim()
                   ? options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()))
                   : options;
                 
                 const exactMatch = filtered.some(o => o.label.toLowerCase() === search.toLowerCase());
+
+                if (filtered.length === 0 && !creatable) {
+                  return (
+                    <div className="p-4 text-center text-xs text-muted">
+                      Nenhuma opção encontrada para "{search}".
+                    </div>
+                  )
+                }
 
                 return (
                   <>

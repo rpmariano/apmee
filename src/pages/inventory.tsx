@@ -137,39 +137,6 @@ export default function InventoryPage() {
           </button>
         </div>
 
-        {/* Event Selector Dropdown when toggled */}
-        {isEventSelectorOpen && (
-          <div className="mt-2.5 px-4 pb-2 animate-in fade-in duration-150">
-            <div className="rounded-xl border border-warm-200 bg-surface p-3 shadow-md flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-foreground">Filtrar por Evento</span>
-                <button
-                  type="button"
-                  onClick={() => setIsEventSelectorOpen(false)}
-                  className="rounded-full p-1 text-muted hover:bg-warm-100"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <CustomSelect
-                value={selectedEventId}
-                onChange={(val) => {
-                  setSelectedEventId(val)
-                  setIsEventSelectorOpen(false)
-                }}
-                options={[
-                  { label: 'Todos os Eventos (Mostrar todo o inventário)', value: 'all' },
-                  ...events.map((e) => ({
-                    label: `${e.event_type === 'festa' ? '🎉 ' : '📅 '}${e.title}`,
-                    value: e.id,
-                  })),
-                ]}
-                placeholder="Selecione um evento..."
-              />
-            </div>
-          </div>
-        )}
-
         {/* Active Event Filter Chip */}
         {selectedEventId !== 'all' && (
           <div className="mt-2.5 px-4 flex items-center gap-1.5 pb-1">
@@ -207,11 +174,74 @@ export default function InventoryPage() {
       <button
         type="button"
         aria-label="Adicionar item ao inventário"
-        className="fixed bottom-24 right-6 min-[430px]:right-[calc(50%-215px+1.5rem)] z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary-400 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-500 active:scale-95"
+        className="fixed bottom-24 right-6 min-[430px]:right-[calc(50%-215px+1.5rem)] z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-600 active:scale-95"
         onClick={() => setIsFormOpen(true)}
       >
         <Plus className="h-6 w-6" />
       </button>
+
+      {/* Slide-up Bottom Sheet for Event Filter */}
+      {isEventSelectorOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={() => setIsEventSelectorOpen(false)}
+        >
+          <div
+            className="w-full max-w-[430px] rounded-t-2xl sm:rounded-2xl bg-surface border-t sm:border border-warm-200 p-5 shadow-2xl animate-in slide-in-from-bottom-4 duration-200 flex flex-col gap-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-foreground">Filtrar por Evento</h3>
+                <p className="text-xs text-muted">Selecione o evento para ver os itens alocados</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEventSelectorOpen(false)}
+                className="rounded-full p-2 text-muted hover:bg-warm-100 transition-colors"
+                aria-label="Fechar seletor"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <CustomSelect
+              searchable
+              value={selectedEventId}
+              onChange={(val) => {
+                setSelectedEventId(val)
+                if (val === 'all') {
+                  if (urlEventId) setSearchParams({})
+                } else {
+                  setSearchParams({ event: val })
+                }
+                setIsEventSelectorOpen(false)
+              }}
+              options={[
+                { label: 'Todos os Eventos (Mostrar todo o inventário)', value: 'all' },
+                ...events.map((e) => ({
+                  label: `${e.event_type === 'festa' ? '🎉 ' : '📅 '}${e.title}`,
+                  value: e.id,
+                })),
+              ]}
+              placeholder="Pesquisar evento..."
+            />
+
+            {selectedEventId !== 'all' && (
+              <button
+                type="button"
+                onClick={() => {
+                  handleClearEventFilter()
+                  setIsEventSelectorOpen(false)
+                }}
+                className="w-full rounded-[var(--radius-button)] border border-warm-200 py-2.5 text-xs font-semibold text-secondary-600 hover:bg-warm-50 transition-colors"
+              >
+                Limpar Filtro de Evento
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {transactionItem && (
         <TransactionForm

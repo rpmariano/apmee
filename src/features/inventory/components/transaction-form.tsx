@@ -4,6 +4,8 @@ import type { InventoryItem } from '@/types/database'
 import { useCreateInventoryTransaction } from '../api/use-inventory-transactions'
 import { useCaptiveStock, getItemAvailability } from '../api/use-captive-stock'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
+import { useHardwareBack } from '@/hooks/use-hardware-back'
 
 interface TransactionFormProps {
   item: InventoryItem
@@ -17,7 +19,17 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
   const [outReason, setOutReason] = useState<OutReason>('quebra_stock')
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState('')
+  const [showUnsaved, setShowUnsaved] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const isDirty = quantity !== 1 || notes.trim() !== '' || type !== 'out'
+
+  const handleCloseClick = () => {
+    if (isDirty) setShowUnsaved(true)
+    else onClose()
+  }
+
+  useHardwareBack(true, handleCloseClick)
 
   const { data: captiveMap } = useCaptiveStock()
   const availability = getItemAvailability(item, captiveMap)
@@ -71,7 +83,7 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
             <h2 className="text-lg font-bold text-foreground">
               Movimento de Stock
             </h2>
-            <button onClick={onClose} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
+            <button onClick={handleCloseClick} aria-label="Fechar formulário" className="rounded-full p-2 text-muted hover:bg-warm-100">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -238,6 +250,15 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
         variant="danger"
         confirmLabel="OK"
         onConfirm={() => setErrorMessage(null)}
+      />
+
+      <UnsavedDialog
+        isOpen={showUnsaved}
+        onCancel={() => setShowUnsaved(false)}
+        onDiscard={() => {
+          setShowUnsaved(false)
+          onClose()
+        }}
       />
     </div>
   )

@@ -20,6 +20,9 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
+
+  const clearAuthError = useCallback(() => setAuthError(null), [])
 
   /**
    * Fetches the user's profile from allowed_users.
@@ -84,6 +87,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             await supabase.auth.signOut()
             setUser(null)
             userRef.current = null
+            setAuthError(session.user.email)
           }
         }
       } catch {
@@ -113,12 +117,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const authUser = buildAuthUser(session.user.id, profile)
           setUser(authUser)
           userRef.current = authUser
+          setAuthError(null)
         } else {
           // Not in whitelist → reject
           await supabase.auth.signOut()
           setUser(null)
           userRef.current = null
-          console.warn('Acesso não autorizado: email não registado.')
+          setAuthError(session.user.email)
+          console.warn('Acesso não autorizado: email não registado.', session.user.email)
         }
         if (!isCurrentSession) {
           setIsLoading(false)
@@ -137,17 +143,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [fetchUserProfile, buildAuthUser])
 
   const signIn = useCallback(async () => {
-    await supabase.auth.signInWithOAuth({
+    setAuthError(null)
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: window.location.origin + import.meta.env.BASE_URL,
       },
     })
+    if (error) {
+      setAuthError(error.message)
+    }
   }, [])
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
     setUser(null)
+    setAuthError(null)
   }, [])
 
   return (
@@ -156,6 +167,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user,
         isLoading,
         isAuthenticated: !!user,
+        authError,
+        clearAuthError,
         signIn,
         signOut,
       }}

@@ -4,6 +4,7 @@ import type { FinancialAccount } from '@/types/database'
 
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { CustomDialog } from '@/components/ui/custom-dialog'
+import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
 
 interface TransferFormProps {
   onClose: () => void
@@ -52,10 +53,18 @@ export function TransferForm({
   const [notes, setNotes] = useState(existingDescription?.replace(/Transferência (para|de) (Banco|Caixa) ?— ?/, '') ?? '')
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showUnsaved, setShowUnsaved] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
-  useHardwareBack(true, onClose)
+  const isDirty = !isExisting && (amount.trim() !== '' || notes.trim() !== '')
+
+  const handleCloseClick = () => {
+    if (isDirty) setShowUnsaved(true)
+    else onClose()
+  }
+
+  useHardwareBack(true, handleCloseClick)
 
   const handleSwap = () => {
     if (isExisting) return
@@ -117,7 +126,7 @@ export function TransferForm({
                 <Trash2 className="h-5 w-5" />
               </button>
             )}
-            <button onClick={onClose} aria-label="Fechar" className="rounded-full p-2 text-muted hover:bg-warm-100">
+            <button onClick={handleCloseClick} aria-label="Fechar" className="rounded-full p-2 text-muted hover:bg-warm-100">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -282,6 +291,15 @@ export function TransferForm({
           isLoading={isDeleting}
           onConfirm={handleConfirmDelete}
           onCancel={() => setShowDeleteConfirm(false)}
+        />
+
+        <UnsavedDialog
+          isOpen={showUnsaved}
+          onCancel={() => setShowUnsaved(false)}
+          onDiscard={() => {
+            setShowUnsaved(false)
+            onClose()
+          }}
         />
       </div>
     </div>

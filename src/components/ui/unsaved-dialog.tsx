@@ -2,7 +2,7 @@ interface UnsavedDialogProps {
   isOpen: boolean
   onCancel: () => void
   onDiscard: () => void
-  onSave: () => void
+  onSave?: () => void
 }
 
 export function UnsavedDialog({ isOpen, onCancel, onDiscard, onSave }: UnsavedDialogProps) {
@@ -17,12 +17,14 @@ export function UnsavedDialog({ isOpen, onCancel, onDiscard, onSave }: UnsavedDi
         </p>
         
         <div className="mt-6 flex flex-col gap-2">
-          <button
-            onClick={onSave}
-            className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95"
-          >
-            Gravar e Sair
-          </button>
+          {onSave && (
+            <button
+              onClick={onSave}
+              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-500 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-primary-600 active:scale-95"
+            >
+              Gravar e Sair
+            </button>
+          )}
           
           <button
             onClick={onDiscard}

@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { TaskList } from '@/features/tasks/components/task-list'
 import { TaskForm } from '@/features/tasks/components/task-form'
-import { useCreateTask, useUpdateTask, useDeleteTask } from '@/features/tasks/api/use-tasks'
+import { useCreateTask, useUpdateTask, useDeleteTask, useTasks } from '@/features/tasks/api/use-tasks'
 import { useAuth } from '@/providers/auth-provider'
 import { useBoardMembers } from '@/features/board/api/use-board'
 import { usePermissions } from '@/hooks/use-permissions'
@@ -23,16 +24,29 @@ const tabs: { value: FilterValue; label: string }[] = [
 ]
 
 export default function TasksPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const editTaskId = searchParams.get('edit')
   const [activeTab, setActiveTab] = useState<FilterValue>('todo')
   const [scopeFilter, setScopeFilter] = useState<'all' | 'my'>('all')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  const { data: allTasks } = useTasks()
   const { user } = useAuth()
   const { data: boardMembers } = useBoardMembers()
   const currentMember = boardMembers?.find(m => m.email === user?.email)
   const currentMemberId = currentMember?.id
+
+  useEffect(() => {
+    if (editTaskId && allTasks && !isFormOpen) {
+      const target = allTasks.find((t) => t.id === editTaskId)
+      if (target) {
+        setEditingTask(target)
+        setIsFormOpen(true)
+      }
+    }
+  }, [editTaskId, allTasks, isFormOpen])
 
   const createMutation = useCreateTask()
   const updateMutation = useUpdateTask()
@@ -60,6 +74,9 @@ export default function TasksPage() {
   const handleCloseForm = () => {
     setIsFormOpen(false)
     setEditingTask(undefined)
+    if (searchParams.get('edit')) {
+      setSearchParams({})
+    }
   }
 
   const handleSubmitForm = async (data: Partial<Task>) => {

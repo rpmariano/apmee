@@ -1,18 +1,23 @@
 import { useAuth } from '@/providers/auth-provider'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
 import { APP_NAME } from '@/lib/constants'
+import { AlertCircle, Mail, RotateCw } from 'lucide-react'
 
 /**
  * Login page — shown to unauthenticated users.
- * Features the APMEE logo and a Google sign-in button.
+ * Features the APMEE logo, a Google sign-in button, and supportive guidance if unauthorized.
  */
 export default function LoginPage() {
-  const { isAuthenticated, isLoading, signIn } = useAuth()
+  const { isAuthenticated, isLoading, signIn, authError, clearAuthError } = useAuth()
+  const [searchParams] = useSearchParams()
+
+  const urlError = searchParams.get('error_description') || searchParams.get('error')
+  const displayError = authError || urlError
 
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-400" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-500" />
       </div>
     )
   }
@@ -22,27 +27,69 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6">
-      <div className="flex w-full max-w-sm flex-col items-center gap-8">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-12">
+      <div className="flex w-full max-w-sm flex-col items-center gap-6">
         {/* Logo */}
         <img
           src={`${import.meta.env.BASE_URL}logo.jpeg`}
           alt={`Logo ${APP_NAME}`}
-          className="h-40 w-40 rounded-full object-cover shadow-md"
+          className="h-36 w-36 rounded-full object-cover shadow-md"
         />
 
         {/* Title */}
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground">{APP_NAME}</h1>
-          <p className="mt-2 text-sm text-muted">
+          <p className="mt-1 text-sm text-muted">
             Plataforma de Gestão da Associação
           </p>
         </div>
 
+        {/* Supportive Unauthorized / Error Guidance */}
+        {displayError && (
+          <div className="w-full rounded-[var(--radius-card)] border border-amber-200 bg-amber-50/80 p-4 shadow-xs animate-in fade-in duration-200">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-2 text-xs">
+                <p className="font-bold text-amber-900">
+                  Acesso Restrito / Não Autorizado
+                </p>
+                <p className="text-amber-800 leading-relaxed">
+                  A conta {authError && authError.includes('@') ? (
+                    <strong className="font-semibold text-amber-950">{authError}</strong>
+                  ) : (
+                    'utilizada'
+                  )}{' '}
+                  não se encontra registada com permissão de acesso à plataforma.
+                </p>
+                <div className="rounded-lg bg-white/70 p-2.5 border border-amber-200/60">
+                  <p className="text-muted leading-relaxed">
+                    Se é membro dos órgãos sociais ou da equipa da APMEE e precisa de acesso, contacte o administrador:
+                  </p>
+                  <a
+                    href="mailto:apmee.cobre@gmail.com"
+                    className="mt-1.5 inline-flex items-center gap-1.5 font-semibold text-primary-600 hover:text-primary-700 underline"
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    <span>apmee.cobre@gmail.com</span>
+                  </a>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => clearAuthError()}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-amber-900 hover:underline pt-1"
+                >
+                  <RotateCw className="h-3 w-3" />
+                  <span>Tentar com outra conta</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Google sign-in button */}
         <button
           onClick={signIn}
-          className="flex w-full items-center justify-center gap-3 rounded-[var(--radius-button)] border border-warm-300 bg-surface px-6 py-3 text-sm font-medium text-foreground shadow-sm transition-all hover:bg-warm-50 hover:shadow-md active:scale-[0.98]"
+          className="flex w-full items-center justify-center gap-3 rounded-[var(--radius-button)] border border-warm-300 bg-surface px-6 py-3.5 text-sm font-medium text-foreground shadow-sm transition-all hover:bg-warm-50 hover:shadow-md active:scale-[0.98]"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -62,12 +109,12 @@ export default function LoginPage() {
               fill="#EA4335"
             />
           </svg>
-          Entrar com Google
+          <span>Entrar com Google</span>
         </button>
 
         {/* Footer */}
         <p className="text-xs text-muted">
-          Acesso restrito a membros da direção
+          Acesso restrito a membros autorizados da APMEE
         </p>
       </div>
     </div>
