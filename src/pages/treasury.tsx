@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEvents } from '@/features/events/api/use-events'
-import { Plus, SlidersHorizontal, X, ArrowLeftRight } from 'lucide-react'
+import { SlidersHorizontal, X, ArrowLeftRight } from 'lucide-react'
 import { TreasurySummary, type TreasuryViewMode } from '@/features/treasury/components/treasury-summary'
 import { MovementList } from '@/features/treasury/components/movement-list'
 import { MovementForm } from '@/features/treasury/components/movement-form'
@@ -441,18 +441,6 @@ export default function TreasuryPage() {
           />
         </div>
       </div>
-
-      {/* Floating Action Button (FAB) anchored to 430px container */}
-      {canWriteTreasury && (
-        <button
-          type="button"
-          aria-label="Registar novo movimento financeiro"
-          className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-5 min-[430px]:right-[calc(50%-215px+1.25rem)] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-white shadow-xl hover:bg-primary-600 active:scale-95 transition-all"
-          onClick={() => setIsFormOpen(true)}
-        >
-          <Plus className="h-6 w-6" />
-        </button>
-      )}
 
       {/* Movement Modal Form */}
       {isFormOpen && (

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { Plus, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { TaskList } from '@/features/tasks/components/task-list'
 import { TaskForm } from '@/features/tasks/components/task-form'
 import { useCreateTask, useUpdateTask, useDeleteTask, useTasks } from '@/features/tasks/api/use-tasks'
@@ -181,15 +181,6 @@ export default function TasksPage() {
       <div className="px-4">
         <TaskList filter={activeTab} assigneeFilter={scopeFilter === 'my' && currentMemberId ? currentMemberId : 'all'} onEditTask={handleEditTask} onToggleStatus={handleToggleStatus} />
       </div>
-
-      <button
-        type="button"
-        aria-label="Criar nova tarefa"
-        className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-5 min-[430px]:right-[calc(50%-215px+1.25rem)] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-white shadow-xl hover:bg-primary-600 active:scale-95 transition-all"
-        onClick={() => setIsFormOpen(true)}
-      >
-        <Plus className="h-6 w-6" />
-      </button>
 
       {isFormOpen && (
         <TaskForm

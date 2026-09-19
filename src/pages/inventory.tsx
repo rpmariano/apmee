@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { Plus, X, Calendar, ArrowLeft } from 'lucide-react'
+import { X, Calendar, ArrowLeft } from 'lucide-react'
 import { InventoryList } from '@/features/inventory/components/inventory-list'
 import { InventoryForm } from '@/features/inventory/components/inventory-form'
 import { TransactionForm } from '@/features/inventory/components/transaction-form'
@@ -191,15 +191,6 @@ export default function InventoryPage() {
           onTransaction={(item) => setTransactionItem(item)}
         />
       </div>
-
-      <button
-        type="button"
-        aria-label="Adicionar item ao inventário"
-        className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-5 min-[430px]:right-[calc(50%-215px+1.25rem)] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-white shadow-xl hover:bg-primary-600 active:scale-95 transition-all"
-        onClick={() => setIsFormOpen(true)}
-      >
-        <Plus className="h-6 w-6" />
-      </button>
 
       {/* Slide-up Bottom Sheet for Event Filter */}
       {isEventSelectorOpen && (

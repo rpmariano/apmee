@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Plus, Search, ArrowLeft } from 'lucide-react'
+import { Search, ArrowLeft } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { QuotaList } from '@/features/quotas/components/quota-list'
 import { QuotaForm } from '@/features/quotas/components/quota-form'
@@ -460,17 +460,6 @@ export default function QuotasPage() {
           onEdit={canWriteQuotas ? handleEditQuota : undefined} 
         />
       </div>
-
-      {canWriteQuotas && (
-        <button
-          type="button"
-          aria-label="Registar nova quota"
-          className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-5 min-[430px]:right-[calc(50%-215px+1.25rem)] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-white shadow-xl hover:bg-primary-600 active:scale-95 transition-all"
-          onClick={() => setIsFormOpen(true)}
-        >
-          <Plus className="h-6 w-6" />
-        </button>
-      )}
 
       {isFormOpen && (
         <QuotaForm

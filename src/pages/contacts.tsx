@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Plus, Search, ChevronDown, Star, RotateCcw, ArrowLeft } from 'lucide-react'
+import { Search, ChevronDown, Star, RotateCcw, ArrowLeft } from 'lucide-react'
 import { ContactList } from '@/features/contacts/components/contact-list'
 import { ContactForm } from '@/features/contacts/components/contact-form'
 import { useContacts, useCreateContact, useUpdateContact, useDeleteContact } from '@/features/contacts/api/use-contacts'
@@ -289,16 +289,6 @@ export default function ContactsPage() {
           onlyMembers={onlyMembers}
         />
       </div>
-
-      {/* Floating Action Button (FAB) */}
-      <button
-        type="button"
-        aria-label="Criar novo contacto"
-        className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-5 min-[430px]:right-[calc(50%-215px+1.25rem)] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-white shadow-xl hover:bg-primary-600 active:scale-95 transition-all"
-        onClick={() => setIsFormOpen(true)}
-      >
-        <Plus className="h-6 w-6" />
-      </button>
 
       {/* Form Modal/Slide-over */}
       {isFormOpen && (

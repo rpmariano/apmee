@@ -77,7 +77,19 @@ export default function BoardPage() {
               </span>
             )}
           </div>
-          <MenuAlerts />
+          <div className="flex items-center gap-2">
+            {isSuperAdmin && (
+              <button
+                type="button"
+                onClick={() => setIsFormOpen(true)}
+                className="flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-primary-600 active:scale-95 transition-all"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Adicionar</span>
+              </button>
+            )}
+            <MenuAlerts />
+          </div>
         </div>
         <p className="px-4 mt-2 text-sm text-muted">Gestão de acessos à plataforma.</p>
       </div>
@@ -89,17 +101,6 @@ export default function BoardPage() {
           onEdit={isSuperAdmin ? handleEditMember : undefined} 
         />
       </div>
-
-      {isSuperAdmin && (
-        <button
-          type="button"
-          aria-label="Adicionar membro da direção"
-          className="fixed bottom-24 right-6 min-[430px]:right-[calc(50%-215px+1.5rem)] z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary-400 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-500 active:scale-95"
-          onClick={() => setIsFormOpen(true)}
-        >
-          <Plus className="h-6 w-6" />
-        </button>
-      )}
 
       {isFormOpen && (
         <BoardForm
