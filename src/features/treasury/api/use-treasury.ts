@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { FinancialMovement } from '@/types/database'
-import { getQuotaDeduplicationKey, isMovementMatchingQuota } from '@/lib/quota-utils'
+import { reconcileQuotasAndMovements } from '@/lib/quota-utils'
 
 const TREASURY_QUERY_KEY = 'treasury'
 
@@ -19,88 +19,54 @@ export function useMovements() {
 
       if (error) throw error
 
-      // 2. Fetch active quotas to reconcile against the Single Source of Truth
-      let activeQuotas: any[] = []
+      // 2. Fetch quotas to reconcile against the Single Source of Truth
+      let quotas: any[] = []
       try {
         const { data: qData } = await (supabase as any)
           .from('quotas')
-          .select('id, contact_id, year, paid, movement_id, contact:contacts(name)')
-          .is('deleted_at', null)
-        if (qData) activeQuotas = qData
+          .select('id, contact_id, year, paid, amount, paid_date, movement_id, deleted_at, contact:contacts(name)')
+        if (qData) quotas = qData
       } catch (qErr) {
         console.warn('Aviso ao carregar quotas para reconciliação:', qErr)
       }
 
-      const raw = (data as any[]) || []
-      const seenQuotaKeys = new Set<string>()
-      const duplicateIdsToSoftDelete: string[] = []
-      const normalized: FinancialMovement[] = []
+      const raw = (data as FinancialMovement[]) || []
 
-      // Identify unpaid quotas to purge their movements
-      const unpaidMovementIds = new Set<string>()
-      const unpaidQuotas = activeQuotas.filter((q) => !q.paid)
-      for (const uq of unpaidQuotas) {
-        if (uq.movement_id) unpaidMovementIds.add(uq.movement_id)
-      }
+      // 3. Strict 1-to-1 reconciliation & purge of orphan/duplicate quota movements
+      const { validMovements, idsToSoftDelete, quotaLinksToUpdate } = reconcileQuotasAndMovements(
+        raw,
+        quotas
+      )
 
-      for (const m of raw) {
-        const item: FinancialMovement = {
-          ...m,
-          account: m.account || 'banco',
-        }
-
-        if (m.category === 'Quotas de Sócios') {
-          // A. If this movement is explicitly linked to an unpaid quota, soft delete & discard!
-          if (unpaidMovementIds.has(m.id)) {
-            duplicateIdsToSoftDelete.push(m.id)
-            continue
-          }
-
-          // B. If this movement matches an unpaid quota by name/year and has no paid quota matching, discard!
-          if (activeQuotas.length > 0) {
-            const matchesUnpaid = unpaidQuotas.some((uq) =>
-              isMovementMatchingQuota(m, null, uq.contact?.name || '', uq.year)
-            )
-            if (matchesUnpaid) {
-              const matchesAnyPaid = activeQuotas.some(
-                (pq) => pq.paid && isMovementMatchingQuota(m, pq.movement_id, pq.contact?.name || '', pq.year)
-              )
-              if (!matchesAnyPaid) {
-                duplicateIdsToSoftDelete.push(m.id)
-                continue
-              }
-            }
-          }
-
-          // C. Enhanced deduplication key (handles diacritics, middle names, school years)
-          const deduplicationKey = getQuotaDeduplicationKey(m.description)
-          if (deduplicationKey) {
-            if (seenQuotaKeys.has(deduplicationKey)) {
-              // Duplicate quota detected!
-              duplicateIdsToSoftDelete.push(m.id)
-              continue
-            }
-            seenQuotaKeys.add(deduplicationKey)
-          }
-        }
-
-        normalized.push(item)
-      }
-
-      // Background cleanup: soft delete duplicate/orphan records in Supabase so database remains clean
-      if (duplicateIdsToSoftDelete.length > 0) {
+      // 4. Background cleanup: soft delete duplicate/orphan records in Supabase
+      if (idsToSoftDelete.length > 0) {
         (supabase as any)
           .from('financial_movements')
           .update({ deleted_at: new Date().toISOString() })
-          .in('id', duplicateIdsToSoftDelete)
+          .in('id', idsToSoftDelete)
           .then(({ error: cleanErr }: any) => {
             if (cleanErr) {
-              console.warn('Aviso ao limpar quotas duplicadas na BD:', cleanErr)
+              console.warn('Aviso ao purgar quotas duplicadas/órfãs na BD:', cleanErr)
             }
           })
       }
 
-      return normalized
+      // 5. Background repair: link quotas to their primary movement_id in Supabase
+      if (quotaLinksToUpdate.length > 0) {
+        for (const link of quotaLinksToUpdate) {
+          (supabase as any)
+            .from('quotas')
+            .update({ movement_id: link.movementId })
+            .eq('id', link.quotaId)
+            .then(({ error: linkErr }: any) => {
+              if (linkErr) {
+                console.warn('Aviso ao sincronizar movement_id da quota:', linkErr)
+              }
+            })
+        }
+      }
+
+      return validMovements
     },
   })
 }

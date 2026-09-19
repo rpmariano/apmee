@@ -13,7 +13,7 @@ import type { Quota, FinancialMovement } from '@/types/database'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { formatSchoolYear, getCurrentSchoolYear, getSchoolYearOptions } from '@/lib/school-year'
-import { isMovementMatchingQuota, getQuotaDeduplicationKey } from '@/lib/quota-utils'
+import { isMovementMatchingQuota, reconcileQuotasAndMovements } from '@/lib/quota-utils'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
 import { getFriendlyErrorMessage } from '@/lib/error-utils'
@@ -78,79 +78,57 @@ export default function QuotasPage() {
     return contacts?.find((c) => c.id === contactId)?.name || editingQuota?.contact?.name || 'Associado'
   }
 
-  // Auto-cleanup on mount: detect and soft-delete any legacy duplicate quota movements in database
+  // Auto-cleanup on mount: reconcile quotas and treasury movements, purging duplicates and orphans
   useEffect(() => {
     async function runDeduplication() {
       try {
         const [{ data: activeMovs }, { data: allQuotas }] = await Promise.all([
           (supabase as any)
             .from('financial_movements')
-            .select('id, category, description, created_at, updated_at')
-            .eq('category', 'Quotas de Sócios')
+            .select('*')
             .is('deleted_at', null)
             .order('updated_at', { ascending: false })
             .order('created_at', { ascending: false }),
           (supabase as any)
             .from('quotas')
-            .select('id, paid, movement_id, year, contact:contacts(name)')
-            .is('deleted_at', null),
+            .select('id, contact_id, year, paid, amount, paid_date, movement_id, deleted_at, contact:contacts(name)'),
         ])
 
         if (!activeMovs || activeMovs.length === 0) return
 
-        const seenKeys = new Set<string>()
-        const idsToPurge = new Set<string>()
+        const { idsToSoftDelete, quotaLinksToUpdate } = reconcileQuotasAndMovements(
+          activeMovs,
+          allQuotas || []
+        )
 
-        // 1. Purge movements belonging to unpaid quotas
-        const quotasList = (allQuotas as any[]) || []
-        const unpaidQuotas = quotasList.filter((q) => !q.paid)
-        const paidQuotas = quotasList.filter((q) => q.paid)
+        let changed = false
 
-        for (const uq of unpaidQuotas) {
-          if (uq.movement_id) idsToPurge.add(uq.movement_id)
-        }
-
-        for (const mov of activeMovs) {
-          if (idsToPurge.has(mov.id)) continue
-
-          // If matches unpaid quota and no matching paid quota
-          const isUnpaidMatch = unpaidQuotas.some((uq) =>
-            isMovementMatchingQuota(mov, null, uq.contact?.name || '', uq.year)
-          )
-          if (isUnpaidMatch) {
-            const hasMatchingPaid = paidQuotas.some((pq) =>
-              isMovementMatchingQuota(mov, pq.movement_id, pq.contact?.name || '', pq.year)
-            )
-            if (!hasMatchingPaid) {
-              idsToPurge.add(mov.id)
-              continue
-            }
-          }
-
-          // 2. Deduplicate using enhanced key
-          const key = getQuotaDeduplicationKey(mov.description)
-          if (key) {
-            if (seenKeys.has(key)) {
-              idsToPurge.add(mov.id)
-            } else {
-              seenKeys.add(key)
-            }
-          }
-        }
-
-        if (idsToPurge.size > 0) {
+        if (idsToSoftDelete.length > 0) {
           const { error } = await (supabase as any)
             .from('financial_movements')
             .update({ deleted_at: new Date().toISOString() })
-            .in('id', Array.from(idsToPurge))
+            .in('id', idsToSoftDelete)
 
-          if (!error) {
-            queryClient.invalidateQueries({ queryKey: ['treasury'] })
-            queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
-          }
+          if (!error) changed = true
+        }
+
+        if (quotaLinksToUpdate.length > 0) {
+          await Promise.allSettled(
+            quotaLinksToUpdate.map((link) =>
+              (supabase as any)
+                .from('quotas')
+                .update({ movement_id: link.movementId })
+                .eq('id', link.quotaId)
+            )
+          )
+        }
+
+        if (changed) {
+          queryClient.invalidateQueries({ queryKey: ['treasury'] })
+          queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
         }
       } catch (err) {
-        console.warn('Aviso na deduplicação em segundo plano:', err)
+        console.warn('Aviso na reconciliação e purga em segundo plano:', err)
       }
     }
 

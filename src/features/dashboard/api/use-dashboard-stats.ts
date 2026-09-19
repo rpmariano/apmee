@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import { getQuotaDeduplicationKey } from '@/lib/quota-utils'
+import { reconcileQuotasAndMovements } from '@/lib/quota-utils'
+import type { FinancialMovement } from '@/types/database'
 
 export function useDashboardStats() {
   return useQuery({
@@ -26,23 +27,24 @@ export function useDashboardStats() {
         .neq('status', 'done')
         .is('deleted_at', null)
 
-      // Fetch treasury balance (Incomes - Expenses, deduplicating any duplicate quotas identically to Treasury)
-      const { data: movements } = await (supabase as any)
-        .from('financial_movements')
-        .select('id, type, amount, category, description')
-        .is('deleted_at', null)
+      // Fetch treasury balance (Incomes - Expenses, strictly reconciled with quotas Single Source of Truth)
+      const [{ data: movements }, { data: quotas }] = await Promise.all([
+        (supabase as any)
+          .from('financial_movements')
+          .select('*')
+          .is('deleted_at', null),
+        (supabase as any)
+          .from('quotas')
+          .select('id, contact_id, year, paid, amount, paid_date, movement_id, deleted_at, contact:contacts(name)'),
+      ])
       
       let balance = 0
       if (movements) {
-        const seenQuotas = new Set<string>()
-        balance = movements.reduce((acc: number, mov: any) => {
-          if (mov.category === 'Quotas de Sócios' && mov.description) {
-            const key = getQuotaDeduplicationKey(mov.description)
-            if (key) {
-              if (seenQuotas.has(key)) return acc
-              seenQuotas.add(key)
-            }
-          }
+        const { validMovements } = reconcileQuotasAndMovements(
+          movements as FinancialMovement[],
+          quotas || []
+        )
+        balance = validMovements.reduce((acc: number, mov: any) => {
           const val = Number(mov.amount) || 0
           return mov.type === 'income' ? acc + val : acc - val
         }, 0)
