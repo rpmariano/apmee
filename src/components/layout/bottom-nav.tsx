@@ -27,6 +27,21 @@ export function BottomNav() {
             <Link
               key={item.to}
               to={item.to}
+              onClick={() => {
+                if (isActive) {
+                  const mainEl = document.querySelector('main')
+                  if (mainEl) {
+                    mainEl.scrollTo({ top: 0, behavior: 'smooth' })
+                  }
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                  if (document.documentElement) {
+                    document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
+                  }
+                  if (document.body) {
+                    document.body.scrollTo({ top: 0, behavior: 'smooth' })
+                  }
+                }
+              }}
               className={cn(
                 'group relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-xs transition-colors active:scale-95',
                 isActive

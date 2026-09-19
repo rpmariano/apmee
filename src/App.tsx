@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AppShell } from '@/components/layout/app-shell'
+import { ScrollToTop } from '@/components/layout/scroll-to-top'
 import { Loader2 } from 'lucide-react'
 
 // Lazy-loaded route components for optimal performance and chunk splitting
@@ -34,6 +35,7 @@ function RouteFallback() {
 export default function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <ScrollToTop />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           {/* Public route */}

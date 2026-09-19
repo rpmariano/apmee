@@ -1,4 +1,5 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/providers/auth-provider'
 import { BottomNav } from './bottom-nav'
 import { NetworkStatus } from '@/components/ui/network-status'
@@ -12,6 +13,14 @@ import { NetworkStatus } from '@/components/ui/network-status'
  */
 export function AppShell() {
   const { isAuthenticated, isLoading } = useAuth()
+  const location = useLocation()
+  const mainRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0
+    }
+  }, [location.pathname])
 
   if (isLoading) {
     return (
@@ -34,7 +43,7 @@ export function AppShell() {
       <div className="relative flex w-full max-w-[430px] flex-col min-h-screen bg-background shadow-xl">
         <NetworkStatus />
         {/* Main content area — scrollable, with bottom padding for nav bar and safe area */}
-        <main className="flex-1 overflow-y-auto pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]">
+        <main ref={mainRef} className="flex-1 overflow-y-auto pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]">
           <Outlet />
         </main>
 
