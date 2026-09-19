@@ -69,38 +69,71 @@ export default function QuotasPage() {
   useEffect(() => {
     async function runDeduplication() {
       try {
-        const { data: activeMovs } = await (supabase as any)
-          .from('financial_movements')
-          .select('id, category, description, created_at, updated_at')
-          .eq('category', 'Quotas de Sócios')
-          .is('deleted_at', null)
-          .order('updated_at', { ascending: false })
-          .order('created_at', { ascending: false })
+        const [{ data: activeMovs }, { data: allQuotas }] = await Promise.all([
+          (supabase as any)
+            .from('financial_movements')
+            .select('id, category, description, created_at, updated_at')
+            .eq('category', 'Quotas de Sócios')
+            .is('deleted_at', null)
+            .order('updated_at', { ascending: false })
+            .order('created_at', { ascending: false }),
+          (supabase as any)
+            .from('quotas')
+            .select('id, paid, movement_id, year, contact:contacts(name)')
+            .is('deleted_at', null),
+        ])
 
         if (!activeMovs || activeMovs.length === 0) return
 
         const seenKeys = new Set<string>()
-        const duplicateIds: string[] = []
+        const idsToPurge = new Set<string>()
+
+        // 1. Purge movements belonging to unpaid quotas
+        const quotasList = (allQuotas as any[]) || []
+        const unpaidQuotas = quotasList.filter((q) => !q.paid)
+        const paidQuotas = quotasList.filter((q) => q.paid)
+
+        for (const uq of unpaidQuotas) {
+          if (uq.movement_id) idsToPurge.add(uq.movement_id)
+        }
 
         for (const mov of activeMovs) {
+          if (idsToPurge.has(mov.id)) continue
+
+          // If matches unpaid quota and no matching paid quota
+          const isUnpaidMatch = unpaidQuotas.some((uq) =>
+            isMovementMatchingQuota(mov, null, uq.contact?.name || '', uq.year)
+          )
+          if (isUnpaidMatch) {
+            const hasMatchingPaid = paidQuotas.some((pq) =>
+              isMovementMatchingQuota(mov, pq.movement_id, pq.contact?.name || '', pq.year)
+            )
+            if (!hasMatchingPaid) {
+              idsToPurge.add(mov.id)
+              continue
+            }
+          }
+
+          // 2. Deduplicate using enhanced key
           const key = getQuotaDeduplicationKey(mov.description)
           if (key) {
             if (seenKeys.has(key)) {
-              duplicateIds.push(mov.id)
+              idsToPurge.add(mov.id)
             } else {
               seenKeys.add(key)
             }
           }
         }
 
-        if (duplicateIds.length > 0) {
+        if (idsToPurge.size > 0) {
           const { error } = await (supabase as any)
             .from('financial_movements')
             .update({ deleted_at: new Date().toISOString() })
-            .in('id', duplicateIds)
+            .in('id', Array.from(idsToPurge))
 
           if (!error) {
             queryClient.invalidateQueries({ queryKey: ['treasury'] })
+            queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
           }
         }
       } catch (err) {

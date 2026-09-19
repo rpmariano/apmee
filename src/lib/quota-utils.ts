@@ -1,51 +1,78 @@
-import { formatSchoolYear } from '@/lib/school-year'
+import { formatSchoolYear, getCurrentSchoolYear } from '@/lib/school-year'
 import type { FinancialMovement } from '@/types/database'
 
 /**
  * Normalizes a quota movement description into a unique key: `${year}:${cleanedName}`.
- * Allows identifying identical quota payments regardless of formatting (em-dash, hyphen, full year, etc.).
- * 
- * Examples:
- * - "Quota 25/26 — Manuel Marques" -> "25/26:manuel marques"
- * - "Quota 25/26 - Manuel Marques"  -> "25/26:manuel marques"
- * - "Quota 2025/2026 — Manuel Marques" -> "25/26:manuel marques"
+ * Allows identifying identical quota payments regardless of formatting:
+ * - Unicode dashes (— vs -)
+ * - School year formats (25/26, 2025/2026, 2025-2026, 2025, or omitted)
+ * - Diacritics/accents (João vs Joao, Conceição vs Conceicao)
+ * - Name variations (first + last name: "Rui Pedro Mariano" vs "Rui Mariano")
+ * - Prefixes ("Quota 25/26", "Quotas de Sócios", "Pagamento de Quota")
  */
 export function getQuotaDeduplicationKey(description: string): string {
   if (!description) return ''
-  const clean = description.toLowerCase().trim()
 
-  // Extract year if present (e.g. 25/26 or 2025/2026 or 2025)
-  const yearMatch = clean.match(/(\d{2}\/\d{2}|\d{4}\/\d{4}|\b20\d{2}\b)/)
-  let yearPart = 'current'
+  // 1. Remove accents/diacritics and convert to lower case
+  const clean = description
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+
+  // 2. Extract and standardize school year
+  // Matches: 25/26, 2025/2026, 2025-2026, 2025/26, 25-26, 2025, 2026
+  const yearMatch = clean.match(/(\d{2}[/-]\d{2}|\d{4}[/-]\d{4}|\d{4}[/-]\d{2}|\b20\d{2}\b)/)
+  let yearPart = formatSchoolYear(getCurrentSchoolYear()).toLowerCase() // Default to active school year if omitted
+
   if (yearMatch) {
-    const rawYear = yearMatch[1]
-    if (rawYear.length === 5) {
-      yearPart = rawYear // e.g. 25/26
-    } else if (rawYear.length === 9) {
+    const raw = yearMatch[1].replace('-', '/')
+    if (raw.length === 5) {
+      // 25/26
+      yearPart = raw
+    } else if (raw.length === 9) {
       // 2025/2026 -> 25/26
-      yearPart = `${rawYear.slice(2, 4)}/${rawYear.slice(7, 9)}`
-    } else if (rawYear.length === 4) {
+      yearPart = `${raw.slice(2, 4)}/${raw.slice(7, 9)}`
+    } else if (raw.length === 7) {
+      // 2025/26 -> 25/26
+      yearPart = `${raw.slice(2, 4)}/${raw.slice(5, 7)}`
+    } else if (raw.length === 4) {
       // 2025 -> 25/26
-      const y = parseInt(rawYear, 10)
+      const y = parseInt(raw, 10)
       yearPart = `${String(y).slice(-2)}/${String(y + 1).slice(-2)}`
     }
   }
 
-  // Remove prefixes like "quota", "quotas de sócios", year prefix, dashes, and extra spaces
-  const namePart = clean
-    .replace(/^quotas?\s*(?:de\s*s[óo]cios)?/i, '')
-    .replace(/^(?:\d{2}\/\d{2}|\d{4}\/\d{4}|\d{4})/i, '')
-    .replace(/^[-—–:]+/, '')
-    .replace(/[-—–:]+/g, ' ')
+  // 3. Clean and isolate member name
+  let namePart = clean
+    // Remove "pagamento de", "pagamento"
+    .replace(/\bpagamento\s*(?:de\s*)?/gi, '')
+    // Remove "quotas de socios", "quota de socio", "quotas", "quota"
+    .replace(/\bquotas?\s*(?:de\s*socios?|de\s*associados?|socios?|associados?)?\b/gi, '')
+    // Remove extracted year strings
+    .replace(/(?:\d{2}[/-]\d{2}|\d{4}[/-]\d{4}|\d{4}[/-]\d{2}|\b20\d{2}\b)/g, '')
+    // Remove separating punctuation (dashes, slashes, colons, bullets)
+    .replace(/[-—–:/•.]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 
-  return `${yearPart}:${namePart}`
+  // 4. Normalize name by first + last name to bridge middle-name differences
+  const parts = namePart.split(' ').filter(Boolean)
+  let normalizedPerson = namePart
+  if (parts.length >= 2) {
+    normalizedPerson = `${parts[0]} ${parts[parts.length - 1]}`
+  } else if (parts.length === 1) {
+    normalizedPerson = parts[0]
+  } else {
+    normalizedPerson = '__geral__'
+  }
+
+  return `${yearPart}:${normalizedPerson}`
 }
 
 /**
  * Checks if a financial movement matches a given quota by ID or by Category + Contact Name + School Year.
- * Resilient against unicode dashes (— vs -), year formats (25/26 vs 2025/2026), and minor spacing differences.
+ * Resilient against unicode dashes (— vs -), year formats (25/26 vs 2025/2026), accents, and middle names.
  */
 export function isMovementMatchingQuota(
   mov: FinancialMovement,
@@ -63,18 +90,29 @@ export function isMovementMatchingQuota(
     return false
   }
 
-  const desc = mov.description.toLowerCase().trim()
-  const cleanContactName = contactName.toLowerCase().trim()
+  const descClean = mov.description
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+  const contactClean = contactName
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
 
-  // Contact name matching: full string or first + last name
+  // Contact name matching: full string, first + last name, or single name
+  const contactParts = contactClean.split(/\s+/).filter(Boolean)
   const nameMatches =
-    desc.includes(cleanContactName) ||
+    descClean.includes(contactClean) ||
     (() => {
-      const parts = cleanContactName.split(/\s+/).filter(Boolean)
-      if (parts.length >= 2) {
-        return desc.includes(parts[0]) && desc.includes(parts[parts.length - 1])
+      if (contactParts.length >= 2) {
+        return (
+          descClean.includes(contactParts[0]) &&
+          descClean.includes(contactParts[contactParts.length - 1])
+        )
       }
-      return false
+      return contactParts.length === 1 && descClean.includes(contactParts[0])
     })()
 
   if (!nameMatches) {
@@ -83,14 +121,21 @@ export function isMovementMatchingQuota(
 
   // Year matching
   const yShort = formatSchoolYear(targetYear).toLowerCase() // e.g. '25/26'
-  const yFullYear = targetYear < 100 ? 2000 + targetYear : targetYear
-  const yLong = `${yFullYear}/${yFullYear + 1}` // e.g. '2025/2026'
 
   // If description has an explicit year, ensure it matches this quota's year
-  const yearInDescMatch = desc.match(/(\d{2}\/\d{2}|\d{4}\/\d{4})/)
+  const yearInDescMatch = mov.description.match(/(\d{2}[/-]\d{2}|\d{4}[/-]\d{4}|\d{4}[/-]\d{2}|\b20\d{2}\b)/)
   if (yearInDescMatch) {
-    const foundYear = yearInDescMatch[1]
-    if (foundYear !== yShort && foundYear !== yLong) {
+    const foundRaw = yearInDescMatch[1].replace('-', '/')
+    let foundYear = foundRaw
+    if (foundRaw.length === 9) {
+      foundYear = `${foundRaw.slice(2, 4)}/${foundRaw.slice(7, 9)}`
+    } else if (foundRaw.length === 7) {
+      foundYear = `${foundRaw.slice(2, 4)}/${foundRaw.slice(5, 7)}`
+    } else if (foundRaw.length === 4) {
+      const y = parseInt(foundRaw, 10)
+      foundYear = `${String(y).slice(-2)}/${String(y + 1).slice(-2)}`
+    }
+    if (foundYear !== yShort) {
       return false
     }
   }
