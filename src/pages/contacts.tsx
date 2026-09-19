@@ -116,7 +116,7 @@ export default function ContactsPage() {
   return (
     <div className="relative min-h-[calc(100vh-4rem)] bg-background">
       {/* Header & Tabs - Sticky */}
-      <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="sticky top-0 z-10 bg-background/95 pb-1 pt-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-100">
         <div className="px-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-foreground">Contactos</h1>
@@ -142,7 +142,7 @@ export default function ContactsPage() {
 
           {/* Search Bar (Expandable) */}
           {isSearchOpen && (
-            <div className="mt-3 animate-in fade-in slide-in-from-top-2">
+            <div className="mt-2.5 animate-in fade-in slide-in-from-top-2">
               <input
                 type="search"
                 autoFocus
@@ -157,13 +157,13 @@ export default function ContactsPage() {
         </div>
 
         {/* Tabs - Horizontal Scroll */}
-        <div className="mt-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide">
+        <div className="mt-2.5 flex gap-1.5 overflow-x-auto px-4 pb-2.5 scrollbar-hide">
           {tabs.map((tab) => (
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
               className={cn(
-                'whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                'whitespace-nowrap rounded-full px-3.5 py-1 text-xs sm:text-sm font-medium transition-colors',
                 activeTab === tab.value
                   ? 'bg-secondary-900 text-white shadow-sm'
                   : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
@@ -173,86 +173,86 @@ export default function ContactsPage() {
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Secondary Filters Bar */}
-        <div className="mt-2 flex flex-wrap items-center gap-2 px-4 pb-2 text-xs">
-          {/* Status Filter (Ativos por defeito) */}
-          <div className="relative inline-flex items-center">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              aria-label="Filtrar por estado"
-              className={cn(
-                'appearance-none rounded-full border px-3 py-1.5 pr-7 text-xs font-semibold focus:outline-none focus:ring-1 transition-all cursor-pointer',
-                statusFilter === 'active'
-                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
-                  : statusFilter === 'inactive'
-                  ? 'border-red-300 bg-red-50 text-red-800'
-                  : 'border-warm-200 bg-surface text-secondary-700'
-              )}
-            >
-              <option value="active">Estado: Ativos</option>
-              <option value="inactive">Estado: Inativos</option>
-              <option value="all">Estado: Todos</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 opacity-60" />
-          </div>
-
-          {/* Turma Filter */}
-          <div className="relative inline-flex items-center">
-            <select
-              value={turmaFilter}
-              onChange={(e) => setTurmaFilter(e.target.value)}
-              aria-label="Filtrar por turma"
-              className={cn(
-                'appearance-none rounded-full border px-3 py-1.5 pr-7 text-xs font-semibold focus:outline-none focus:ring-1 transition-all cursor-pointer',
-                turmaFilter !== 'all'
-                  ? 'border-primary-400 bg-primary-50 text-primary-800'
-                  : 'border-warm-200 bg-surface text-secondary-700'
-              )}
-            >
-              <option value="all">Turma: Todas</option>
-              {availableTurmas.map((t) => (
-                <option key={t} value={t}>
-                  Turma: {t}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 opacity-60" />
-          </div>
-
-          {/* Associados Filter Toggle */}
-          <button
-            type="button"
-            onClick={() => setOnlyMembers((prev) => !prev)}
+      {/* Secondary Filters Bar (Scrolls naturally with content) */}
+      <div className="flex flex-wrap items-center gap-2 px-4 pt-3 pb-2 text-xs">
+        {/* Status Filter (Ativos por defeito) */}
+        <div className="relative inline-flex items-center">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            aria-label="Filtrar por estado"
             className={cn(
-              'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer',
-              onlyMembers
-                ? 'border-amber-400 bg-amber-50 text-amber-900 shadow-xs ring-1 ring-amber-300'
-                : 'border-warm-200 bg-surface text-secondary-700 hover:bg-warm-100'
+              'appearance-none rounded-full border px-3 py-1.5 pr-7 text-xs font-semibold focus:outline-none focus:ring-1 transition-all cursor-pointer',
+              statusFilter === 'active'
+                ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                : statusFilter === 'inactive'
+                ? 'border-red-300 bg-red-50 text-red-800'
+                : 'border-warm-200 bg-surface text-secondary-700'
             )}
           >
-            <Star className={cn('h-3.5 w-3.5', onlyMembers ? 'fill-amber-500 text-amber-500' : 'text-secondary-400')} />
-            <span>Só Associados</span>
-          </button>
-
-          {/* Clear Filters (if modified from default) */}
-          {(statusFilter !== 'active' || turmaFilter !== 'all' || onlyMembers) && (
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter('active')
-                setTurmaFilter('all')
-                setOnlyMembers(false)
-              }}
-              className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-muted hover:text-foreground transition-colors cursor-pointer"
-              title="Repor filtros por defeito"
-            >
-              <RotateCcw className="h-3 w-3" />
-              <span>Limpar</span>
-            </button>
-          )}
+            <option value="active">Estado: Ativos</option>
+            <option value="inactive">Estado: Inativos</option>
+            <option value="all">Estado: Todos</option>
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 opacity-60" />
         </div>
+
+        {/* Turma Filter */}
+        <div className="relative inline-flex items-center">
+          <select
+            value={turmaFilter}
+            onChange={(e) => setTurmaFilter(e.target.value)}
+            aria-label="Filtrar por turma"
+            className={cn(
+              'appearance-none rounded-full border px-3 py-1.5 pr-7 text-xs font-semibold focus:outline-none focus:ring-1 transition-all cursor-pointer',
+              turmaFilter !== 'all'
+                ? 'border-primary-400 bg-primary-50 text-primary-800'
+                : 'border-warm-200 bg-surface text-secondary-700'
+            )}
+          >
+            <option value="all">Turma: Todas</option>
+            {availableTurmas.map((t) => (
+              <option key={t} value={t}>
+                Turma: {t}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 opacity-60" />
+        </div>
+
+        {/* Associados Filter Toggle */}
+        <button
+          type="button"
+          onClick={() => setOnlyMembers((prev) => !prev)}
+          className={cn(
+            'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer',
+            onlyMembers
+              ? 'border-amber-400 bg-amber-50 text-amber-900 shadow-xs ring-1 ring-amber-300'
+              : 'border-warm-200 bg-surface text-secondary-700 hover:bg-warm-100'
+          )}
+        >
+          <Star className={cn('h-3.5 w-3.5', onlyMembers ? 'fill-amber-500 text-amber-500' : 'text-secondary-400')} />
+          <span>Só Associados</span>
+        </button>
+
+        {/* Clear Filters (if modified from default) */}
+        {(statusFilter !== 'active' || turmaFilter !== 'all' || onlyMembers) && (
+          <button
+            type="button"
+            onClick={() => {
+              setStatusFilter('active')
+              setTurmaFilter('all')
+              setOnlyMembers(false)
+            }}
+            className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-muted hover:text-foreground transition-colors cursor-pointer"
+            title="Repor filtros por defeito"
+          >
+            <RotateCcw className="h-3 w-3" />
+            <span>Limpar</span>
+          </button>
+        )}
       </div>
 
       {/* List Content */}
@@ -271,7 +271,7 @@ export default function ContactsPage() {
       <button
         type="button"
         aria-label="Criar novo contacto"
-        className="fixed bottom-24 right-6 min-[430px]:right-[calc(50%-215px+1.5rem)] z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary-400 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-500 active:scale-95"
+        className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-5 min-[430px]:right-[calc(50%-215px+1.25rem)] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-white shadow-xl hover:bg-primary-600 active:scale-95 transition-all"
         onClick={() => setIsFormOpen(true)}
       >
         <Plus className="h-6 w-6" />

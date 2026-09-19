@@ -43,7 +43,7 @@ export default function HomePage() {
     .slice(0, 3)
 
   return (
-    <div className="px-4 pt-6 pb-24">
+    <div className="px-4 pt-6 pb-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

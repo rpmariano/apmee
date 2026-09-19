@@ -70,7 +70,7 @@ export default function MenuPage() {
     })
 
   return (
-    <div className="px-4 pt-6 pb-24">
+    <div className="px-4 pt-6 pb-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-foreground">Menu</h1>
         <MenuAlerts />

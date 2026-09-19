@@ -483,41 +483,41 @@ export function MovementForm({ movement, initialEventId, onClose, onSubmit, onDe
               </div>
             )}
           </div>
+        </form>
+      </div>
 
-        
-        <div className="border-t border-warm-200 bg-surface p-4 flex flex-col gap-2.5">
-          {isExistingMovement && isEditing && onDelete && (
-            <button
-              type="button"
-              disabled={isLoading || isUploading || isDeleting}
-              onClick={() => setShowDeleteConfirm(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-xs font-bold text-red-600 transition-all hover:bg-red-100 hover:border-red-300 active:scale-95 disabled:opacity-50"
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-              <span>Eliminar Movimento</span>
-            </button>
-          )}
+      {/* Sticky Bottom Actions */}
+      <div className="shrink-0 border-t border-warm-200 bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col gap-2.5">
+        {isExistingMovement && isEditing && onDelete && (
+          <button
+            type="button"
+            disabled={isLoading || isUploading || isDeleting}
+            onClick={() => setShowDeleteConfirm(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-xs font-bold text-red-600 transition-all hover:bg-red-100 hover:border-red-300 active:scale-95 disabled:opacity-50"
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+            <span>Eliminar Movimento</span>
+          </button>
+        )}
 
-          {readOnly ? (
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-secondary-900 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary-800 active:scale-95"
-            >
-              Fechar
-            </button>
-          ) : (
-            <button
-              type="submit"
-              form="movement-form"
-              disabled={isLoading || isUploading || isDeleting}
-              className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
-            >
-              {isUploading ? 'A enviar documento...' : isLoading ? 'A Guardar...' : (movement ? 'Guardar Movimento' : 'Registar Movimento')}
-            </button>
-          )}
-        </div>
-      </form>
+        {readOnly ? (
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-secondary-900 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-secondary-800 active:scale-95"
+          >
+            Fechar
+          </button>
+        ) : (
+          <button
+            type="submit"
+            form="movement-form"
+            disabled={isLoading || isUploading || isDeleting}
+            className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-500 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-600 active:scale-95 disabled:opacity-50"
+          >
+            {isUploading ? 'A enviar documento...' : isLoading ? 'A Guardar...' : (movement ? 'Guardar Movimento' : 'Registar Movimento')}
+          </button>
+        )}
       </div>
 
       <UnsavedDialog

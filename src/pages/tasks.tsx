@@ -169,7 +169,7 @@ export default function TasksPage() {
       <button
         type="button"
         aria-label="Criar nova tarefa"
-        className="fixed bottom-24 right-6 min-[430px]:right-[calc(50%-215px+1.5rem)] z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary-400 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary-500 active:scale-95"
+        className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-5 min-[430px]:right-[calc(50%-215px+1.25rem)] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-white shadow-xl hover:bg-primary-600 active:scale-95 transition-all"
         onClick={() => setIsFormOpen(true)}
       >
         <Plus className="h-6 w-6" />

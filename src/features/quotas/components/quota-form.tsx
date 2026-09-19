@@ -384,29 +384,30 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
               )}
             </div>
           )}
+        </form>
+      </div>
 
-        
-<div className="border-t border-warm-200 bg-surface p-4 flex flex-col gap-2">
-          {isExistingQuota && onDelete && (
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={isDeleting}
-              className="flex w-full items-center justify-center rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-sm font-medium text-red-600 transition-all hover:bg-red-100 active:scale-95 disabled:opacity-50"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Eliminar Quota
-            </button>
-          )}
+      {/* Sticky Bottom Actions */}
+      <div className="shrink-0 border-t border-warm-200 bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col gap-2">
+        {isExistingQuota && onDelete && (
           <button
-            type="submit"
-            disabled={isSubmitting || isLoading || isUploading || isLoadingContacts}
-            className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={isDeleting}
+            className="flex w-full items-center justify-center rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-sm font-medium text-red-600 transition-all hover:bg-red-100 active:scale-95 disabled:opacity-50"
           >
-            {isUploading ? 'A anexar recibo...' : (isSubmitting || isLoading) ? 'A Guardar...' : (quota ? 'Guardar Quota' : 'Registar Quota')}
+            <Trash2 className="mr-2 h-4 w-4" />
+            Eliminar Quota
           </button>
-        </div>
-</form>
+        )}
+        <button
+          type="submit"
+          form="quota-form"
+          disabled={isSubmitting || isLoading || isUploading || isLoadingContacts}
+          className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-500 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-600 active:scale-95 disabled:opacity-50"
+        >
+          {isUploading ? 'A anexar recibo...' : (isSubmitting || isLoading) ? 'A Guardar...' : (quota ? 'Guardar Quota' : 'Registar Quota')}
+        </button>
       </div>
 
       

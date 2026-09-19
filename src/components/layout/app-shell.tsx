@@ -33,8 +33,8 @@ export function AppShell() {
       {/* Phone-width container */}
       <div className="relative flex w-full max-w-[430px] flex-col min-h-screen bg-background shadow-xl">
         <NetworkStatus />
-        {/* Main content area — scrollable, with bottom padding for nav bar */}
-        <main className="flex-1 overflow-y-auto pb-20">
+        {/* Main content area — scrollable, with bottom padding for nav bar and safe area */}
+        <main className="flex-1 overflow-y-auto pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]">
           <Outlet />
         </main>
 

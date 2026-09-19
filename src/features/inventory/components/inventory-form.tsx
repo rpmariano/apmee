@@ -211,30 +211,29 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading, onDelete }: 
               placeholder="Detalhes sobre o estado de conservação, etc."
             />
           </div>
+        </form>
+      </div>
 
-        
-<div className="border-t border-warm-200 bg-surface p-4 flex flex-col gap-2">
-          {isExistingItem && onDelete && (
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={isDeleting}
-              className="flex w-full items-center justify-center rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-sm font-medium text-red-600 transition-all hover:bg-red-100 active:scale-95 disabled:opacity-50"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Eliminar Item
-            </button>
-          )}
+      <div className="shrink-0 border-t border-warm-200 bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col gap-2">
+        {isExistingItem && onDelete && (
           <button
-            type="submit"
-            form="inventory-form"
-            disabled={isLoading}
-            className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={isDeleting}
+            className="flex w-full items-center justify-center rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-sm font-medium text-red-600 transition-all hover:bg-red-100 active:scale-95 disabled:opacity-50"
           >
-            {isLoading ? 'A Guardar...' : (item ? 'Guardar Item' : 'Criar Item')}
+            <Trash2 className="mr-2 h-4 w-4" />
+            Eliminar Item
           </button>
-        </div>
-</form>
+        )}
+        <button
+          type="submit"
+          form="inventory-form"
+          disabled={isLoading}
+          className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-500 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-600 active:scale-95 disabled:opacity-50"
+        >
+          {isLoading ? 'A Guardar...' : (item ? 'Guardar Item' : 'Criar Item')}
+        </button>
       </div>
 
       

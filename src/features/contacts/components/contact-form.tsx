@@ -470,29 +470,31 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
               <span>Nenhuma quota paga registada para este associado.</span>
             </div>
           )}
-        
-        <div className="border-t border-warm-200 bg-surface p-4 flex flex-col gap-2.5">
-          {contact && onDelete && (
-            <button
-              type="button"
-              disabled={isLoading || isDeleting}
-              onClick={() => setShowDeleteConfirm(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-xs font-bold text-red-600 transition-all hover:bg-red-100 hover:border-red-300 active:scale-95 disabled:opacity-50"
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-              <span>Eliminar Contacto</span>
-            </button>
-          )}
+        </form>
+      </div>
 
+      {/* Sticky Bottom Actions */}
+      <div className="shrink-0 border-t border-warm-200 bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col gap-2.5">
+        {contact && onDelete && (
           <button
-            type="submit"
+            type="button"
             disabled={isLoading || isDeleting}
-            className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-xs font-bold text-red-600 transition-all hover:bg-red-100 hover:border-red-300 active:scale-95 disabled:opacity-50"
           >
-            {isLoading ? 'A Guardar...' : (contact ? 'Guardar Contacto' : 'Criar Contacto')}
+            <Trash2 className="h-4 w-4 text-red-500" />
+            <span>Eliminar Contacto</span>
           </button>
-        </div>
-      </form>
+        )}
+
+        <button
+          type="submit"
+          form="contact-form"
+          disabled={isLoading || isDeleting}
+          className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-500 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-600 active:scale-95 disabled:opacity-50"
+        >
+          {isLoading ? 'A Guardar...' : (contact ? 'Guardar Contacto' : 'Criar Contacto')}
+        </button>
       </div>
 
       <UnsavedDialog

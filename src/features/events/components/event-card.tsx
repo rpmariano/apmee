@@ -52,6 +52,11 @@ export function EventCard({ event, creatorName, onEdit, financeSummary }: EventC
   const hasMinutes = Boolean(event.minutes?.trim())
   const documentCount = event.documents?.length || 0
 
+  const hasContextPills =
+    hasShortages ||
+    (isReuniao && (hasMinutes || documentCount > 0)) ||
+    Boolean(financeSummary && financeSummary.count > 0)
+
   return (
     <div
       role="button"
@@ -68,9 +73,9 @@ export function EventCard({ event, creatorName, onEdit, financeSummary }: EventC
         onEdit && 'cursor-pointer active:scale-[0.98] hover:shadow-md hover:border-warm-300'
       )}
     >
-      <div className="pointer-events-none flex flex-col gap-3 w-full">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
+      <div className="pointer-events-none flex flex-col gap-2.5 w-full">
+        {/* Top Strip: Classification Badges (Left) & Creator Initial Seal (Right) */}
+        <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
             {/* Event Type Badge */}
             <span
@@ -100,7 +105,44 @@ export function EventCard({ event, creatorName, onEdit, financeSummary }: EventC
             >
               {status.label}
             </span>
+          </div>
 
+          {/* Creator Circle Seal */}
+          <div
+            className={cn(
+              'shrink-0 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-bold select-none bg-warm-50/80',
+              isReuniao
+                ? 'border-blue-400 text-blue-700'
+                : 'border-amber-400 text-amber-700'
+            )}
+            title={effectiveCreatorName ? `Criado por: ${effectiveCreatorName}` : 'Criado por: APMEE'}
+          >
+            {creatorInitials}
+          </div>
+        </div>
+
+        {/* Title & Description */}
+        <div className="flex flex-col gap-1">
+          <h3 className="text-base sm:text-lg font-bold text-foreground leading-snug">{event.title}</h3>
+
+          {/* Description or Objectives Snippet */}
+          {isReuniao ? (
+            event.objectives ? (
+              <p className="line-clamp-2 text-xs text-secondary-600">
+                <span className="font-semibold text-secondary-700">Objetivos: </span>
+                {event.objectives}
+              </p>
+            ) : null
+          ) : (
+            event.description ? (
+              <p className="line-clamp-2 text-xs sm:text-sm text-muted">{event.description}</p>
+            ) : null
+          )}
+        </div>
+
+        {/* Contextual Pills Row (Shortages, Minutes, Documents, Financial Balance) */}
+        {hasContextPills && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
             {/* Shortage pill (only for Festas) */}
             {hasShortages && (
               <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">
@@ -125,7 +167,7 @@ export function EventCard({ event, creatorName, onEdit, financeSummary }: EventC
               </span>
             )}
 
-            {/* Financial balance pill (for Festas or Events with finances) */}
+            {/* Financial balance pill */}
             {financeSummary && financeSummary.count > 0 && (
               <span
                 className={cn(
@@ -142,70 +184,36 @@ export function EventCard({ event, creatorName, onEdit, financeSummary }: EventC
               </span>
             )}
           </div>
+        )}
 
-          <h3 className="mt-2 text-lg font-bold text-foreground leading-tight">{event.title}</h3>
+        {/* Date, Time & Location Footer */}
+        <div className="mt-0.5 flex flex-col gap-1.5 border-t border-warm-100 pt-2.5">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-secondary-600">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4 shrink-0 opacity-70" />
+              <span>
+                {formattedDate}
+                {endDate && !isSameDayEnd ? ` - ${format(endDate, "d 'de' MMMM", { locale: pt })}` : ''}
+              </span>
+            </div>
 
-          {/* Description or Objectives Snippet */}
-          {isReuniao ? (
-            event.objectives ? (
-              <p className="mt-1 line-clamp-2 text-xs text-secondary-600">
-                <span className="font-semibold text-secondary-700">Objetivos: </span>
-                {event.objectives}
-              </p>
-            ) : null
-          ) : (
-            event.description ? (
-              <p className="mt-1 line-clamp-2 text-sm text-muted">{event.description}</p>
-            ) : null
+            {!event.is_all_day && (
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4 shrink-0 opacity-70" />
+                <span>
+                  {formattedTime} {endDate && `às ${format(endDate, 'HH:mm')}`}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {event.location && (
+            <div className="flex items-center gap-1.5 text-xs sm:text-sm text-secondary-600">
+              <MapPin className="h-4 w-4 shrink-0 opacity-70" />
+              <span className="line-clamp-1">{event.location}</span>
+            </div>
           )}
         </div>
-
-        {/* Creator Circle Symbol (circulo vazio com as iniciais) */}
-        <div
-          className={cn(
-            'shrink-0 flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold select-none bg-transparent',
-            isReuniao
-              ? 'border-blue-600 text-blue-600'
-              : 'border-amber-500 text-amber-600'
-          )}
-          title={effectiveCreatorName ? `Criado por: ${effectiveCreatorName}` : 'Criado por: APMEE'}
-        >
-          {creatorInitials}
-        </div>
-      </div>
-
-      <div className="mt-1 flex flex-col gap-1.5 border-t border-warm-100 pt-3">
-        <div className="flex items-center gap-2 text-sm text-secondary-600">
-          <Calendar className="h-4 w-4 shrink-0 opacity-70" />
-          <span>
-            {formattedDate}
-            {endDate && !isSameDayEnd ? ` - ${format(endDate, "d 'de' MMMM", { locale: pt })}` : ''}
-          </span>
-        </div>
-
-        {!event.is_all_day && (
-          <div className="flex items-center gap-2 text-sm text-secondary-600">
-            <Clock className="h-4 w-4 shrink-0 opacity-70" />
-            <span>
-              {formattedTime} {endDate && `às ${format(endDate, 'HH:mm')}`}
-            </span>
-          </div>
-        )}
-
-        {event.location && (
-          <div className="flex items-center gap-2 text-sm text-secondary-600">
-            <MapPin className="h-4 w-4 shrink-0 opacity-70" />
-            <span className="line-clamp-1">{event.location}</span>
-          </div>
-        )}
-
-        {effectiveCreatorName && (
-          <div className="flex items-center gap-1 text-xs text-muted pt-0.5">
-            <span>Criado por:</span>
-            <span className="font-semibold text-secondary-700">{effectiveCreatorName}</span>
-          </div>
-        )}
-      </div>
       </div>
     </div>
   )
