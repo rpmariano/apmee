@@ -71,13 +71,18 @@ export function TaskCard({ task, assigneeName, onEdit, onToggleStatus }: TaskCar
       >
         <span
           className={cn(
-            "flex h-6 w-6 items-center justify-center rounded-full border transition-all active:scale-90",
+            "flex h-6 w-6 items-center justify-center rounded-full border transition-all duration-200 active:scale-90",
             isDone
-              ? "border-green-600 bg-green-500 text-white shadow-sm"
+              ? "border-green-600 bg-green-500 text-white shadow-xs"
               : "border-secondary-300 bg-white hover:border-green-500 hover:text-green-500 text-transparent"
           )}
         >
-          <CheckCircle2 className={cn("h-4 w-4 transition-all", isDone ? "scale-100 animate-[pop_300ms_ease-out]" : "scale-75")} />
+          <CheckCircle2
+            className={cn(
+              "h-4 w-4 transition-transform duration-200",
+              isDone ? "scale-100 animate-[check-pop_260ms_cubic-bezier(0.16,1,0.3,1)]" : "scale-75"
+            )}
+          />
         </span>
       </button>
 

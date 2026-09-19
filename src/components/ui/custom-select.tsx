@@ -93,7 +93,7 @@ export function CustomSelect({
           />
 
           {/* Dropdown menu */}
-          <div className="absolute left-0 top-full z-[70] mt-1 max-h-60 w-full overflow-y-auto rounded-[var(--radius-card)] border border-warm-200 bg-surface py-1 shadow-xl animate-in fade-in slide-in-from-top-2 flex flex-col">
+          <div className="absolute left-0 top-full z-[70] mt-1 max-h-60 w-full overflow-y-auto rounded-[var(--radius-card)] border border-warm-200 bg-surface py-1 shadow-xl animate-in fade-in slide-in-from-top-1.5 duration-150 ease-out flex flex-col">
             
             {showSearch && (
               <div className="p-2 border-b border-warm-100">

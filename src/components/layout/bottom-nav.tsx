@@ -28,19 +28,28 @@ export function BottomNav() {
               key={item.to}
               to={item.to}
               className={cn(
-                'flex flex-1 flex-col items-center gap-1 py-2.5 text-xs transition-all active:scale-95',
+                'group relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-xs transition-colors active:scale-95',
                 isActive
                   ? 'text-primary-600 font-bold'
                   : 'text-secondary-600 hover:text-secondary-800'
               )}
             >
-              <item.icon
+              <div
                 className={cn(
-                  'h-5 w-5 transition-transform',
-                  isActive ? 'text-primary-600 scale-110' : 'text-secondary-500'
+                  'flex h-7 w-12 items-center justify-center rounded-full transition-all duration-200 ease-out',
+                  isActive
+                    ? 'bg-primary-100/80 text-primary-600'
+                    : 'text-secondary-500 group-hover:bg-warm-100/60'
                 )}
-                strokeWidth={isActive ? 2.5 : 2}
-              />
+              >
+                <item.icon
+                  className={cn(
+                    'h-5 w-5 transition-transform duration-200 ease-out',
+                    isActive ? 'scale-105' : 'scale-100'
+                  )}
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
+              </div>
               <span className="leading-tight">{item.label}</span>
             </Link>
           )

@@ -74,20 +74,29 @@ export function MenuAlerts() {
           )} 
         />
 
-        {/* Calm Notification Badge */}
+        {/* Calm Notification Badge with Concentric Expanding Wave */}
         {hasAlerts && (
-          <span className={cn(
-            "absolute right-1.5 top-1.5 z-20 flex h-2.5 w-2.5 rounded-full ring-2 ring-background",
-            hasUnread ? "bg-primary-500 animate-pulse" : "bg-amber-500"
-          )} />
+          <span className="absolute right-1.5 top-1.5 z-20 flex h-2.5 w-2.5 items-center justify-center">
+            {hasUnread && (
+              <span className="absolute h-full w-full rounded-full bg-primary-400 opacity-75 animate-[wave-ping_2.4s_cubic-bezier(0.16,1,0.3,1)_infinite]" />
+            )}
+            <span
+              className={cn(
+                "relative inline-flex h-2.5 w-2.5 rounded-full ring-2 ring-background transition-colors",
+                hasUnread ? "bg-primary-500" : "bg-amber-500"
+              )}
+            />
+          </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-center bg-warm-100/80 backdrop-blur-sm animate-in fade-in">{/* Phone container */}<div className="flex w-full max-w-[430px] flex-col bg-background shadow-xl">
-          <div className="flex flex-1 flex-col justify-end">
-            <div className="flex h-[80vh] flex-col rounded-t-3xl bg-surface shadow-2xl animate-in slide-in-from-bottom-full">
-              <div className="flex items-center justify-between border-b border-warm-200 px-6 py-4">
+        <div className="fixed inset-0 z-[100] flex justify-center bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
+          {/* Phone container */}
+          <div className="flex w-full max-w-[430px] flex-col bg-background shadow-xl">
+            <div className="flex flex-1 flex-col justify-end">
+              <div className="flex h-[80vh] flex-col rounded-t-3xl bg-surface shadow-2xl animate-in slide-in-from-bottom-8 duration-240 ease-out">
+                <div className="flex items-center justify-between border-b border-warm-200 px-6 py-4">
                 <div className="flex items-center gap-2">
                   <Bell className={cn("h-5 w-5", hasAlerts ? "text-primary-600" : "text-secondary-600")} />
                   <h2 className="text-lg font-bold text-foreground">

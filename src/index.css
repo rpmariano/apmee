@@ -59,9 +59,13 @@
   /* Fonts */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   /* Smooth Motion & Micro-interaction Tokens */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --animate-fade-in: fade-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
   --animate-slide-up: slide-up 240ms cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-pop: pop 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-pop: pop 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-check-pop: check-pop 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-wave-ping: wave-ping 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  --animate-drawer-up: drawer-up 240ms cubic-bezier(0.16, 1, 0.3, 1);
 
   @keyframes fade-in {
     from { opacity: 0; }
@@ -73,8 +77,31 @@
   }
   @keyframes pop {
     0% { transform: scale(0.85); }
-    60% { transform: scale(1.15); }
+    50% { transform: scale(1.15); }
     100% { transform: scale(1); }
+  }
+  @keyframes check-pop {
+    0% { transform: scale(0.75); }
+    55% { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
+  @keyframes wave-ping {
+    0% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    45% {
+      transform: scale(2.4);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(2.4);
+      opacity: 0;
+    }
+  }
+  @keyframes drawer-up {
+    from { transform: translateY(100%); opacity: 0.9; }
+    to { transform: translateY(0); opacity: 1; }
   }
 }
 
@@ -95,6 +122,7 @@
 
 /* ============================================
    WCAG 2.3.3 Motion Accessibility
+   Preserves color and opacity feedback without spatial translation
    ============================================ */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -102,7 +130,15 @@
   ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 150ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Suppress spatial movement while preserving opacity and color transitions */
+  .animate-spin,
+  [class*="slide-in-"],
+  [class*="zoom-in-"] {
+    transform: none !important;
+    animation: none !important;
   }
 }

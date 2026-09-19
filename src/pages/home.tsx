@@ -171,13 +171,13 @@ export default function HomePage() {
               <div
                 key={task.id}
                 onClick={() => navigate(`/tarefas?edit=${task.id}`)}
-                className="group flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-3.5 shadow-xs transition-all hover:border-primary-200 hover:shadow-sm cursor-pointer active:scale-[0.99]"
+                className="group flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-warm-200 bg-surface p-3.5 shadow-xs transition-all duration-200 hover:border-primary-200 hover:shadow-sm cursor-pointer active:scale-[0.98]"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span
                       className={cn(
-                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold shrink-0',
+                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold shrink-0 transition-colors',
                         task.priority === 'urgent' && 'bg-red-50 text-red-700 border border-red-200',
                         task.priority === 'high' && 'bg-orange-50 text-orange-700 border border-orange-200',
                         task.priority === 'medium' && 'bg-primary-50 text-primary-700 border border-primary-200',
@@ -215,7 +215,7 @@ export default function HomePage() {
                     </p>
                   )}
                 </div>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted group-hover:bg-warm-100 group-hover:text-primary-600 transition-colors">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted group-hover:bg-warm-100 group-hover:text-primary-600 transition-all duration-200">
                   <ChevronRight className="h-4 w-4" />
                 </div>
               </div>
@@ -246,7 +246,7 @@ function StatCard({
   return (
     <Link
       to={to}
-      className={`flex flex-col rounded-[var(--radius-card)] ${color} p-4 shadow-sm active:scale-95`}
+      className={`flex flex-col rounded-[var(--radius-card)] ${color} p-4 shadow-sm transition-all duration-150 active:scale-95`}
     >
       <p className={`text-2xl font-bold ${textColor}`}>{value}</p>
       <p className="mt-1 text-xs text-muted">{label}</p>
