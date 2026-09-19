@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/providers/auth-provider'
 import { APP_NAME } from '@/lib/constants'
+import { Calendar, ChevronRight, Plus } from 'lucide-react'
 import { MenuAlerts } from '@/components/ui/menu-alerts'
 import { useDashboardStats } from '@/features/dashboard/api/use-dashboard-stats'
 import { cn } from '@/lib/utils'
@@ -39,20 +40,41 @@ export default function HomePage() {
           }
         }}
         className={cn(
-          "mt-6 rounded-[var(--radius-card)] bg-primary-400 p-6 text-white shadow-md transition-all cursor-pointer active:scale-[0.98] hover:shadow-lg"
+          "mt-6 rounded-[var(--radius-card)] bg-primary-500 p-6 text-white shadow-md transition-all cursor-pointer active:scale-[0.98] hover:bg-primary-600 hover:shadow-lg"
         )}
       >
-        <p className="text-xs font-medium uppercase tracking-wider opacity-80">
-          Próximo Evento
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wider text-white/80">
+            Próximo Evento
+          </p>
+          <Calendar className="h-4 w-4 text-white/80" />
+        </div>
+        
         <h2 className="mt-2 text-lg font-bold">
           {isLoading ? 'A carregar...' : stats?.nextEvent?.title ?? 'Nenhum evento agendado'}
         </h2>
-        <p className="mt-1 text-sm opacity-90">
+        
+        <p className="mt-1 text-sm text-white/90">
           {stats?.nextEvent?.start_date 
             ? new Date(stats.nextEvent.start_date).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
-            : 'Crie o primeiro evento através do botão +'}
+            : 'Consulte a agenda ou marque a próxima reunião ou festa escolar.'}
         </p>
+
+        <div className="mt-4">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3.5 py-1.5 text-xs font-semibold backdrop-blur-xs hover:bg-white/30 transition-colors">
+            {stats?.nextEvent?.id ? (
+              <>
+                <span>Ver detalhes na Agenda</span>
+                <ChevronRight className="h-3.5 w-3.5" />
+              </>
+            ) : (
+              <>
+                <Plus className="h-3.5 w-3.5" />
+                <span>Abrir Agenda</span>
+              </>
+            )}
+          </span>
+        </div>
       </div>
 
       {/* Quick Stats */}

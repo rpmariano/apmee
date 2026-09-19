@@ -54,6 +54,7 @@ export default function App() {
             <Route path="/tarefas" element={<TasksPage />} />
             <Route path="/inventario" element={<InventoryPage />} />
             <Route path="/tesouraria" element={<TreasuryPage />} />
+            <Route path="/treasury" element={<TreasuryPage />} />
             <Route path="/quotas" element={<QuotasPage />} />
             <Route path="/board" element={<BoardPage />} />
           </Route>

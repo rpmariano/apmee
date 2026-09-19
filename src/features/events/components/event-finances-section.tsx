@@ -65,7 +65,7 @@ export function EventFinancesSection({ eventId, eventTitle }: EventFinancesSecti
         </div>
 
         <Link
-          to={`/treasury?event=${eventId}`}
+          to={`/tesouraria?event=${eventId}`}
           className="flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700 underline"
         >
           <span>Tesouraria</span>
