@@ -102,7 +102,7 @@ export default function InventoryPage() {
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] bg-background">
-      <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="sticky top-0 z-20 bg-background/95 pb-2 pt-3.5 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-200/60">
         <div className="px-4 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <Link

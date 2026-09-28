@@ -130,7 +130,7 @@ export default function ContactsPage() {
   return (
     <div className="relative min-h-[calc(100vh-4rem)] bg-background">
       {/* Header & Tabs - Sticky */}
-      <div className="sticky top-0 z-10 bg-background/95 pb-1 pt-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-100">
+      <div className="sticky top-0 z-20 bg-background/95 pb-1 pt-3.5 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-200/60">
         <div className="px-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">

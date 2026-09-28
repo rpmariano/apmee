@@ -355,7 +355,7 @@ export default function EventsPage() {
   return (
     <div className="relative min-h-[calc(100vh-4rem)] bg-background pb-4">
       {/* Header - Sticky */}
-      <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="sticky top-0 z-20 bg-background/95 pb-2.5 pt-3.5 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-200/60">
         <div className="flex items-center justify-between px-4">
           <div className="flex items-center gap-2.5">
             <div

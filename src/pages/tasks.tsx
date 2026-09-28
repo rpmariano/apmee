@@ -115,7 +115,7 @@ export default function TasksPage() {
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] bg-background">
-      <div className="sticky top-0 z-10 bg-background/95 pb-2 pt-6 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="sticky top-0 z-20 bg-background/95 pb-2 pt-3.5 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-200/60">
         <div className="px-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-foreground">Tarefas</h1>
           <div className="flex items-center gap-2">

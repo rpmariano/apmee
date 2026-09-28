@@ -70,13 +70,16 @@ export default function MenuPage() {
     })
 
   return (
-    <div className="px-4 pt-6 pb-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-foreground">Menu</h1>
-        <MenuAlerts />
+    <div className="min-h-full pb-6">
+      <div className="sticky top-0 z-20 bg-background/95 px-4 pt-3.5 pb-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-200/60">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold text-foreground">Menu</h1>
+          <MenuAlerts />
+        </div>
       </div>
 
-      {/* Search bar */}
+      <div className="px-4 pt-4 pb-4">
+        {/* Search bar */}
       <div className="mt-4">
         <input
           type="search"
@@ -173,6 +176,7 @@ export default function MenuPage() {
       <div className="mt-6 text-center">
         <p className="text-xs font-medium text-muted">APMEE EB Cobre · Associação de Pais e Mães</p>
         <p className="mt-0.5 text-xs text-muted/80">Escola Básica do Cobre, Cascais</p>
+      </div>
       </div>
 
       {/* Logout Confirmation Dialog */}

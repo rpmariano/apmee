@@ -38,16 +38,16 @@ export function AppShell() {
   }
 
   return (
-    <div className="flex min-h-screen justify-center bg-warm-100">
+    <div className="flex h-screen h-[100dvh] justify-center bg-warm-100 overflow-hidden">
       {/* Phone-width container */}
-      <div className="relative flex w-full max-w-[430px] flex-col min-h-screen bg-background shadow-xl overflow-x-hidden">
+      <div className="relative flex w-full max-w-[430px] flex-col h-full bg-background shadow-xl overflow-hidden">
         <NetworkStatus />
-        {/* Main content area — scrollable, with bottom padding for nav bar and safe area */}
-        <main ref={mainRef} className="flex-1 overflow-y-auto overflow-x-hidden pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]">
+        {/* Main content area — the dedicated scrollable container */}
+        <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
           <Outlet />
         </main>
 
-        {/* Bottom navigation bar — fixed at bottom, constrained to container */}
+        {/* Bottom navigation bar — permanently fixed at bottom of container */}
         <BottomNav />
       </div>
     </div>
