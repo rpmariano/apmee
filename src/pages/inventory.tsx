@@ -11,7 +11,6 @@ import { CustomDialog } from '@/components/ui/custom-dialog'
 import { CustomSelect } from '@/components/ui/custom-select'
 import { useToast } from '@/components/ui/toast'
 import { getFriendlyErrorMessage } from '@/lib/error-utils'
-import { MenuAlerts } from '@/components/ui/menu-alerts'
 import { cn } from '@/lib/utils'
 import { usePermissions } from '@/hooks/use-permissions'
 
@@ -114,7 +113,6 @@ export default function InventoryPage() {
             </Link>
             <h1 className="text-xl font-bold text-foreground">Inventário</h1>
           </div>
-          <MenuAlerts />
         </div>
 
         <div className="mt-3.5 px-4 flex items-center justify-between gap-2">

@@ -10,7 +10,6 @@ import { TURMA_OPTIONS } from '@/lib/constants'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
 import { getFriendlyErrorMessage } from '@/lib/error-utils'
-import { MenuAlerts } from '@/components/ui/menu-alerts'
 import { cn } from '@/lib/utils'
 
 type FilterValue = ContactCategory | 'all'
@@ -170,7 +169,6 @@ export default function ContactsPage() {
               >
                 <Search className="h-5 w-5" />
               </button>
-              <MenuAlerts />
             </div>
           </div>
 

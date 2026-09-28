@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import { MenuAlerts } from '@/components/ui/menu-alerts'
 
 /**
  * Email — placeholder page (Phase 2)
@@ -20,7 +19,6 @@ export default function EmailPage() {
             </Link>
             <h1 className="text-xl font-bold text-foreground">Email</h1>
           </div>
-          <MenuAlerts />
         </div>
       </div>
       <div className="px-4 pt-4">

@@ -11,7 +11,6 @@ import type { Task, TaskStatus } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
 import { getFriendlyErrorMessage } from '@/lib/error-utils'
-import { MenuAlerts } from '@/components/ui/menu-alerts'
 import { cn } from '@/lib/utils'
 
 type FilterValue = TaskStatus | 'all'
@@ -118,23 +117,20 @@ export default function TasksPage() {
       <div className="sticky top-0 z-20 bg-background/95 pb-2 pt-3.5 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-200/60">
         <div className="px-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-foreground">Tarefas</h1>
-          <div className="flex items-center gap-2">
-            {canWriteTasks && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingTask(undefined)
-                  setIsFormOpen(true)
-                }}
-                aria-label="+ Criar nova tarefa"
-                className="flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-primary-600 transition-all active:scale-95 shrink-0"
-              >
-                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                <span>Criar</span>
-              </button>
-            )}
-            <MenuAlerts />
-          </div>
+          {canWriteTasks && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingTask(undefined)
+                setIsFormOpen(true)
+              }}
+              aria-label="+ Criar nova tarefa"
+              className="flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-primary-600 transition-all active:scale-95 shrink-0"
+            >
+              <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+              <span>Criar</span>
+            </button>
+          )}
         </div>
 
         <div className="mt-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide">

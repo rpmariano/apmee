@@ -23,7 +23,6 @@ import { cn } from '@/lib/utils'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
 import { getFriendlyErrorMessage } from '@/lib/error-utils'
-import { MenuAlerts } from '@/components/ui/menu-alerts'
 
 export default function TreasuryPage() {
   const queryClient = useQueryClient()
@@ -279,7 +278,6 @@ export default function TreasuryPage() {
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-black text-foreground">Tesouraria</h1>
           </div>
-          <MenuAlerts />
         </div>
 
         {/* Action Header: Transferir & Filtros */}

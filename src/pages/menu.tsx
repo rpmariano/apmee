@@ -11,7 +11,6 @@ import { usePermissions } from '@/hooks/use-permissions'
 import { useAuth } from '@/providers/auth-provider'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { LogOut } from 'lucide-react'
-import { MenuAlerts } from '@/components/ui/menu-alerts'
 import { cn } from '@/lib/utils'
 
 interface MenuItem {
@@ -74,7 +73,6 @@ export default function MenuPage() {
       <div className="sticky top-0 z-20 bg-background/95 px-4 pt-3.5 pb-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-200/60">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-foreground">Menu</h1>
-          <MenuAlerts />
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/providers/auth-provider'
+import { AppHeader } from './app-header'
 import { BottomNav } from './bottom-nav'
 import { NetworkStatus } from '@/components/ui/network-status'
 
@@ -42,6 +43,9 @@ export function AppShell() {
       {/* Phone-width container */}
       <div className="relative flex w-full max-w-[430px] flex-col h-full bg-background shadow-xl overflow-hidden">
         <NetworkStatus />
+        {/* Global institutional top header — present on all screens */}
+        <AppHeader />
+
         {/* Main content area — the dedicated scrollable container */}
         <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
           <Outlet />

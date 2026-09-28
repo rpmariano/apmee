@@ -19,8 +19,7 @@ import type { Event } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
 import { getFriendlyErrorMessage } from '@/lib/error-utils'
-import { MenuAlerts } from '@/components/ui/menu-alerts'
-import { cn, getInitials } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 
 export default function EventsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -61,8 +60,6 @@ export default function EventsPage() {
     }
     return map
   }, [boardMembers, user])
-
-  const userInitials = getInitials(user?.displayName || user?.email)
 
   // Map finances by event_id for instantaneous badges
   const eventFinancesMap = useMemo(() => {
@@ -357,21 +354,10 @@ export default function EventsPage() {
       {/* Header - Sticky */}
       <div className="sticky top-0 z-20 bg-background/95 pb-2.5 pt-3.5 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-200/60">
         <div className="flex items-center justify-between px-4">
-          <div className="flex items-center gap-2.5">
-            <div
-              className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary-500 bg-transparent text-primary-600 font-bold text-xs select-none"
-              title={user?.displayName || user?.email || 'Agenda APMEE'}
-            >
-              {userInitials}
-            </div>
-            <h1 className="text-xl font-bold text-foreground">Agenda</h1>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-medium text-secondary-500 capitalize">
-              {format(selectedDate, "EEEE, d 'de' MMMM", { locale: pt })}
-            </span>
-            <MenuAlerts />
-          </div>
+          <h1 className="text-xl font-bold text-foreground">Agenda</h1>
+          <span className="text-xs font-medium text-secondary-500 capitalize">
+            {format(selectedDate, "EEEE, d 'de' MMMM", { locale: pt })}
+          </span>
         </div>
       </div>
 

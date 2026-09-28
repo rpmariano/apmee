@@ -9,7 +9,6 @@ import type { AllowedUser } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
 import { getFriendlyErrorMessage } from '@/lib/error-utils'
-import { MenuAlerts } from '@/components/ui/menu-alerts'
 
 export default function BoardPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -77,23 +76,20 @@ export default function BoardPage() {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            {isSuperAdmin && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingMember(undefined)
-                  setIsFormOpen(true)
-                }}
-                aria-label="+ Criar membro da direção"
-                className="flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-primary-600 transition-all active:scale-95 shrink-0"
-              >
-                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                <span>Criar</span>
-              </button>
-            )}
-            <MenuAlerts />
-          </div>
+          {isSuperAdmin && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingMember(undefined)
+                setIsFormOpen(true)
+              }}
+              aria-label="+ Criar membro da direção"
+              className="flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-primary-600 transition-all active:scale-95 shrink-0"
+            >
+              <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+              <span>Criar</span>
+            </button>
+          )}
         </div>
         <p className="px-4 mt-2 text-sm text-muted">Gestão de acessos à plataforma.</p>
       </div>

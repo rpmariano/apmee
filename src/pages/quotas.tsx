@@ -17,7 +17,6 @@ import { isMovementMatchingQuota, reconcileQuotasAndMovements } from '@/lib/quot
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
 import { getFriendlyErrorMessage } from '@/lib/error-utils'
-import { MenuAlerts } from '@/components/ui/menu-alerts'
 
 type FilterValue = 'all' | 'paid' | 'unpaid'
 
@@ -373,7 +372,6 @@ export default function QuotasPage() {
               >
                 <Search className="h-5 w-5" />
               </button>
-              <MenuAlerts />
             </div>
           </div>
 

@@ -2,9 +2,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/providers/auth-provider'
 import { APP_NAME } from '@/lib/constants'
 import { Calendar, ChevronRight, Plus, CheckSquare, Clock } from 'lucide-react'
-import { MenuAlerts } from '@/components/ui/menu-alerts'
-import { UserHeaderProfile } from '@/components/ui/user-header-profile'
-import { getCurrentSchoolYear, formatSchoolYear } from '@/lib/school-year'
 import { useDashboardStats } from '@/features/dashboard/api/use-dashboard-stats'
 import { useTasks } from '@/features/tasks/api/use-tasks'
 import { cn } from '@/lib/utils'
@@ -45,35 +42,8 @@ export default function HomePage() {
     .slice(0, 3)
 
   return (
-    <div className="min-h-full pb-6">
-      {/* Institutional Top Strip: Logo + APMEE EB Cobre + Active Year Badge + Alerts + User Profile */}
-      <div className="sticky top-0 z-20 bg-background/95 px-4 pt-3.5 pb-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-200/80">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <img
-              src={`${import.meta.env.BASE_URL}logo_cropped.jpeg`}
-              alt="Logótipo APMEE EB Cobre"
-              className="h-10 w-10 rounded-full object-cover border border-warm-200 shadow-xs shrink-0"
-            />
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-black tracking-tight text-foreground truncate">
-                APMEE · EB Cobre
-              </span>
-              <span className="text-xs font-semibold text-primary-600">
-                Ano Letivo {formatSchoolYear(getCurrentSchoolYear())}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1 shrink-0">
-            <MenuAlerts />
-            <UserHeaderProfile />
-          </div>
-        </div>
-      </div>
-
-      <div className="px-4 pt-4 pb-4">
-        {/* Greeting & Date */}
+    <div className="px-4 pt-3 pb-6">
+      {/* Greeting & Date */}
       <div className="mt-4 flex items-center justify-between">
         <div>
           <p className="text-xs font-medium text-secondary-500">Olá,</p>
@@ -278,7 +248,6 @@ export default function HomePage() {
 
       {/* App name footer */}
       <p className="mt-8 text-center text-xs text-muted">{APP_NAME}</p>
-      </div>
     </div>
   )
 }
