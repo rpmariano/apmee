@@ -32,3 +32,6 @@ dev-dist/
 # Binaries
 *.exe
 **/scripts/bin/
+
+# Local folders
+roadlog-moto/

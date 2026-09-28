@@ -55,26 +55,24 @@ export function QuotaCard({ quota, onEdit }: QuotaCardProps) {
         }
       }}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-2.5">
         
         {/* Contact Info & Year */}
-        <div className="flex flex-1 items-start gap-3">
+        <div className="flex flex-1 items-start gap-3 min-w-0">
           {/* Círculo das Iniciais (Selo do Sistema de Design) */}
           <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-primary-500/80 bg-transparent text-xs font-black tracking-tight text-primary-700">
             {initials || 'AP'}
           </div>
           
-          <div className="flex flex-col overflow-hidden">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="truncate font-bold text-foreground leading-tight">
-                {contactName}
-              </span>
-            </div>
+          <div className="flex flex-1 flex-col min-w-0">
+            <h3 className="truncate font-bold text-foreground leading-tight">
+              {contactName}
+            </h3>
 
             {schoolDetails && (
-              <span className="mt-0.5 text-xs text-secondary-600 font-medium truncate">
+              <p className="mt-0.5 text-xs text-secondary-600 font-medium truncate" title={schoolDetails}>
                 {schoolDetails}
-              </span>
+              </p>
             )}
             
             <div className="mt-1.5 flex items-center gap-2 flex-wrap">
@@ -89,17 +87,17 @@ export function QuotaCard({ quota, onEdit }: QuotaCardProps) {
         </div>
 
         {/* Status Badge */}
-        <div className="flex shrink-0 flex-col items-end">
+        <div className="flex shrink-0 flex-col items-end self-start">
           {isPaid ? (
-            <div className="flex items-center gap-1 rounded-full bg-green-100/90 px-2.5 py-1 text-xs font-bold text-green-800">
-              <CheckCircle2 className="h-3.5 w-3.5 text-green-700" />
+            <span className="inline-flex items-center gap-1 rounded-full bg-green-100/90 px-2.5 py-1 text-xs font-bold text-green-800 whitespace-nowrap shrink-0">
+              <CheckCircle2 className="h-3.5 w-3.5 text-green-700 shrink-0" />
               Pago
-            </div>
+            </span>
           ) : (
-            <div className="flex items-center gap-1 rounded-full bg-amber-100/90 px-2.5 py-1 text-xs font-bold text-amber-800">
-              <Clock className="h-3.5 w-3.5 text-amber-700" />
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100/90 px-2.5 py-1 text-xs font-bold text-amber-800 whitespace-nowrap shrink-0">
+              <Clock className="h-3.5 w-3.5 text-amber-700 shrink-0" />
               Pendente
-            </div>
+            </span>
           )}
         </div>
       </div>

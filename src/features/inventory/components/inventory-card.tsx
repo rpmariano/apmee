@@ -43,7 +43,7 @@ export function InventoryCard({ item, onEdit, onTransaction, captiveInfo, eventR
       }}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-1 items-start gap-3">
+        <div className="flex flex-1 items-start gap-3 min-w-0">
           <div className={cn(
             "mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-button)]",
             isLowStock ? "bg-orange-100 text-orange-600" : "bg-warm-100 text-secondary-600"

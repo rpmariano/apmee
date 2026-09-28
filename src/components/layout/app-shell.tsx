@@ -40,10 +40,10 @@ export function AppShell() {
   return (
     <div className="flex min-h-screen justify-center bg-warm-100">
       {/* Phone-width container */}
-      <div className="relative flex w-full max-w-[430px] flex-col min-h-screen bg-background shadow-xl">
+      <div className="relative flex w-full max-w-[430px] flex-col min-h-screen bg-background shadow-xl overflow-x-hidden">
         <NetworkStatus />
         {/* Main content area — scrollable, with bottom padding for nav bar and safe area */}
-        <main ref={mainRef} className="flex-1 overflow-y-auto pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]">
+        <main ref={mainRef} className="flex-1 overflow-y-auto overflow-x-hidden pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]">
           <Outlet />
         </main>
 
