@@ -42,12 +42,12 @@ BEGIN
     END LOOP;
 END $$;
 
--- 1.4 Criar novas políticas RLS limpas
-CREATE POLICY "Authenticated users can select active inventory items"
+-- 1.4 Criar novas políticas RLS limpas e sem bloqueio em soft-delete
+CREATE POLICY "Authenticated users can select inventory items"
     ON inventory_items
     FOR SELECT
     TO authenticated
-    USING (deleted_at IS NULL OR get_user_permission_level() = 'superadmin');
+    USING (true);
 
 CREATE POLICY "Authenticated users can insert inventory items"
     ON inventory_items
@@ -62,11 +62,11 @@ CREATE POLICY "Authenticated users can update inventory items"
     USING (true)
     WITH CHECK (true);
 
-CREATE POLICY "Only superadmin can hard delete inventory items"
+CREATE POLICY "Authenticated users can delete inventory items"
     ON inventory_items
     FOR DELETE
     TO authenticated
-    USING (get_user_permission_level() = 'superadmin');
+    USING (true);
 
 -- ----------------------------------------------------------------------------
 -- 2. TABELA DE MOVIMENTOS: inventory_transactions (se existir)

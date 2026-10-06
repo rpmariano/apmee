@@ -285,11 +285,12 @@ CREATE POLICY "Authenticated users can update tasks"
 -- Requisito: Igual a contacts (SELECT registos ativos, INSERT/UPDATE para todos autenticados, hard DELETE apenas superadmin).
 
 DROP POLICY IF EXISTS "Authenticated users can select active inventory items" ON inventory_items;
-CREATE POLICY "Authenticated users can select active inventory items"
+DROP POLICY IF EXISTS "Authenticated users can select inventory items" ON inventory_items;
+CREATE POLICY "Authenticated users can select inventory items"
     ON inventory_items
     FOR SELECT
     TO authenticated
-    USING (deleted_at IS NULL OR get_user_permission_level() = 'superadmin');
+    USING (true);
 
 DROP POLICY IF EXISTS "Authenticated users can insert inventory items" ON inventory_items;
 CREATE POLICY "Authenticated users can insert inventory items"
@@ -307,11 +308,12 @@ CREATE POLICY "Authenticated users can update inventory items"
     WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Only superadmin can hard delete inventory items" ON inventory_items;
-CREATE POLICY "Only superadmin can hard delete inventory items"
+DROP POLICY IF EXISTS "Authenticated users can delete inventory items" ON inventory_items;
+CREATE POLICY "Authenticated users can delete inventory items"
     ON inventory_items
     FOR DELETE
     TO authenticated
-    USING (get_user_permission_level() = 'superadmin');
+    USING (true);
 
 -- ----------------------------------------------------------------------------
 -- 9b. POLÍTICAS: inventory_transactions
