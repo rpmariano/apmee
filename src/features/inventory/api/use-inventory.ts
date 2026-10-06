@@ -34,6 +34,8 @@ export function useCreateItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [INVENTORY_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['captive-stock'] })
+      queryClient.invalidateQueries({ queryKey: ['event-inventory'] })
     },
   })
 }
@@ -54,6 +56,8 @@ export function useUpdateItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [INVENTORY_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['captive-stock'] })
+      queryClient.invalidateQueries({ queryKey: ['event-inventory'] })
     },
   })
 }
@@ -73,6 +77,8 @@ export function useDeleteItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [INVENTORY_QUERY_KEY] })
+      queryClient.invalidateQueries({ queryKey: ['captive-stock'] })
+      queryClient.invalidateQueries({ queryKey: ['event-inventory'] })
     },
   })
 }

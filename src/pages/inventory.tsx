@@ -5,6 +5,7 @@ import { InventoryList } from '@/features/inventory/components/inventory-list'
 import { InventoryForm } from '@/features/inventory/components/inventory-form'
 import { TransactionForm } from '@/features/inventory/components/transaction-form'
 import { useCreateItem, useUpdateItem, useDeleteItem } from '@/features/inventory/api/use-inventory'
+import { useCaptiveStock } from '@/features/inventory/api/use-captive-stock'
 import { useEvents } from '@/features/events/api/use-events'
 import type { InventoryItem, InventoryCategory } from '@/types/database'
 import { CustomDialog } from '@/components/ui/custom-dialog'
@@ -37,6 +38,7 @@ export default function InventoryPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const { data: events = [] } = useEvents()
+  const { data: captiveMap } = useCaptiveStock()
   const createMutation = useCreateItem()
   const updateMutation = useUpdateItem()
   const deleteMutation = useDeleteItem()
@@ -95,8 +97,15 @@ export default function InventoryPage() {
   }
 
   const handleDeleteItem = async (id: string) => {
-    await deleteMutation.mutateAsync(id)
-    toast.success('Item eliminado do inventário!')
+    try {
+      await deleteMutation.mutateAsync(id)
+      toast.success('Item eliminado do inventário!')
+      handleCloseForm()
+    } catch (error: any) {
+      console.error('Failed to delete item:', error)
+      setErrorMessage(getFriendlyErrorMessage(error, 'Erro ao eliminar o item. Tente novamente.'))
+      throw error
+    }
   }
 
   return (
@@ -278,18 +287,19 @@ export default function InventoryPage() {
       )}
 
       {isFormOpen && (
-      <InventoryForm
+        <InventoryForm
           item={editingItem}
           onClose={handleCloseForm}
           onSubmit={handleSubmitForm}
           isLoading={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
           onDelete={canWriteInventory ? handleDeleteItem : undefined}
+          captiveInfo={editingItem ? captiveMap?.get(editingItem.id) : undefined}
         />
       )}
 
       <CustomDialog
         isOpen={!!errorMessage}
-        title="Erro ao guardar item"
+        title="Erro no Inventário"
         description={errorMessage || ''}
         variant="danger"
         confirmLabel="OK"

@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react'
-import { X, Trash2 } from 'lucide-react'
+import { X, Trash2, CalendarCheck } from 'lucide-react'
 import type { InventoryItem, InventoryCategory } from '@/types/database'
+import type { ItemCaptiveInfo } from '../api/use-captive-stock'
+import { cn } from '@/lib/utils'
 
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
@@ -26,8 +28,9 @@ interface InventoryFormProps {
   onSubmit: (data: Partial<InventoryItem>) => void
   isLoading?: boolean
   onDelete?: (id: string) => Promise<void>
+  captiveInfo?: ItemCaptiveInfo
 }
-export function InventoryForm({ item, onClose, onSubmit, isLoading, onDelete }: InventoryFormProps) {
+export function InventoryForm({ item, onClose, onSubmit, isLoading, onDelete, captiveInfo }: InventoryFormProps) {
 
   const isExistingItem = !!item
   const [showUnsaved, setShowUnsaved] = useState(false)
@@ -70,14 +73,15 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading, onDelete }: 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!name.trim()) return
     onSubmit({
-      name,
+      name: name.trim(),
       category,
-      quantity,
-      unit: unit || 'un',
-      min_stock: minStock,
-      location: location || null,
-      notes: notes || null,
+      quantity: Number(quantity) || 0,
+      unit: unit.trim() || 'un',
+      min_stock: Number(minStock) || 0,
+      location: location.trim() || null,
+      notes: notes.trim() || null,
     })
   }
 
@@ -87,6 +91,8 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading, onDelete }: 
     try {
       await onDelete(item.id)
       onClose()
+    } catch (err: any) {
+      console.error('Failed to delete item:', err)
     } finally {
       setIsDeleting(false)
       setShowDeleteConfirm(false)
@@ -117,38 +123,70 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading, onDelete }: 
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        <form ref={formRef}   id="inventory-form"  onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form ref={formRef} id="inventory-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           
-          {/* 1. Categoria (em primeiro lugar) */}
+          {/* Alerta de Stock Cativo em Eventos */}
+          {captiveInfo && captiveInfo.captiveQuantity > 0 && (
+            <div className="flex items-start gap-2.5 rounded-[var(--radius-button)] border border-primary-200 bg-primary-50 p-3 text-xs text-primary-900 shadow-2xs">
+              <CalendarCheck className="h-4 w-4 shrink-0 text-primary-600 mt-0.5" />
+              <div className="flex-1">
+                <span className="font-bold">Item associado a eventos ativos:</span>{' '}
+                <span>
+                  {captiveInfo.captiveQuantity} {item?.unit || 'un'} reservada(s) (
+                  {captiveInfo.allocations.map((a) => a.eventTitle).join(', ')}
+                  ).
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* 1. Categoria */}
           <div className="flex flex-col gap-1.5 z-[80]">
             <label className="text-sm font-medium text-secondary-700">
               Categoria <span className="text-primary-500">*</span>
             </label>
             <CustomSelect disabled={!isEditing} 
               value={category}
-              onChange={(val) => {
-                setCategory(val as InventoryCategory)
-                if (!item) {
-                  setName('')
-                }
-              }}
+              onChange={(val) => setCategory(val as InventoryCategory)}
               options={INVENTORY_CATEGORIES}
             />
           </div>
 
-          {/* 2. Nome do Item (depois da categoria) */}
-          <div className="flex flex-col gap-1.5 z-[70]">
-            <label className="text-sm font-medium text-secondary-700">
+          {/* 2. Nome do Item */}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="inv-name" className="text-sm font-medium text-secondary-700">
               Nome do Item <span className="text-primary-500">*</span>
             </label>
-            <CustomSelect disabled={!isEditing} 
+            <input
+              id="inv-name"
+              disabled={!isEditing}
+              type="text"
               value={name}
-              onChange={(val) => setName(val)}
-              options={(ITEMS_BY_CATEGORY[category] || []).map(i => ({ label: i, value: i }))}
-              placeholder="Selecione ou crie..."
-              creatable
+              onChange={(e) => setName(e.target.value)}
               required
+              className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+              placeholder="Ex: Guardanapos, Copos de papel, Microfone..."
             />
+            {isEditing && ITEMS_BY_CATEGORY[category] && ITEMS_BY_CATEGORY[category].length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                <span className="text-[11px] font-medium text-muted">Sugestões:</span>
+                {ITEMS_BY_CATEGORY[category].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => setName(suggestion)}
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-xs transition-colors cursor-pointer active:scale-95",
+                      name === suggestion
+                        ? "bg-primary-100 text-primary-800 font-semibold border border-primary-300"
+                        : "bg-warm-100 text-secondary-600 hover:bg-warm-200 hover:text-foreground"
+                    )}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -251,7 +289,11 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading, onDelete }: 
       <CustomDialog
         isOpen={showDeleteConfirm}
         title="Eliminar Item?"
-        description={`Tem a certeza que pretende eliminar "${item?.name}"? Esta ação não pode ser revertida.`}
+        description={
+          captiveInfo && captiveInfo.captiveQuantity > 0
+            ? `ATENÇÃO: "${item?.name}" tem ${captiveInfo.captiveQuantity} unidade(s) alocadas a eventos ativos (${captiveInfo.allocations.map((a) => a.eventTitle).join(', ')}). Tem a certeza que pretende eliminar este item do inventário?`
+            : `Tem a certeza que pretende eliminar "${item?.name}"? Esta ação não pode ser revertida.`
+        }
         variant="danger"
         confirmLabel="Sim, Eliminar"
         cancelLabel="Cancelar"

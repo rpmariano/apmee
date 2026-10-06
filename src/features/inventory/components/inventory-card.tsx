@@ -1,4 +1,4 @@
-import { AlertTriangle, MapPin, Package, ArrowRightLeft, CalendarCheck } from 'lucide-react'
+import { AlertTriangle, MapPin, Package, ArrowRightLeft, CalendarCheck, Pencil } from 'lucide-react'
 import type { InventoryItem } from '@/types/database'
 import type { ItemCaptiveInfo } from '../api/use-captive-stock'
 import { cn } from '@/lib/utils'
@@ -114,11 +114,23 @@ export function InventoryCard({ item, onEdit, onTransaction, captiveInfo, eventR
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          {onEdit && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+              className="flex items-center justify-center gap-1.5 rounded-[var(--radius-button)] border border-warm-200 bg-surface px-2.5 py-1.5 text-xs font-semibold text-secondary-700 shadow-2xs transition-colors hover:bg-warm-100 hover:text-foreground active:scale-95"
+              aria-label={`Editar ${item.name}`}
+            >
+              <Pencil className="h-3.5 w-3.5 text-secondary-500" />
+              Editar
+            </button>
+          )}
           {onTransaction && (
             <button
+              type="button"
               onClick={(e) => { e.stopPropagation(); onTransaction(item); }}
-              className="flex items-center justify-center gap-1.5 rounded-[var(--radius-button)] border border-primary-200 bg-primary-50 px-3 py-1.5 text-xs font-bold text-primary-700 transition-colors hover:bg-primary-100 active:scale-95"
+              className="flex items-center justify-center gap-1.5 rounded-[var(--radius-button)] border border-primary-200 bg-primary-50 px-3 py-1.5 text-xs font-bold text-primary-700 shadow-2xs transition-colors hover:bg-primary-100 active:scale-95"
             >
               <ArrowRightLeft className="h-3.5 w-3.5" />
               Movimentar
