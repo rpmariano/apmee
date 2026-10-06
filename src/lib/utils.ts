@@ -24,3 +24,21 @@ export function getInitials(name?: string | null): string {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
+
+/**
+ * Checks if a phone number is a Portuguese mobile number (prefixes 91, 92, 93, or 96).
+ * Handles national format as well as international prefixes (+351, 00351).
+ */
+export function isPortugueseMobile(phone?: string | null): boolean {
+  if (!phone) return false
+  const cleaned = phone.replace(/[\s\-\(\)\.]/g, '')
+  let digits = cleaned
+  if (digits.startsWith('+351')) {
+    digits = digits.slice(4)
+  } else if (digits.startsWith('00351')) {
+    digits = digits.slice(5)
+  } else if (digits.startsWith('351') && digits.length > 9) {
+    digits = digits.slice(3)
+  }
+  return /^(91|92|93|96)/.test(digits)
+}

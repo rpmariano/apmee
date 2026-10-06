@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import type { Contact, ContactCategory } from '@/types/database'
 import { CONTACT_CATEGORIES, CONTACT_CATEGORY_LABELS } from '@/lib/constants'
-import { cn } from '@/lib/utils'
+import { cn, isPortugueseMobile } from '@/lib/utils'
 import { useQuotas } from '@/features/quotas/api/use-quotas'
 import { formatSchoolYear } from '@/lib/school-year'
 
@@ -65,6 +65,12 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
   const [email, setEmail] = useState(contact?.email ?? '')
   const [phone, setPhone] = useState(contact?.phone ?? '')
   const [whatsapp, setWhatsapp] = useState(contact?.whatsapp ?? '')
+  const [isWhatsappManuallyEdited, setIsWhatsappManuallyEdited] = useState(() => {
+    if (!contact) return false
+    if (contact.whatsapp && contact.whatsapp !== contact.phone) return true
+    if (contact.phone && !contact.whatsapp && isPortugueseMobile(contact.phone)) return true
+    return false
+  })
   const [notes, setNotes] = useState(contact?.notes ?? '')
   const [isMember, setIsMember] = useState(contact?.is_member ?? false)
 
@@ -136,16 +142,22 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
   )
 
   const handlePhoneChange = (val: string) => {
-    if (whatsapp === phone || !whatsapp) {
-      setWhatsapp(val)
-    }
     setPhone(val)
+    if (!val.trim() && !whatsapp.trim()) {
+      setIsWhatsappManuallyEdited(false)
+      return
+    }
+    if (!isWhatsappManuallyEdited) {
+      if (isPortugueseMobile(val)) {
+        setWhatsapp(val)
+      } else {
+        setWhatsapp('')
+      }
+    }
   }
 
   const handleWhatsappChange = (val: string) => {
-    if (phone === whatsapp || !phone) {
-      setPhone(val)
-    }
+    setIsWhatsappManuallyEdited(true)
     setWhatsapp(val)
   }
 
@@ -165,12 +177,12 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
     }
 
     onSubmit({
-      name,
+      name: name.trim(),
       category,
-      email: email || null,
-      phone: phone || null,
-      whatsapp: whatsapp || null,
-      notes: notes || null,
+      email: email.trim() || null,
+      phone: phone.trim() || null,
+      whatsapp: whatsapp.trim() || null,
+      notes: notes.trim() || null,
       is_member: isMember,
       is_active: isActive,
       metadata: {
@@ -283,7 +295,7 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="contact-phone" className="text-sm font-medium text-secondary-700">Telemóvel</label>
+              <label htmlFor="contact-phone" className="text-sm font-medium text-secondary-700">Telefone / Telemóvel</label>
               <input id="contact-phone" disabled={!isEditing} 
                 type="tel"
                 value={phone}
@@ -294,13 +306,26 @@ export function ContactForm({ contact, initialCategory, onClose, onSubmit, onDel
             </div>
             <div className="flex flex-col gap-1.5">
               <label htmlFor="contact-whatsapp" className="text-sm font-medium text-secondary-700">WhatsApp</label>
-              <input id="contact-whatsapp" disabled={!isEditing} 
-                type="tel"
-                value={whatsapp}
-                onChange={(e) => handleWhatsappChange(e.target.value)}
-                className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-                placeholder="Ex: 912345678"
-              />
+              <div className="relative">
+                <input id="contact-whatsapp" disabled={!isEditing} 
+                  type="tel"
+                  value={whatsapp}
+                  onChange={(e) => handleWhatsappChange(e.target.value)}
+                  className="w-full rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 pr-8 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                  placeholder="Ex: 912345678"
+                />
+                {isEditing && Boolean(whatsapp) && (
+                  <button
+                    type="button"
+                    onClick={() => handleWhatsappChange('')}
+                    title="Limpar WhatsApp"
+                    aria-label="Limpar WhatsApp"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted hover:bg-warm-100 hover:text-foreground active:scale-95 transition-all cursor-pointer"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
