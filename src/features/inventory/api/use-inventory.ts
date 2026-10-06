@@ -24,10 +24,16 @@ export function useCreateItem() {
 
   return useMutation({
     mutationFn: async (newItem: any) => {
+      const { data: { session } } = await supabase.auth.getSession()
+      const payload = {
+        ...newItem,
+        ...(session?.user?.id ? { created_by: session.user.id } : {}),
+      }
+
       const { data, error } = await (supabase as any).from('inventory_items')
-        .insert(newItem)
+        .insert(payload)
         .select()
-        .single()
+        .maybeSingle()
 
       if (error) throw error
       return data
@@ -49,7 +55,7 @@ export function useUpdateItem() {
         .update(updates)
         .eq('id', id)
         .select()
-        .single()
+        .maybeSingle()
 
       if (error) throw error
       return data

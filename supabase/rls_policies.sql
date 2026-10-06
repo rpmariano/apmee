@@ -314,6 +314,42 @@ CREATE POLICY "Only superadmin can hard delete inventory items"
     USING (get_user_permission_level() = 'superadmin');
 
 -- ----------------------------------------------------------------------------
+-- 9b. POLÍTICAS: inventory_transactions
+-- ----------------------------------------------------------------------------
+-- Requisito: Todos os utilizadores autenticados podem SELECT, INSERT, UPDATE e DELETE movimentos manuais.
+
+ALTER TABLE IF EXISTS inventory_transactions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated users can select inventory transactions" ON inventory_transactions;
+CREATE POLICY "Authenticated users can select inventory transactions"
+    ON inventory_transactions
+    FOR SELECT
+    TO authenticated
+    USING (true);
+
+DROP POLICY IF EXISTS "Authenticated users can insert inventory transactions" ON inventory_transactions;
+CREATE POLICY "Authenticated users can insert inventory transactions"
+    ON inventory_transactions
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Authenticated users can update inventory transactions" ON inventory_transactions;
+CREATE POLICY "Authenticated users can update inventory transactions"
+    ON inventory_transactions
+    FOR UPDATE
+    TO authenticated
+    USING (true)
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Authenticated users can delete inventory transactions" ON inventory_transactions;
+CREATE POLICY "Authenticated users can delete inventory transactions"
+    ON inventory_transactions
+    FOR DELETE
+    TO authenticated
+    USING (true);
+
+-- ----------------------------------------------------------------------------
 -- 10. POLÍTICAS: financial_movements
 -- ----------------------------------------------------------------------------
 -- Requisito: Todos os utilizadores autenticados podem consultar registos ativos (deleted_at IS NULL).
