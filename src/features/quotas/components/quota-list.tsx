@@ -1,6 +1,7 @@
-import { Users, CheckCircle2, Search } from 'lucide-react'
+import { Users, CheckCircle2, Search, SlidersHorizontal, RotateCcw } from 'lucide-react'
 import { QuotaCard, type QuotaWithContact } from './quota-card'
 import { formatSchoolYear } from '@/lib/school-year'
+import { matchesQuotaFilters, type QuotaFilterCriteria } from './quota-filters'
 
 type FilterValue = 'all' | 'paid' | 'unpaid'
 
@@ -9,6 +10,8 @@ interface QuotaListProps {
   filter: FilterValue
   searchQuery?: string
   selectedYear?: number
+  filters?: QuotaFilterCriteria
+  onClearFilters?: () => void
   isLoading: boolean
   onEdit?: (quota: QuotaWithContact) => void
 }
@@ -18,6 +21,8 @@ export function QuotaList({
   filter,
   searchQuery = '',
   selectedYear,
+  filters,
+  onClearFilters,
   isLoading,
   onEdit,
 }: QuotaListProps) {
@@ -32,30 +37,28 @@ export function QuotaList({
   }
 
   const query = searchQuery.trim().toLowerCase()
+  const hasActiveCustomFilters = filters && Object.values(filters).some((v) => v !== 'all')
 
   const filteredQuotas = (quotas || []).filter((q) => {
-    // 1. Year filter
-    if (selectedYear !== undefined && q.year !== selectedYear) return false
+    if (filters) {
+      return matchesQuotaFilters(q, filters, searchQuery, filter, selectedYear)
+    }
 
-    // 2. Tab status filter
+    // Fallback if filters not passed
+    if (selectedYear !== undefined && q.year !== selectedYear) return false
     if (filter === 'paid' && !q.paid) return false
     if (filter === 'unpaid' && q.paid) return false
-
-    // 3. Search query filter
     if (query) {
       const contactName = (q.contact?.name || '').toLowerCase()
       const metadata = q.contact?.metadata || {}
       const educando = String(metadata.educando || '').toLowerCase()
       const turma = String(metadata.turma || (Array.isArray(metadata.turmas) ? metadata.turmas.join(' ') : '')).toLowerCase()
-
-      const matches =
+      return (
         contactName.includes(query) ||
         educando.includes(query) ||
         turma.includes(query)
-
-      if (!matches) return false
+      )
     }
-
     return true
   })
 
@@ -64,7 +67,9 @@ export function QuotaList({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center px-4">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-warm-100 text-secondary-400 mb-3">
-          {isSearching ? (
+          {hasActiveCustomFilters ? (
+            <SlidersHorizontal className="h-8 w-8 text-primary-500" />
+          ) : isSearching ? (
             <Search className="h-8 w-8 text-secondary-400" />
           ) : filter === 'unpaid' ? (
             <CheckCircle2 className="h-8 w-8 text-green-600" />
@@ -74,7 +79,9 @@ export function QuotaList({
         </div>
 
         <p className="text-base font-bold text-foreground">
-          {isSearching
+          {hasActiveCustomFilters
+            ? 'Nenhuma quota encontrada'
+            : isSearching
             ? 'Nenhum resultado encontrado'
             : filter === 'unpaid'
             ? 'Quotas em dia!'
@@ -84,7 +91,9 @@ export function QuotaList({
         </p>
 
         <p className="mt-1 text-xs text-secondary-600 max-w-xs leading-relaxed">
-          {isSearching
+          {hasActiveCustomFilters
+            ? 'Não existem quotas registadas que correspondam aos filtros selecionados. Tente ajustar ou limpar os filtros.'
+            : isSearching
             ? `Não encontrámos quotas que correspondam a "${searchQuery}". Tente outro termo.`
             : filter === 'unpaid'
             ? `Todas as quotas registadas no ano letivo ${selectedYear ? formatSchoolYear(selectedYear) : ''} já se encontram regularizadas.`
@@ -92,6 +101,17 @@ export function QuotaList({
             ? `Ainda não existem quotas liquidadas no ano letivo ${selectedYear ? formatSchoolYear(selectedYear) : ''}.`
             : `Ainda não foram registadas quotas para o ano letivo ${selectedYear ? formatSchoolYear(selectedYear) : ''}. Toque em "+" para registar.`}
         </p>
+
+        {hasActiveCustomFilters && onClearFilters && (
+          <button
+            type="button"
+            onClick={onClearFilters}
+            className="mt-4 flex items-center gap-1.5 rounded-full bg-primary-50 px-4 py-2 text-xs font-bold text-primary-700 border border-primary-200 hover:bg-primary-100 active:scale-95 transition-all"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            <span>Limpar Filtros</span>
+          </button>
+        )}
       </div>
     )
   }

@@ -6,17 +6,27 @@ interface QuotaSummaryProps {
   quotas: QuotaWithContact[]
   selectedYear: number
   isLoading?: boolean
+  filteredQuotas?: QuotaWithContact[]
+  isFiltered?: boolean
 }
 
-export function QuotaSummary({ quotas, selectedYear, isLoading }: QuotaSummaryProps) {
+export function QuotaSummary({
+  quotas,
+  selectedYear,
+  isLoading,
+  filteredQuotas,
+  isFiltered = false,
+}: QuotaSummaryProps) {
   if (isLoading) {
     return <div className="h-40 w-full animate-pulse rounded-[var(--radius-card)] bg-warm-100" />
   }
 
   // Filter quotas strictly for the selected school year
   const yearQuotas = quotas.filter((q) => q.year === selectedYear)
-  const paidQuotas = yearQuotas.filter((q) => q.paid)
-  const unpaidQuotas = yearQuotas.filter((q) => !q.paid)
+  const targetQuotas = isFiltered && filteredQuotas !== undefined ? filteredQuotas : yearQuotas
+
+  const paidQuotas = targetQuotas.filter((q) => q.paid)
+  const unpaidQuotas = targetQuotas.filter((q) => !q.paid)
 
   // Financial totals
   const totalRaised = paidQuotas.reduce((acc, q) => acc + Number(q.amount || 0), 0)
@@ -28,7 +38,7 @@ export function QuotaSummary({ quotas, selectedYear, isLoading }: QuotaSummaryPr
     .reduce((acc, q) => acc + Number(q.amount || 0), 0)
 
   // Counts & Rate
-  const totalCount = yearQuotas.length
+  const totalCount = targetQuotas.length
   const paidCount = paidQuotas.length
   const unpaidCount = unpaidQuotas.length
   const regularizedPct = totalCount > 0 ? Math.round((paidCount / totalCount) * 100) : 0
@@ -37,13 +47,19 @@ export function QuotaSummary({ quotas, selectedYear, isLoading }: QuotaSummaryPr
     <div className="rounded-[var(--radius-card)] bg-surface border border-warm-200 p-4 shadow-sm transition-all">
       {/* Header with year tag and regularized progress */}
       <div className="flex items-center justify-between gap-2 border-b border-warm-100 pb-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="rounded-md bg-secondary-100 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-secondary-800">
             Ano Letivo {formatSchoolYear(selectedYear)}
           </span>
-          <span className="text-xs text-secondary-500 font-medium">
-            {totalCount} {totalCount === 1 ? 'registo' : 'registos'}
-          </span>
+          {isFiltered ? (
+            <span className="rounded-md bg-primary-100 px-2 py-0.5 text-xs font-bold text-primary-800 border border-primary-200">
+              {totalCount} de {yearQuotas.length} registos
+            </span>
+          ) : (
+            <span className="text-xs text-secondary-500 font-medium">
+              {totalCount} {totalCount === 1 ? 'registo' : 'registos'}
+            </span>
+          )}
         </div>
 
         {totalCount > 0 && (
@@ -56,7 +72,9 @@ export function QuotaSummary({ quotas, selectedYear, isLoading }: QuotaSummaryPr
       {/* Main Metric: Total Raised */}
       <div className="mt-3 flex items-baseline justify-between">
         <div>
-          <span className="text-xs font-medium text-secondary-500">Total Angariado em Quotas</span>
+          <span className="text-xs font-medium text-secondary-500">
+            {isFiltered ? 'Total Angariado (Filtrado)' : 'Total Angariado em Quotas'}
+          </span>
           <div className="text-2xl font-black tracking-tight text-foreground">
             {totalRaised.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}
           </div>

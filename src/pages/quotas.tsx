@@ -5,6 +5,12 @@ import { useQueryClient } from '@tanstack/react-query'
 import { QuotaList } from '@/features/quotas/components/quota-list'
 import { QuotaForm } from '@/features/quotas/components/quota-form'
 import { QuotaSummary } from '@/features/quotas/components/quota-summary'
+import {
+  QuotaFilters,
+  type QuotaFilterCriteria,
+  DEFAULT_QUOTA_FILTERS,
+  matchesQuotaFilters,
+} from '@/features/quotas/components/quota-filters'
 import { useQuotas, useCreateQuota, useUpdateQuota, useDeleteQuota } from '@/features/quotas/api/use-quotas'
 import { useContacts } from '@/features/contacts/api/use-contacts'
 import { usePermissions } from '@/hooks/use-permissions'
@@ -32,6 +38,7 @@ export default function QuotasPage() {
   const [activeTab, setActiveTab] = useState<FilterValue>('all')
   const [selectedYear, setSelectedYear] = useState<number>(getCurrentSchoolYear())
   const [searchQuery, setSearchQuery] = useState('')
+  const [filters, setFilters] = useState<QuotaFilterCriteria>(DEFAULT_QUOTA_FILTERS)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingQuota, setEditingQuota] = useState<QuotaWithContact | undefined>()
@@ -43,6 +50,22 @@ export default function QuotasPage() {
   const queryClient = useQueryClient()
   const { data: quotas, isLoading } = useQuotas()
   const { data: contacts } = useContacts('all')
+
+  const hasActiveFilters = useMemo(() => {
+    return Object.values(filters).some((v) => v !== 'all')
+  }, [filters])
+
+  const filteredQuotasForSummary = useMemo(() => {
+    return (quotas || []).filter((q) =>
+      matchesQuotaFilters(q, filters, searchQuery, 'all', selectedYear)
+    )
+  }, [quotas, filters, searchQuery, selectedYear])
+
+  const filteredQuotasForList = useMemo(() => {
+    return (quotas || []).filter((q) =>
+      matchesQuotaFilters(q, filters, searchQuery, activeTab, selectedYear)
+    )
+  }, [quotas, filters, searchQuery, activeTab, selectedYear])
   const createMutation = useCreateQuota()
   const updateMutation = useUpdateQuota()
   const deleteMutation = useDeleteQuota()
@@ -392,16 +415,16 @@ export default function QuotasPage() {
         </div>
 
         {/* Tabs & School Year Row */}
-        <div className="mt-4 flex items-center justify-between gap-2 px-4 pb-2">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+        <div className="mt-3 flex items-center justify-between gap-2 px-4 pb-2">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
                 className={cn(
-                  'whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+                  'whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition-colors',
                   activeTab === tab.value
-                    ? 'bg-primary-500 text-white shadow-xs font-semibold'
+                    ? 'bg-primary-500 text-white shadow-xs'
                     : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
                 )}
               >
@@ -416,7 +439,7 @@ export default function QuotasPage() {
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
               aria-label="Filtrar por Ano Letivo"
-              className="rounded-full border border-warm-200 bg-surface px-3 py-1 text-xs font-bold text-secondary-800 shadow-2xs focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-300"
+              className="rounded-full border border-warm-200 bg-surface px-2.5 py-1 text-xs font-bold text-secondary-800 shadow-2xs focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-300"
             >
               {schoolYearOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -428,12 +451,24 @@ export default function QuotasPage() {
         </div>
       </div>
 
+      {/* Secondary Filters Bar (Chips + Drawer Modal) */}
+      <div className="px-4 pt-2.5 pb-0.5">
+        <QuotaFilters
+          quotas={quotas || []}
+          filters={filters}
+          onFilterChange={setFilters}
+          filteredCount={filteredQuotasForList.length}
+        />
+      </div>
+
       {/* Quota Summary Card */}
-      <div className="px-4 pt-3 pb-1">
+      <div className="px-4 pt-2 pb-1">
         <QuotaSummary
           quotas={quotas || []}
           selectedYear={selectedYear}
           isLoading={isLoading}
+          filteredQuotas={filteredQuotasForSummary}
+          isFiltered={hasActiveFilters || Boolean(searchQuery.trim())}
         />
       </div>
 
@@ -443,6 +478,8 @@ export default function QuotasPage() {
           filter={activeTab} 
           searchQuery={searchQuery}
           selectedYear={selectedYear}
+          filters={filters}
+          onClearFilters={() => setFilters(DEFAULT_QUOTA_FILTERS)}
           isLoading={isLoading} 
           onEdit={canWriteQuotas ? handleEditQuota : undefined} 
         />
