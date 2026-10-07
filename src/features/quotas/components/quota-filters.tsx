@@ -129,11 +129,45 @@ export function matchesQuotaFilters(
   return true
 }
 
+export function getQuotaTurmas(q: QuotaWithContact): string[] {
+  const meta = q.contact?.metadata || {}
+  const raw = meta.turmas ?? meta.turma
+  if (Array.isArray(raw)) {
+    return raw.map((t) => String(t).trim()).filter(Boolean)
+  }
+  if (typeof raw === 'string' && raw.trim()) {
+    return raw.split(',').map((t) => t.trim()).filter(Boolean)
+  }
+  return []
+}
+
+export function getQuotaEducando(q: QuotaWithContact): string | null {
+  const meta = q.contact?.metadata || {}
+  const edu = meta.educando
+  if (typeof edu === 'string' && edu.trim()) {
+    return edu.trim()
+  }
+  return null
+}
+
+export function getQuotaEducandos(q: QuotaWithContact): string[] {
+  const meta = q.contact?.metadata || {}
+  const edu = meta.educando
+  if (typeof edu === 'string' && edu.trim()) {
+    if (edu.includes(',')) {
+      return edu.split(',').map((s) => s.trim()).filter(Boolean)
+    }
+    return [edu.trim()]
+  }
+  return []
+}
+
 interface QuotaFiltersProps {
   quotas: QuotaWithContact[]
   filters: QuotaFilterCriteria
   onFilterChange: (next: QuotaFilterCriteria) => void
   filteredCount: number
+  selectedYear?: number
 }
 
 export function QuotaFilters({
@@ -141,36 +175,167 @@ export function QuotaFilters({
   filters,
   onFilterChange,
   filteredCount,
+  selectedYear,
 }: QuotaFiltersProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
-  // 1. Extrair todas as turmas dinâmicas existentes
-  const availableTurmas = useMemo(() => {
-    const set = new Set<string>(TURMA_OPTIONS.map((o) => o.value))
-    quotas.forEach((q) => {
-      const meta = q.contact?.metadata || {}
-      const raw = meta.turmas ?? meta.turma
-      if (Array.isArray(raw)) {
-        raw.forEach((t) => t && set.add(String(t).trim()))
-      } else if (typeof raw === 'string' && raw.trim()) {
-        raw.split(',').forEach((t) => t && set.add(t.trim()))
-      }
-    })
-    return Array.from(set).sort()
-  }, [quotas])
-
-  // 2. Extrair todos os educandos existentes
-  const availableEducandos = useMemo(() => {
+  // Todas as turmas da escola (base + quotas) para permitir trocar livremente no atalho
+  const allSchoolTurmas = useMemo(() => {
     const set = new Set<string>()
+    TURMA_OPTIONS.forEach((o) => set.add(o.value))
     quotas.forEach((q) => {
-      const meta = q.contact?.metadata || {}
-      const edu = meta.educando
-      if (typeof edu === 'string' && edu.trim()) {
-        set.add(edu.trim())
-      }
+      getQuotaTurmas(q).forEach((t) => set.add(t))
     })
     return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt'))
   }, [quotas])
+
+  // 1. Quotas candidatas e turmas disponíveis (dependentes dos restantes filtros)
+  const candidateQuotasForTurma = useMemo(() => {
+    return quotas.filter((q) =>
+      matchesQuotaFilters(q, { ...filters, turma: 'all' }, undefined, undefined, selectedYear)
+    )
+  }, [quotas, filters, selectedYear])
+
+  const availableTurmas = useMemo(() => {
+    const set = new Set<string>()
+    const hasOtherFilters =
+      filters.educando !== 'all' ||
+      filters.account !== 'all' ||
+      filters.paymentMethod !== 'all' ||
+      filters.receipt !== 'all' ||
+      filters.month !== 'all'
+
+    // Se não há outros filtros ativos, incluir as turmas base de TURMA_OPTIONS
+    if (!hasOtherFilters) {
+      TURMA_OPTIONS.forEach((o) => set.add(o.value))
+    }
+
+    // Adicionar turmas das quotas candidatas
+    candidateQuotasForTurma.forEach((q) => {
+      getQuotaTurmas(q).forEach((t) => set.add(t))
+    })
+
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt'))
+  }, [candidateQuotasForTurma, filters])
+
+  const turmaCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    candidateQuotasForTurma.forEach((q) => {
+      getQuotaTurmas(q).forEach((t) => {
+        counts.set(t, (counts.get(t) || 0) + 1)
+      })
+    })
+    return counts
+  }, [candidateQuotasForTurma])
+
+  // 2. Quotas candidatas e educandos disponíveis (dependentes da turma e restantes filtros)
+  const candidateQuotasForEducando = useMemo(() => {
+    return quotas.filter((q) =>
+      matchesQuotaFilters(q, { ...filters, educando: 'all' }, undefined, undefined, selectedYear)
+    )
+  }, [quotas, filters, selectedYear])
+
+  const availableEducandos = useMemo(() => {
+    const set = new Set<string>()
+    candidateQuotasForEducando.forEach((q) => {
+      getQuotaEducandos(q).forEach((edu) => {
+        if (edu) set.add(edu)
+      })
+    })
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'pt'))
+  }, [candidateQuotasForEducando])
+
+  // 3. Quotas candidatas e contagens para Conta (Banco vs Caixa)
+  const candidateQuotasForAccount = useMemo(() => {
+    return quotas.filter((q) =>
+      matchesQuotaFilters(q, { ...filters, account: 'all' }, undefined, undefined, selectedYear)
+    )
+  }, [quotas, filters, selectedYear])
+
+  const { bankCount, cashCount } = useMemo(() => {
+    let bank = 0
+    let cash = 0
+    candidateQuotasForAccount.forEach((q) => {
+      const acc = q.account || 'banco'
+      if (acc === 'banco') bank++
+      if (acc === 'caixa') cash++
+    })
+    return { bankCount: bank, cashCount: cash }
+  }, [candidateQuotasForAccount])
+
+  // 4. Quotas candidatas e contagens para Método de Pagamento
+  const candidateQuotasForMethod = useMemo(() => {
+    return quotas.filter((q) =>
+      matchesQuotaFilters(q, { ...filters, paymentMethod: 'all' }, undefined, undefined, selectedYear)
+    )
+  }, [quotas, filters, selectedYear])
+
+  const { mbwayCount, transferenciaCount, numerarioCount } = useMemo(() => {
+    let mbway = 0
+    let transferencia = 0
+    let numerario = 0
+    candidateQuotasForMethod.forEach((q) => {
+      const pm = (q.payment_method || '').toLowerCase()
+      if (pm === 'mbway') mbway++
+      if (pm === 'transferencia') transferencia++
+      if (pm === 'numerario') numerario++
+    })
+    return { mbwayCount: mbway, transferenciaCount: transferencia, numerarioCount: numerario }
+  }, [candidateQuotasForMethod])
+
+  // 5. Quotas candidatas e contagens para Recibo
+  const candidateQuotasForReceipt = useMemo(() => {
+    return quotas.filter((q) =>
+      matchesQuotaFilters(q, { ...filters, receipt: 'all' }, undefined, undefined, selectedYear)
+    )
+  }, [quotas, filters, selectedYear])
+
+  const { withReceiptCount, withoutReceiptCount } = useMemo(() => {
+    let withR = 0
+    let withoutR = 0
+    candidateQuotasForReceipt.forEach((q) => {
+      if (q.receipt_url) withR++
+      else withoutR++
+    })
+    return { withReceiptCount: withR, withoutReceiptCount: withoutR }
+  }, [candidateQuotasForReceipt])
+
+  // 6. Quotas candidatas e contagens para Mês
+  const candidateQuotasForMonth = useMemo(() => {
+    return quotas.filter((q) =>
+      matchesQuotaFilters(q, { ...filters, month: 'all' }, undefined, undefined, selectedYear)
+    )
+  }, [quotas, filters, selectedYear])
+
+  const monthCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    candidateQuotasForMonth.forEach((q) => {
+      if (q.paid_date) {
+        const m = String(new Date(q.paid_date).getMonth() + 1)
+        counts.set(m, (counts.get(m) || 0) + 1)
+      }
+    })
+    return counts
+  }, [candidateQuotasForMonth])
+
+  const dynamicMonthOptions = useMemo(() => {
+    const result: { label: string; value: string }[] = [
+      {
+        label: `Todos os Meses (${candidateQuotasForMonth.length})`,
+        value: 'all',
+      },
+    ]
+
+    MONTH_OPTIONS.filter((m) => m.value !== 'all').forEach((m) => {
+      const count = monthCounts.get(m.value) || 0
+      result.push({
+        label: `${m.label} (${count})`,
+        value: m.value,
+      })
+    })
+
+    return result
+  }, [candidateQuotasForMonth.length, monthCounts])
 
   // Contagem de filtros ativos
   const activeCount = useMemo(() => {
@@ -188,11 +353,55 @@ export function QuotaFilters({
     onFilterChange(DEFAULT_QUOTA_FILTERS)
   }
 
+  // Atualização em cascata: quando um filtro muda, reavalia os restantes filtros ativos.
+  // Se algum filtro ativo deixar de ter quotas compatíveis, é automaticamente reposto para 'all'.
   const handleUpdate = <K extends keyof QuotaFilterCriteria>(key: K, value: QuotaFilterCriteria[K]) => {
-    onFilterChange({
+    const nextFilters: QuotaFilterCriteria = {
       ...filters,
       [key]: value,
-    })
+    }
+
+    const hasMatches = (test: QuotaFilterCriteria) => {
+      return quotas.some((q) =>
+        matchesQuotaFilters(q, test, undefined, undefined, selectedYear)
+      )
+    }
+
+    // 1. Incompatibilidade de educando ao mudar turma
+    if (key === 'turma' && nextFilters.educando !== 'all') {
+      if (!hasMatches({ ...nextFilters })) {
+        nextFilters.educando = 'all'
+      }
+    }
+
+    // 2. Incompatibilidade de turma ao mudar educando
+    if (key === 'educando' && nextFilters.turma !== 'all') {
+      if (!hasMatches({ ...nextFilters })) {
+        nextFilters.turma = 'all'
+      }
+    }
+
+    // 3. Incompatibilidade de conta
+    if (nextFilters.account !== 'all' && !hasMatches({ ...nextFilters })) {
+      nextFilters.account = 'all'
+    }
+
+    // 4. Incompatibilidade de método de pagamento
+    if (nextFilters.paymentMethod !== 'all' && !hasMatches({ ...nextFilters })) {
+      nextFilters.paymentMethod = 'all'
+    }
+
+    // 5. Incompatibilidade de recibo
+    if (nextFilters.receipt !== 'all' && !hasMatches({ ...nextFilters })) {
+      nextFilters.receipt = 'all'
+    }
+
+    // 6. Incompatibilidade de mês
+    if (nextFilters.month !== 'all' && !hasMatches({ ...nextFilters })) {
+      nextFilters.month = 'all'
+    }
+
+    onFilterChange(nextFilters)
   }
 
   const openDrawer = () => {
@@ -238,7 +447,7 @@ export function QuotaFilters({
               className="absolute inset-0 w-[calc(100%-24px)] h-full opacity-0 cursor-pointer"
             >
               <option value="all">Todas as Turmas</option>
-              {availableTurmas.map((t) => (
+              {allSchoolTurmas.map((t) => (
                 <option key={t} value={t}>
                   Turma: {t}
                 </option>
@@ -416,7 +625,7 @@ export function QuotaFilters({
               aria-label="Alterar mês"
               className="absolute inset-0 w-[calc(100%-24px)] h-full opacity-0 cursor-pointer"
             >
-              {MONTH_OPTIONS.map((m) => (
+              {dynamicMonthOptions.map((m) => (
                 <option key={m.value} value={m.value}>
                   {m.label}
                 </option>
@@ -492,10 +701,17 @@ export function QuotaFilters({
               
               {/* 1. Secção: Turma */}
               <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-secondary-700">
-                  <GraduationCap className="h-4 w-4 text-primary-600" />
-                  <span>Turma do Educando</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-secondary-700">
+                    <GraduationCap className="h-4 w-4 text-primary-600" />
+                    <span>Turma do Educando</span>
+                  </label>
+                  {filters.educando !== 'all' && (
+                    <span className="text-[11px] font-semibold text-primary-700">
+                      Turma de {filters.educando}
+                    </span>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     type="button"
@@ -507,41 +723,62 @@ export function QuotaFilters({
                         : 'border-warm-200 bg-warm-50 text-secondary-700 hover:bg-warm-100'
                     )}
                   >
-                    Todas
+                    Todas ({candidateQuotasForTurma.length})
                   </button>
-                  {availableTurmas.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => handleUpdate('turma', t)}
-                      className={cn(
-                        'rounded-full px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 border',
-                        filters.turma === t
-                          ? 'border-primary-500 bg-primary-500 text-white font-bold shadow-xs'
-                          : 'border-warm-200 bg-warm-50 text-secondary-700 hover:bg-warm-100'
-                      )}
-                    >
-                      {t}
-                    </button>
-                  ))}
+                  {availableTurmas.map((t) => {
+                    const count = turmaCounts.get(t) || 0
+                    const isDisabled = count === 0
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => handleUpdate('turma', t)}
+                        className={cn(
+                          'rounded-full px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 border',
+                          filters.turma === t
+                            ? 'border-primary-500 bg-primary-500 text-white font-bold shadow-xs'
+                            : isDisabled
+                            ? 'border-warm-200 bg-warm-50/50 text-secondary-400 opacity-40 cursor-not-allowed'
+                            : 'border-warm-200 bg-warm-50 text-secondary-700 hover:bg-warm-100'
+                        )}
+                      >
+                        {t} ({count})
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
               {/* 2. Secção: Educando */}
               <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-secondary-700">
-                  <User className="h-4 w-4 text-primary-600" />
-                  <span>Nome do Educando (Aluno)</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-secondary-700">
+                    <User className="h-4 w-4 text-primary-600" />
+                    <span>Nome do Educando (Aluno)</span>
+                  </label>
+                  <span className="text-[11px] text-muted">
+                    {filters.turma !== 'all'
+                      ? `Alunos de ${filters.turma} (${availableEducandos.length})`
+                      : `${availableEducandos.length} alunos com quotas`}
+                  </span>
+                </div>
                 <CustomSelect
                   searchable
                   value={filters.educando}
                   onChange={(val) => handleUpdate('educando', val)}
                   options={[
-                    { label: 'Todos os Educandos', value: 'all' },
+                    {
+                      label: `Todos os Educandos (${candidateQuotasForEducando.length})`,
+                      value: 'all',
+                    },
                     ...availableEducandos.map((edu) => ({ label: edu, value: edu })),
                   ]}
-                  placeholder="Pesquisar por aluno..."
+                  placeholder={
+                    filters.turma !== 'all'
+                      ? `Pesquisar alunos de ${filters.turma}...`
+                      : 'Pesquisar por aluno...'
+                  }
                 />
               </div>
 
@@ -562,33 +799,39 @@ export function QuotaFilters({
                         : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50'
                     )}
                   >
-                    Todas
+                    Todas ({candidateQuotasForAccount.length})
                   </button>
                   <button
                     type="button"
+                    disabled={bankCount === 0}
                     onClick={() => handleUpdate('account', 'banco')}
                     className={cn(
                       'rounded-xl border py-2.5 px-2 flex items-center justify-center gap-1.5 text-xs font-bold transition-all',
                       filters.account === 'banco'
                         ? 'border-sky-500 bg-sky-50 text-sky-800 shadow-xs'
+                        : bankCount === 0
+                        ? 'border-warm-200 bg-surface text-secondary-400 opacity-40 cursor-not-allowed'
                         : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50'
                     )}
                   >
                     <Landmark className="h-3.5 w-3.5 text-sky-600" />
-                    <span>Banco</span>
+                    <span>Banco ({bankCount})</span>
                   </button>
                   <button
                     type="button"
+                    disabled={cashCount === 0}
                     onClick={() => handleUpdate('account', 'caixa')}
                     className={cn(
                       'rounded-xl border py-2.5 px-2 flex items-center justify-center gap-1.5 text-xs font-bold transition-all',
                       filters.account === 'caixa'
                         ? 'border-amber-500 bg-amber-50 text-amber-800 shadow-xs'
+                        : cashCount === 0
+                        ? 'border-warm-200 bg-surface text-secondary-400 opacity-40 cursor-not-allowed'
                         : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50'
                     )}
                   >
                     <Coins className="h-3.5 w-3.5 text-amber-600" />
-                    <span>Caixa</span>
+                    <span>Caixa ({cashCount})</span>
                   </button>
                 </div>
               </div>
@@ -601,25 +844,31 @@ export function QuotaFilters({
                 </label>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {[
-                    { value: 'all', label: 'Todos' },
-                    { value: 'mbway', label: 'MB Way' },
-                    { value: 'transferencia', label: 'Transferência' },
-                    { value: 'numerario', label: 'Numerário' },
-                  ].map((m) => (
-                    <button
-                      key={m.value}
-                      type="button"
-                      onClick={() => handleUpdate('paymentMethod', m.value)}
-                      className={cn(
-                        'rounded-xl border py-2 px-2 text-center text-xs font-bold transition-all',
-                        filters.paymentMethod === m.value
-                          ? 'border-primary-500 bg-primary-50 text-primary-800 shadow-xs'
-                          : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50'
-                      )}
-                    >
-                      {m.label}
-                    </button>
-                  ))}
+                    { value: 'all', label: 'Todos', count: candidateQuotasForMethod.length },
+                    { value: 'mbway', label: 'MB Way', count: mbwayCount },
+                    { value: 'transferencia', label: 'Transf.', count: transferenciaCount },
+                    { value: 'numerario', label: 'Numerário', count: numerarioCount },
+                  ].map((m) => {
+                    const isDisabled = m.value !== 'all' && m.count === 0
+                    return (
+                      <button
+                        key={m.value}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => handleUpdate('paymentMethod', m.value)}
+                        className={cn(
+                          'rounded-xl border py-2 px-2 text-center text-xs font-bold transition-all',
+                          filters.paymentMethod === m.value
+                            ? 'border-primary-500 bg-primary-50 text-primary-800 shadow-xs'
+                            : isDisabled
+                            ? 'border-warm-200 bg-surface text-secondary-400 opacity-40 cursor-not-allowed'
+                            : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50'
+                        )}
+                      >
+                        {m.label} ({m.count})
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -631,24 +880,30 @@ export function QuotaFilters({
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { value: 'all', label: 'Todos' },
-                    { value: 'with_receipt', label: 'Com Recibo' },
-                    { value: 'without_receipt', label: 'Sem Recibo' },
-                  ].map((r) => (
-                    <button
-                      key={r.value}
-                      type="button"
-                      onClick={() => handleUpdate('receipt', r.value as any)}
-                      className={cn(
-                        'rounded-xl border py-2 px-2 text-center text-xs font-bold transition-all',
-                        filters.receipt === r.value
-                          ? 'border-primary-500 bg-primary-50 text-primary-800 shadow-xs'
-                          : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50'
-                      )}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
+                    { value: 'all', label: 'Todos', count: candidateQuotasForReceipt.length },
+                    { value: 'with_receipt', label: 'Com Recibo', count: withReceiptCount },
+                    { value: 'without_receipt', label: 'Sem Recibo', count: withoutReceiptCount },
+                  ].map((r) => {
+                    const isDisabled = r.value !== 'all' && r.count === 0
+                    return (
+                      <button
+                        key={r.value}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => handleUpdate('receipt', r.value as any)}
+                        className={cn(
+                          'rounded-xl border py-2 px-2 text-center text-xs font-bold transition-all',
+                          filters.receipt === r.value
+                            ? 'border-primary-500 bg-primary-50 text-primary-800 shadow-xs'
+                            : isDisabled
+                            ? 'border-warm-200 bg-surface text-secondary-400 opacity-40 cursor-not-allowed'
+                            : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50'
+                        )}
+                      >
+                        {r.label} ({r.count})
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -661,7 +916,7 @@ export function QuotaFilters({
                 <CustomSelect
                   value={filters.month}
                   onChange={(val) => handleUpdate('month', val)}
-                  options={MONTH_OPTIONS}
+                  options={dynamicMonthOptions}
                   placeholder="Selecione o mês..."
                 />
               </div>

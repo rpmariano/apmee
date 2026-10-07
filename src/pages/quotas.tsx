@@ -437,7 +437,10 @@ export default function QuotasPage() {
           <div className="shrink-0">
             <select
               value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              onChange={(e) => {
+                setSelectedYear(Number(e.target.value))
+                setFilters(DEFAULT_QUOTA_FILTERS)
+              }}
               aria-label="Filtrar por Ano Letivo"
               className="rounded-full border border-warm-200 bg-surface px-2.5 py-1 text-xs font-bold text-secondary-800 shadow-2xs focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-300"
             >
@@ -458,6 +461,7 @@ export default function QuotasPage() {
           filters={filters}
           onFilterChange={setFilters}
           filteredCount={filteredQuotasForList.length}
+          selectedYear={selectedYear}
         />
       </div>
 
