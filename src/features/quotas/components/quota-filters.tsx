@@ -10,6 +10,7 @@ import {
   FileText,
   Calendar,
   RotateCcw,
+  ChevronDown,
 } from 'lucide-react'
 import type { QuotaWithContact } from './quota-card'
 import { cn } from '@/lib/utils'
@@ -223,303 +224,232 @@ export function QuotaFilters({
           )}
         </button>
 
-        {/* 1. Chip Turma */}
-        <button
-          type="button"
-          onClick={openDrawer}
-          className={cn(
-            'flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 shrink-0 shadow-2xs',
-            filters.turma !== 'all'
-              ? 'border-primary-400 bg-primary-50 text-primary-900 font-bold'
-              : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50'
-          )}
-        >
-          <GraduationCap className="h-3.5 w-3.5 text-primary-600" />
-          <span>{filters.turma !== 'all' ? `Turma: ${filters.turma}` : 'Turma'}</span>
-          {filters.turma !== 'all' ? (
-            <span
-              role="button"
+        {/* 1. Atalho Dinâmico: Turma */}
+        {filters.turma !== 'all' && (
+          <div className="relative inline-flex items-center rounded-full border border-primary-400 bg-primary-50 pl-2.5 pr-1 py-1 text-xs font-bold text-primary-900 shadow-2xs shrink-0 animate-in fade-in duration-150">
+            <GraduationCap className="h-3.5 w-3.5 text-primary-600 shrink-0 mr-1" />
+            <span className="truncate max-w-[130px]">Turma: {filters.turma}</span>
+            <ChevronDown className="h-3 w-3 text-primary-600 ml-0.5 opacity-70 shrink-0 pointer-events-none" />
+
+            <select
+              value={filters.turma}
+              onChange={(e) => handleUpdate('turma', e.target.value)}
+              aria-label="Alterar turma"
+              className="absolute inset-0 w-[calc(100%-24px)] h-full opacity-0 cursor-pointer"
+            >
+              <option value="all">Todas as Turmas</option>
+              {availableTurmas.map((t) => (
+                <option key={t} value={t}>
+                  Turma: {t}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation()
                 handleUpdate('turma', 'all')
               }}
-              className="ml-0.5 rounded-full p-0.5 hover:bg-primary-200"
-              aria-label="Limpar filtro de turma"
+              aria-label="Remover filtro de turma"
+              className="relative z-10 ml-1 rounded-full p-0.5 text-primary-700 hover:bg-primary-200 hover:text-primary-950 transition-colors"
             >
-              <X className="h-3 w-3" />
-            </span>
-          ) : (
-            <span className="text-[10px] text-muted">▾</span>
-          )}
-        </button>
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
 
-        {/* 2. Chip Educando */}
-        <button
-          type="button"
-          onClick={openDrawer}
-          className={cn(
-            'flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 shrink-0 shadow-2xs',
-            filters.educando !== 'all'
-              ? 'border-primary-400 bg-primary-50 text-primary-900 font-bold'
-              : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50'
-          )}
-        >
-          <User className="h-3.5 w-3.5 text-secondary-600" />
-          <span className="max-w-[120px] truncate">
-            {filters.educando !== 'all' ? filters.educando : 'Educando'}
-          </span>
-          {filters.educando !== 'all' ? (
-            <span
-              role="button"
+        {/* 2. Atalho Dinâmico: Educando */}
+        {filters.educando !== 'all' && (
+          <div className="relative inline-flex items-center rounded-full border border-primary-400 bg-primary-50 pl-2.5 pr-1 py-1 text-xs font-bold text-primary-900 shadow-2xs shrink-0 animate-in fade-in duration-150">
+            <User className="h-3.5 w-3.5 text-primary-600 shrink-0 mr-1" />
+            <span className="truncate max-w-[140px]">{filters.educando}</span>
+            <ChevronDown className="h-3 w-3 text-primary-600 ml-0.5 opacity-70 shrink-0 pointer-events-none" />
+
+            <select
+              value={filters.educando}
+              onChange={(e) => handleUpdate('educando', e.target.value)}
+              aria-label="Alterar educando"
+              className="absolute inset-0 w-[calc(100%-24px)] h-full opacity-0 cursor-pointer"
+            >
+              <option value="all">Todos os Educandos</option>
+              {availableEducandos.map((edu) => (
+                <option key={edu} value={edu}>
+                  {edu}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation()
                 handleUpdate('educando', 'all')
               }}
-              className="ml-0.5 rounded-full p-0.5 hover:bg-primary-200"
-              aria-label="Limpar filtro de educando"
+              aria-label="Remover filtro de educando"
+              className="relative z-10 ml-1 rounded-full p-0.5 text-primary-700 hover:bg-primary-200 hover:text-primary-950 transition-colors"
             >
-              <X className="h-3 w-3" />
-            </span>
-          ) : (
-            <span className="text-[10px] text-muted">▾</span>
-          )}
-        </button>
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
 
-        {/* 3. Chip Conta (Banco / Caixa) */}
-        <button
-          type="button"
-          onClick={openDrawer}
-          className={cn(
-            'flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 shrink-0 shadow-2xs',
-            filters.account !== 'all'
-              ? 'border-primary-400 bg-primary-50 text-primary-900 font-bold'
-              : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50'
-          )}
-        >
-          {filters.account === 'caixa' ? (
-            <Coins className="h-3.5 w-3.5 text-amber-600" />
-          ) : (
-            <Landmark className="h-3.5 w-3.5 text-sky-600" />
-          )}
-          <span>{filters.account === 'banco' ? 'Banco' : filters.account === 'caixa' ? 'Caixa' : 'Conta'}</span>
-          {filters.account !== 'all' ? (
-            <span
-              role="button"
+        {/* 3. Atalho Dinâmico: Conta (Banco / Caixa) */}
+        {filters.account !== 'all' && (
+          <div className="relative inline-flex items-center rounded-full border border-primary-400 bg-primary-50 pl-2.5 pr-1 py-1 text-xs font-bold text-primary-900 shadow-2xs shrink-0 animate-in fade-in duration-150">
+            {filters.account === 'caixa' ? (
+              <Coins className="h-3.5 w-3.5 text-amber-600 shrink-0 mr-1" />
+            ) : (
+              <Landmark className="h-3.5 w-3.5 text-sky-600 shrink-0 mr-1" />
+            )}
+            <span>{filters.account === 'banco' ? 'Conta: Banco' : 'Conta: Caixa'}</span>
+            <ChevronDown className="h-3 w-3 text-primary-600 ml-0.5 opacity-70 shrink-0 pointer-events-none" />
+
+            <select
+              value={filters.account}
+              onChange={(e) => handleUpdate('account', e.target.value as any)}
+              aria-label="Alterar conta financeira"
+              className="absolute inset-0 w-[calc(100%-24px)] h-full opacity-0 cursor-pointer"
+            >
+              <option value="all">Todas as Contas</option>
+              <option value="banco">Banco</option>
+              <option value="caixa">Caixa</option>
+            </select>
+
+            <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation()
                 handleUpdate('account', 'all')
               }}
-              className="ml-0.5 rounded-full p-0.5 hover:bg-primary-200"
-              aria-label="Limpar filtro de conta"
+              aria-label="Remover filtro de conta"
+              className="relative z-10 ml-1 rounded-full p-0.5 text-primary-700 hover:bg-primary-200 hover:text-primary-950 transition-colors"
             >
-              <X className="h-3 w-3" />
-            </span>
-          ) : (
-            <span className="text-[10px] text-muted">▾</span>
-          )}
-        </button>
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
 
-        {/* 4. Chip Método */}
-        <button
-          type="button"
-          onClick={openDrawer}
-          className={cn(
-            'flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 shrink-0 shadow-2xs',
-            filters.paymentMethod !== 'all'
-              ? 'border-primary-400 bg-primary-50 text-primary-900 font-bold'
-              : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50'
-          )}
-        >
-          <CreditCard className="h-3.5 w-3.5 text-emerald-600" />
-          <span className="capitalize">
-            {filters.paymentMethod === 'mbway'
-              ? 'MB Way'
-              : filters.paymentMethod === 'transferencia'
-              ? 'Transf.'
-              : filters.paymentMethod === 'numerario'
-              ? 'Numerário'
-              : 'Método'}
-          </span>
-          {filters.paymentMethod !== 'all' ? (
-            <span
-              role="button"
+        {/* 4. Atalho Dinâmico: Método de Pagamento */}
+        {filters.paymentMethod !== 'all' && (
+          <div className="relative inline-flex items-center rounded-full border border-primary-400 bg-primary-50 pl-2.5 pr-1 py-1 text-xs font-bold text-primary-900 shadow-2xs shrink-0 animate-in fade-in duration-150">
+            <CreditCard className="h-3.5 w-3.5 text-primary-600 shrink-0 mr-1" />
+            <span className="capitalize">
+              {filters.paymentMethod === 'mbway'
+                ? 'MB Way'
+                : filters.paymentMethod === 'transferencia'
+                ? 'Transf. Bancária'
+                : filters.paymentMethod === 'numerario'
+                ? 'Numerário'
+                : `Método: ${filters.paymentMethod}`}
+            </span>
+            <ChevronDown className="h-3 w-3 text-primary-600 ml-0.5 opacity-70 shrink-0 pointer-events-none" />
+
+            <select
+              value={filters.paymentMethod}
+              onChange={(e) => handleUpdate('paymentMethod', e.target.value)}
+              aria-label="Alterar método de pagamento"
+              className="absolute inset-0 w-[calc(100%-24px)] h-full opacity-0 cursor-pointer"
+            >
+              <option value="all">Todos os Métodos</option>
+              <option value="mbway">MB Way</option>
+              <option value="transferencia">Transferência Bancária</option>
+              <option value="numerario">Numerário</option>
+            </select>
+
+            <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation()
                 handleUpdate('paymentMethod', 'all')
               }}
-              className="ml-0.5 rounded-full p-0.5 hover:bg-primary-200"
-              aria-label="Limpar filtro de método"
+              aria-label="Remover filtro de método"
+              className="relative z-10 ml-1 rounded-full p-0.5 text-primary-700 hover:bg-primary-200 hover:text-primary-950 transition-colors"
             >
-              <X className="h-3 w-3" />
-            </span>
-          ) : (
-            <span className="text-[10px] text-muted">▾</span>
-          )}
-        </button>
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
 
-        {/* 5. Chip Recibo */}
-        <button
-          type="button"
-          onClick={openDrawer}
-          className={cn(
-            'flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 shrink-0 shadow-2xs',
-            filters.receipt !== 'all'
-              ? 'border-primary-400 bg-primary-50 text-primary-900 font-bold'
-              : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50'
-          )}
-        >
-          <FileText className="h-3.5 w-3.5 text-primary-600" />
-          <span>
-            {filters.receipt === 'with_receipt'
-              ? 'Com Recibo'
-              : filters.receipt === 'without_receipt'
-              ? 'Sem Recibo'
-              : 'Recibo'}
-          </span>
-          {filters.receipt !== 'all' ? (
-            <span
-              role="button"
+        {/* 5. Atalho Dinâmico: Recibo */}
+        {filters.receipt !== 'all' && (
+          <div className="relative inline-flex items-center rounded-full border border-primary-400 bg-primary-50 pl-2.5 pr-1 py-1 text-xs font-bold text-primary-900 shadow-2xs shrink-0 animate-in fade-in duration-150">
+            <FileText className="h-3.5 w-3.5 text-primary-600 shrink-0 mr-1" />
+            <span>{filters.receipt === 'with_receipt' ? 'Com Recibo' : 'Sem Recibo'}</span>
+            <ChevronDown className="h-3 w-3 text-primary-600 ml-0.5 opacity-70 shrink-0 pointer-events-none" />
+
+            <select
+              value={filters.receipt}
+              onChange={(e) => handleUpdate('receipt', e.target.value as any)}
+              aria-label="Alterar filtro de recibo"
+              className="absolute inset-0 w-[calc(100%-24px)] h-full opacity-0 cursor-pointer"
+            >
+              <option value="all">Todos os Recibos</option>
+              <option value="with_receipt">Com Recibo</option>
+              <option value="without_receipt">Sem Recibo</option>
+            </select>
+
+            <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation()
                 handleUpdate('receipt', 'all')
               }}
-              className="ml-0.5 rounded-full p-0.5 hover:bg-primary-200"
-              aria-label="Limpar filtro de recibo"
+              aria-label="Remover filtro de recibo"
+              className="relative z-10 ml-1 rounded-full p-0.5 text-primary-700 hover:bg-primary-200 hover:text-primary-950 transition-colors"
             >
-              <X className="h-3 w-3" />
-            </span>
-          ) : (
-            <span className="text-[10px] text-muted">▾</span>
-          )}
-        </button>
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
 
-        {/* 6. Chip Mês */}
-        <button
-          type="button"
-          onClick={openDrawer}
-          className={cn(
-            'flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 shrink-0 shadow-2xs',
-            filters.month !== 'all'
-              ? 'border-primary-400 bg-primary-50 text-primary-900 font-bold'
-              : 'border-warm-200 bg-surface text-secondary-600 hover:bg-warm-50'
-          )}
-        >
-          <Calendar className="h-3.5 w-3.5 text-secondary-500" />
-          <span>
-            {filters.month !== 'all'
-              ? MONTH_OPTIONS.find((m) => m.value === filters.month)?.label || 'Mês'
-              : 'Mês'}
-          </span>
-          {filters.month !== 'all' ? (
-            <span
-              role="button"
+        {/* 6. Atalho Dinâmico: Mês */}
+        {filters.month !== 'all' && (
+          <div className="relative inline-flex items-center rounded-full border border-primary-400 bg-primary-50 pl-2.5 pr-1 py-1 text-xs font-bold text-primary-900 shadow-2xs shrink-0 animate-in fade-in duration-150">
+            <Calendar className="h-3.5 w-3.5 text-primary-600 shrink-0 mr-1" />
+            <span>Mês: {MONTH_OPTIONS.find((m) => m.value === filters.month)?.label || filters.month}</span>
+            <ChevronDown className="h-3 w-3 text-primary-600 ml-0.5 opacity-70 shrink-0 pointer-events-none" />
+
+            <select
+              value={filters.month}
+              onChange={(e) => handleUpdate('month', e.target.value)}
+              aria-label="Alterar mês"
+              className="absolute inset-0 w-[calc(100%-24px)] h-full opacity-0 cursor-pointer"
+            >
+              {MONTH_OPTIONS.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation()
                 handleUpdate('month', 'all')
               }}
-              className="ml-0.5 rounded-full p-0.5 hover:bg-primary-200"
-              aria-label="Limpar filtro de mês"
+              aria-label="Remover filtro de mês"
+              className="relative z-10 ml-1 rounded-full p-0.5 text-primary-700 hover:bg-primary-200 hover:text-primary-950 transition-colors"
             >
-              <X className="h-3 w-3" />
-            </span>
-          ) : (
-            <span className="text-[10px] text-muted">▾</span>
-          )}
-        </button>
-      </div>
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
 
-      {/* Barra de Filtros Ativos (Resumo e Botão Limpar) */}
-      {activeCount > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 pt-0.5 pb-1 animate-in fade-in duration-150">
-          <span className="text-[11px] font-semibold text-secondary-500">Filtros:</span>
-          {filters.turma !== 'all' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-800 border border-primary-200">
-              Turma: {filters.turma}
-              <button
-                type="button"
-                onClick={() => handleUpdate('turma', 'all')}
-                className="hover:text-primary-950"
-                aria-label="Remover turma"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          {filters.educando !== 'all' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-800 border border-primary-200">
-              Educando: {filters.educando}
-              <button
-                type="button"
-                onClick={() => handleUpdate('educando', 'all')}
-                className="hover:text-primary-950"
-                aria-label="Remover educando"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          {filters.account !== 'all' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-800 border border-primary-200">
-              {filters.account === 'banco' ? 'Conta: Banco' : 'Conta: Caixa'}
-              <button
-                type="button"
-                onClick={() => handleUpdate('account', 'all')}
-                className="hover:text-primary-950"
-                aria-label="Remover conta"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          {filters.paymentMethod !== 'all' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-800 border border-primary-200 capitalize">
-              Método: {filters.paymentMethod}
-              <button
-                type="button"
-                onClick={() => handleUpdate('paymentMethod', 'all')}
-                className="hover:text-primary-950"
-                aria-label="Remover método"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          {filters.receipt !== 'all' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-800 border border-primary-200">
-              {filters.receipt === 'with_receipt' ? 'Com Recibo' : 'Sem Recibo'}
-              <button
-                type="button"
-                onClick={() => handleUpdate('receipt', 'all')}
-                className="hover:text-primary-950"
-                aria-label="Remover recibo"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          {filters.month !== 'all' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-800 border border-primary-200">
-              Mês: {MONTH_OPTIONS.find((m) => m.value === filters.month)?.label}
-              <button
-                type="button"
-                onClick={() => handleUpdate('month', 'all')}
-                className="hover:text-primary-950"
-                aria-label="Remover mês"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
+        {/* Botão de Limpeza Rápida (quando há filtros ativos) */}
+        {activeCount > 0 && (
           <button
             type="button"
             onClick={handleClearAll}
-            className="flex items-center gap-1 text-[11px] font-bold text-primary-700 hover:text-primary-900 underline ml-1 cursor-pointer"
+            className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold text-primary-700 hover:bg-primary-100 hover:text-primary-900 transition-colors shrink-0 cursor-pointer ml-0.5"
+            aria-label="Limpar todos os filtros"
           >
             <RotateCcw className="h-3 w-3" />
-            Limpar todos
+            <span>Limpar</span>
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Drawer / Bottom Sheet de Filtros Completos */}
       {isDrawerOpen && (
