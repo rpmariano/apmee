@@ -7,6 +7,7 @@ import {
   Eye,
   Shield,
   FolderOpen,
+  ClipboardList,
 } from 'lucide-react'
 import { usePermissions } from '@/hooks/use-permissions'
 import { useAuth } from '@/providers/auth-provider'
@@ -28,6 +29,7 @@ const menuItems: MenuItem[] = [
   { to: '/inventario', label: 'Inventário', icon: Package, color: 'bg-warm-100 text-secondary-700' },
   { to: '/quotas', label: 'Quotas', icon: Receipt, color: 'bg-warm-300 text-secondary-700', module: 'quotas' },
   { to: '/documentos', label: 'Gestão Documental', icon: FolderOpen, color: 'bg-amber-100 text-amber-800' },
+  { to: '/forms', label: 'Forms', icon: ClipboardList, color: 'bg-teal-100 text-teal-800' },
   { to: '/board', label: 'Direção', icon: Shield, color: 'bg-secondary-200 text-secondary-700', superadminOnly: true },
 ]
 

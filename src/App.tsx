@@ -17,6 +17,7 @@ const TreasuryPage = lazy(() => import('@/pages/treasury'))
 const QuotasPage = lazy(() => import('@/pages/quotas'))
 const BoardPage = lazy(() => import('@/pages/board'))
 const DocumentsPage = lazy(() => import('@/pages/documents'))
+const FormsPage = lazy(() => import('@/pages/forms'))
 
 function RouteFallback() {
   return (
@@ -60,6 +61,7 @@ export default function App() {
             <Route path="/treasury" element={<TreasuryPage />} />
             <Route path="/quotas" element={<QuotasPage />} />
             <Route path="/documentos" element={<DocumentsPage />} />
+            <Route path="/forms" element={<FormsPage />} />
             <Route path="/board" element={<BoardPage />} />
           </Route>
         </Routes>
