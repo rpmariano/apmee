@@ -16,6 +16,7 @@ const InventoryPage = lazy(() => import('@/pages/inventory'))
 const TreasuryPage = lazy(() => import('@/pages/treasury'))
 const QuotasPage = lazy(() => import('@/pages/quotas'))
 const BoardPage = lazy(() => import('@/pages/board'))
+const DocumentsPage = lazy(() => import('@/pages/documents'))
 
 function RouteFallback() {
   return (
@@ -58,6 +59,7 @@ export default function App() {
             <Route path="/tesouraria" element={<TreasuryPage />} />
             <Route path="/treasury" element={<TreasuryPage />} />
             <Route path="/quotas" element={<QuotasPage />} />
+            <Route path="/documentos" element={<DocumentsPage />} />
             <Route path="/board" element={<BoardPage />} />
           </Route>
         </Routes>

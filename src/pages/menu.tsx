@@ -6,6 +6,7 @@ import {
   Receipt,
   Eye,
   Shield,
+  FolderOpen,
 } from 'lucide-react'
 import { usePermissions } from '@/hooks/use-permissions'
 import { useAuth } from '@/providers/auth-provider'
@@ -26,6 +27,7 @@ const menuItems: MenuItem[] = [
   { to: '/contactos', label: 'Contactos', icon: Users, color: 'bg-primary-100 text-primary-600' },
   { to: '/inventario', label: 'Inventário', icon: Package, color: 'bg-warm-100 text-secondary-700' },
   { to: '/quotas', label: 'Quotas', icon: Receipt, color: 'bg-warm-300 text-secondary-700', module: 'quotas' },
+  { to: '/documentos', label: 'Gestão Documental', icon: FolderOpen, color: 'bg-amber-100 text-amber-800' },
   { to: '/board', label: 'Direção', icon: Shield, color: 'bg-secondary-200 text-secondary-700', superadminOnly: true },
 ]
 
