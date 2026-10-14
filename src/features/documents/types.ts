@@ -31,13 +31,5 @@ export function isRootFolder(category?: string | null): boolean {
   return trimmed === '' || trimmed === 'sem pasta' || trimmed === 'raiz'
 }
 
-export const DEFAULT_DOCUMENT_CATEGORIES = [
-  'Estatutos & Regulamentos',
-  'Atas de Assembleia / Direção',
-  'Relatórios & Contas',
-  'Modelos & Minutas',
-  'Contratos & Parcerias',
-  'Seguros & Licenças',
-  'Comunicação & Circulares',
-]
+export const DEFAULT_DOCUMENT_CATEGORIES: string[] = []
 

@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Archive,
   Download,
+  Pencil,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
@@ -19,6 +20,7 @@ interface DocumentCardProps {
   document: AppDocument
   onStatusChange: (id: string, newStatus: DocumentStatus) => void
   onDelete: (id: string) => void
+  onEdit?: (document: AppDocument) => void
   canDelete?: boolean
 }
 
@@ -61,6 +63,7 @@ export function DocumentCard({
   document,
   onStatusChange,
   onDelete,
+  onEdit,
   canDelete = true,
 }: DocumentCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -181,6 +184,18 @@ export function DocumentCard({
             <Download className="h-3.5 w-3.5" />
             <span>Abrir / Descarregar</span>
           </a>
+
+          {onEdit && (
+            <button
+              type="button"
+              onClick={() => onEdit(document)}
+              className="rounded-full p-1.5 text-muted hover:bg-warm-100 hover:text-foreground transition-colors"
+              title="Editar documento"
+              aria-label="Editar documento"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+          )}
 
           {canDelete && (
             <button
