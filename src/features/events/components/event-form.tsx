@@ -68,10 +68,33 @@ export function EventForm({ event, initialDate, onClose, onSubmit, onDelete, isL
   // Event Type
   const [eventType, setEventType] = useState<EventType>(event?.event_type ?? EVENT_TYPES.FESTA)
 
-  // Inventory shortage status (only relevant for Festas)
-  const { hasShortages, shortages } = useEventInventoryStatus(
+  // Staged inventory state
+  const [inventoryIsDirty, setInventoryIsDirty] = useState(false)
+  const [inventoryShortageState, setInventoryShortageState] = useState<{
+    shortages: any[]
+    hasShortages: boolean
+  }>({ shortages: [], hasShortages: false })
+  const saveInventoryRef = useRef<(() => Promise<void>) | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Inventory shortage status fallback (from DB if not yet loaded locally)
+  const { hasShortages: dbHasShortages, shortages: dbShortages } = useEventInventoryStatus(
     eventType === EVENT_TYPES.FESTA ? event?.id : undefined
   )
+
+  const hasShortages =
+    eventType === EVENT_TYPES.FESTA
+      ? inventoryShortageState.shortages.length > 0 || inventoryIsDirty
+        ? inventoryShortageState.hasShortages
+        : dbHasShortages
+      : false
+
+  const shortages =
+    eventType === EVENT_TYPES.FESTA
+      ? inventoryShortageState.shortages.length > 0 || inventoryIsDirty
+        ? inventoryShortageState.shortages
+        : dbShortages
+      : []
 
   const handleCloseClick = () => {
     if (isDirty) setShowUnsaved(true)
@@ -106,7 +129,7 @@ export function EventForm({ event, initialDate, onClose, onSubmit, onDelete, isL
   const [minutes, setMinutes] = useState(event?.minutes ?? '')
   const [documents, setDocuments] = useState<EventDocument[]>(event?.documents ?? [])
 
-  const isDirty =
+  const isFormFieldsDirty =
     eventType !== (event?.event_type ?? EVENT_TYPES.FESTA) ||
     title !== (event?.title ?? '') ||
     description !== (event?.description ?? '') ||
@@ -120,41 +143,46 @@ export function EventForm({ event, initialDate, onClose, onSubmit, onDelete, isL
     minutes !== (event?.minutes ?? '') ||
     JSON.stringify(documents) !== JSON.stringify(event?.documents ?? [])
 
-  const pendingInventoryHandlerRef = useRef<(() => Promise<void>) | null>(null)
+  const isDirty = isFormFieldsDirty || (eventType === EVENT_TYPES.FESTA && inventoryIsDirty)
 
-  const doSubmit = () => {
-    const startIso = new Date(startDate).toISOString()
-    const endIso = endDate ? new Date(endDate).toISOString() : null
+  const doSubmit = async () => {
+    try {
+      setIsSubmitting(true)
 
-    onSubmit({
-      title,
-      description: eventType === EVENT_TYPES.FESTA ? description || null : null,
-      location: location || null,
-      start_date: startIso,
-      end_date: endIso,
-      is_all_day: isAllDay,
-      status,
-      event_type: eventType,
-      meeting_type: eventType === EVENT_TYPES.REUNIAO ? meetingType : null,
-      objectives: eventType === EVENT_TYPES.REUNIAO ? objectives || null : null,
-      minutes: eventType === EVENT_TYPES.REUNIAO ? minutes || null : null,
-      documents: eventType === EVENT_TYPES.REUNIAO ? documents : [],
-    })
+      // Save staged inventory when event exists and handler is registered
+      if (eventType === EVENT_TYPES.FESTA && saveInventoryRef.current && event?.id) {
+        await saveInventoryRef.current()
+      }
+
+      const startIso = new Date(startDate).toISOString()
+      const endIso = endDate ? new Date(endDate).toISOString() : null
+
+      onSubmit({
+        title,
+        description: eventType === EVENT_TYPES.FESTA ? description || null : null,
+        location: location || null,
+        start_date: startIso,
+        end_date: endIso,
+        is_all_day: isAllDay,
+        status,
+        event_type: eventType,
+        meeting_type: eventType === EVENT_TYPES.REUNIAO ? meetingType : null,
+        objectives: eventType === EVENT_TYPES.REUNIAO ? objectives || null : null,
+        minutes: eventType === EVENT_TYPES.REUNIAO ? minutes || null : null,
+        documents: eventType === EVENT_TYPES.REUNIAO ? documents : [],
+      })
+    } catch (err: any) {
+      console.error('Failed to submit event / save inventory:', err)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // If Festa, handle pending inventory
+    // If Festa, handle inventory validation
     if (eventType === EVENT_TYPES.FESTA) {
-      if (pendingInventoryHandlerRef.current) {
-        try {
-          await pendingInventoryHandlerRef.current()
-        } catch (err) {
-          console.error('Failed to save pending inventory:', err)
-        }
-      }
-
       // Block completion if shortages exist
       if (status === EVENT_STATUSES.COMPLETED && hasShortages) {
         setShowCompletionBlocked(true)
@@ -168,7 +196,7 @@ export function EventForm({ event, initialDate, onClose, onSubmit, onDelete, isL
       }
     }
 
-    doSubmit()
+    await doSubmit()
   }
 
   // Handle status change
@@ -482,8 +510,15 @@ export function EventForm({ event, initialDate, onClose, onSubmit, onDelete, isL
                     eventId={event.id}
                     eventStatus={status}
                     isEditing={isEditing}
-                    onRegisterPendingHandler={(handler) => {
-                      pendingInventoryHandlerRef.current = handler
+                    onDirtyChange={setInventoryIsDirty}
+                    onShortagesChange={(stagedShortages, hasShorts) => {
+                      setInventoryShortageState({
+                        shortages: stagedShortages,
+                        hasShortages: hasShorts,
+                      })
+                    }}
+                    onRegisterSaveHandler={(handler) => {
+                      saveInventoryRef.current = handler
                     }}
                   />
                 </div>
@@ -503,7 +538,7 @@ export function EventForm({ event, initialDate, onClose, onSubmit, onDelete, isL
           {isExistingEvent && onDelete && (
             <button
               type="button"
-              disabled={isLoading || isDeleting}
+              disabled={isLoading || isDeleting || isSubmitting}
               onClick={() => setShowDeleteConfirm(true)}
               className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-button)] border border-red-200 bg-red-50/70 py-2.5 text-xs font-bold text-red-600 transition-all hover:bg-red-100 hover:border-red-300 active:scale-95 disabled:opacity-50"
             >
@@ -515,10 +550,10 @@ export function EventForm({ event, initialDate, onClose, onSubmit, onDelete, isL
           <button
             type="submit"
             form="event-form"
-            disabled={isLoading || isDeleting}
+            disabled={isLoading || isDeleting || isSubmitting}
             className="flex w-full items-center justify-center rounded-[var(--radius-button)] bg-primary-400 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-500 active:scale-95 disabled:opacity-50"
           >
-            {isLoading
+            {isLoading || isSubmitting
               ? 'A Guardar...'
               : eventType === EVENT_TYPES.REUNIAO
               ? 'Guardar Reunião'

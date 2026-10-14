@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Plus, Wallet, ExternalLink, ArrowUpRight, ArrowDownRight, Landmark, Coins } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useMovements, useCreateMovement } from '@/features/treasury/api/use-treasury'
-import { MovementForm } from '@/features/treasury/components/movement-form'
+import { useQueryClient } from '@tanstack/react-query'
+import { useToast } from '@/components/ui/toast'
+import { useMovements, useCreateMovement, processInventoryPurchases } from '@/features/treasury/api/use-treasury'
+import { MovementForm, type MovementFormData } from '@/features/treasury/components/movement-form'
 import { usePermissions } from '@/hooks/use-permissions'
 import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
-import type { FinancialMovement } from '@/types/database'
 
 interface EventFinancesSectionProps {
   eventId: string
@@ -15,6 +16,8 @@ interface EventFinancesSectionProps {
 }
 
 export function EventFinancesSection({ eventId, eventTitle }: EventFinancesSectionProps) {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
   const { data: movements = [], isLoading } = useMovements()
   const createMutation = useCreateMovement()
   const { canWrite } = usePermissions()
@@ -38,15 +41,38 @@ export function EventFinancesSection({ eventId, eventTitle }: EventFinancesSecti
 
   const balance = income - expense
 
-  const handleCreateMovement = async (data: Partial<FinancialMovement>) => {
+  const handleCreateMovement = async (data: MovementFormData) => {
     try {
+      const { inventoryItems, inventoryItem, ...movementData } = data
+      const itemsToProcess = inventoryItems || (inventoryItem ? [inventoryItem] : [])
+
       await createMutation.mutateAsync({
-        ...data,
+        ...movementData,
         event_id: eventId,
       } as any)
+
+      if (itemsToProcess.length > 0) {
+        try {
+          await processInventoryPurchases({
+            items: itemsToProcess,
+            eventId: eventId,
+            description: movementData.description || 'Despesa',
+            queryClient,
+          })
+        } catch (invErr) {
+          console.warn('Erro ao processar inventário associado à despesa:', invErr)
+        }
+      }
+
+      toast.success(
+        itemsToProcess.length > 0
+          ? 'Despesa e artigos de inventário registados com sucesso!'
+          : 'Movimento registado com sucesso!'
+      )
       setIsMovementModalOpen(false)
     } catch (err) {
       console.error('Failed to create movement for event:', err)
+      toast.error('Erro ao registar o movimento.')
     }
   }
 

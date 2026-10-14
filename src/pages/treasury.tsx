@@ -14,11 +14,10 @@ import {
   filterMovements,
   isFilterCustom,
 } from '@/features/treasury/components/movement-filters-sheet'
-import { useMovements, useCreateMovement, useUpdateMovement, useDeleteMovement } from '@/features/treasury/api/use-treasury'
+import { useMovements, useCreateMovement, useUpdateMovement, useDeleteMovement, processInventoryPurchases } from '@/features/treasury/api/use-treasury'
 import { useCreateTransfer, useDeleteTransfer } from '@/features/treasury/api/use-transfer'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { FinancialMovement, FinancialAccount } from '@/types/database'
-import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useToast } from '@/components/ui/toast'
@@ -156,7 +155,8 @@ export default function TreasuryPage() {
 
   const handleSubmitForm = async (data: any) => {
     try {
-      const { inventoryItem, ...movementData } = data
+      const { inventoryItems, inventoryItem, ...movementData } = data
+      const itemsToProcess = inventoryItems || (inventoryItem ? [inventoryItem] : [])
 
       if (editingMovement) {
         await updateMutation.mutateAsync({ id: editingMovement.id, ...movementData })
@@ -164,93 +164,25 @@ export default function TreasuryPage() {
       } else {
         await createMutation.mutateAsync(movementData as any)
 
-        // Automatic Inventory Entry & Event Association when an inventory item was bought
-        if (inventoryItem) {
+        // Automatic Inventory Entry & Event Association when inventory items are purchased
+        if (itemsToProcess.length > 0) {
           try {
-            // 1. Check if item already exists in inventory_items
-            const { data: existingItems } = await (supabase as any)
-              .from('inventory_items')
-              .select('*')
-              .is('deleted_at', null)
-
-            const existing = (existingItems || []).find(
-              (i: any) => i.name.toLowerCase() === inventoryItem.name.trim().toLowerCase()
-            )
-
-            let finalItemId = existing?.id
-
-            if (existing) {
-              const updatedQty = (existing.quantity || 0) + inventoryItem.quantity
-              await (supabase as any)
-                .from('inventory_items')
-                .update({ quantity: updatedQty })
-                .eq('id', existing.id)
-            } else {
-              const { data: createdItem, error: createItemErr } = await (supabase as any)
-                .from('inventory_items')
-                .insert({
-                  name: inventoryItem.name.trim(),
-                  category: inventoryItem.category,
-                  quantity: inventoryItem.quantity,
-                  unit: inventoryItem.unit || 'un',
-                  min_stock: 0,
-                })
-                .select()
-                .single()
-
-              if (!createItemErr && createdItem) {
-                finalItemId = createdItem.id
-              }
-            }
-
-            // 2. Register entry transaction in inventory
-            if (finalItemId) {
-              await (supabase as any)
-                .from('inventory_transactions')
-                .insert({
-                  item_id: finalItemId,
-                  type: 'in',
-                  quantity: inventoryItem.quantity,
-                  event_id: movementData.event_id || null,
-                  notes: `Compra via Tesouraria: ${movementData.description || 'Despesa'}`,
-                })
-
-              // 3. If an event is selected, also allocate this item to that event!
-              if (movementData.event_id) {
-                const { data: existingEventItem } = await (supabase as any)
-                  .from('event_inventory')
-                  .select('*')
-                  .eq('event_id', movementData.event_id)
-                  .eq('item_id', finalItemId)
-                  .maybeSingle()
-
-                if (existingEventItem) {
-                  await (supabase as any)
-                    .from('event_inventory')
-                    .update({ quantity: existingEventItem.quantity + inventoryItem.quantity })
-                    .eq('id', existingEventItem.id)
-                } else {
-                  await (supabase as any)
-                    .from('event_inventory')
-                    .insert({
-                      event_id: movementData.event_id,
-                      item_id: finalItemId,
-                      quantity: inventoryItem.quantity,
-                    })
-                }
-                queryClient.invalidateQueries({ queryKey: ['event-inventory', movementData.event_id] })
-              }
-            }
-
-            queryClient.invalidateQueries({ queryKey: ['inventory'] })
-            queryClient.invalidateQueries({ queryKey: ['inventory-transactions'] })
-            queryClient.invalidateQueries({ queryKey: ['captive-stock'] })
+            await processInventoryPurchases({
+              items: itemsToProcess,
+              eventId: movementData.event_id || null,
+              description: movementData.description || 'Despesa',
+              queryClient,
+            })
           } catch (invErr) {
             console.warn('Erro ao atualizar inventário a partir da despesa:', invErr)
           }
         }
 
-        toast.success('Movimento registado com sucesso!')
+        toast.success(
+          itemsToProcess.length > 0
+            ? 'Despesa e artigos de inventário registados com sucesso!'
+            : 'Movimento registado com sucesso!'
+        )
       }
       handleCloseForm()
     } catch (error: any) {
