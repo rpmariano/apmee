@@ -4,6 +4,7 @@ import { useAuth } from '@/providers/auth-provider'
 import { AppHeader } from './app-header'
 import { BottomNav } from './bottom-nav'
 import { NetworkStatus } from '@/components/ui/network-status'
+import { ErrorBoundary } from '@/components/common/error-boundary'
 
 /**
  * Main application shell — wraps authenticated routes with
@@ -48,7 +49,9 @@ export function AppShell() {
 
         {/* Main content area — the dedicated scrollable container */}
         <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
 
         {/* Bottom navigation bar — permanently fixed at bottom of container */}

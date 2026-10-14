@@ -4,6 +4,7 @@ import { AuthProvider } from '@/providers/auth-provider'
 import { ToastProvider } from '@/components/ui/toast'
 import { QueryProvider } from '@/providers/query-provider'
 import { registerSW } from 'virtual:pwa-register'
+import { ErrorBoundary } from '@/components/common/error-boundary'
 import App from './App'
 import './index.css'
 
@@ -58,12 +59,14 @@ if ('serviceWorker' in navigator) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryProvider>
-      <AuthProvider>
-        <ToastProvider>
-          <App />
-        </ToastProvider>
-      </AuthProvider>
-    </QueryProvider>
+    <ErrorBoundary>
+      <QueryProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <App />
+          </ToastProvider>
+        </AuthProvider>
+      </QueryProvider>
+    </ErrorBoundary>
   </StrictMode>
 )
