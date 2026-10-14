@@ -23,6 +23,14 @@ export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
   rascunho: 'Rascunho',
 }
 
+export const ROOT_CATEGORY = 'Sem Pasta'
+
+export function isRootFolder(category?: string | null): boolean {
+  if (!category) return true
+  const trimmed = category.trim().toLowerCase()
+  return trimmed === '' || trimmed === 'sem pasta' || trimmed === 'raiz'
+}
+
 export const DEFAULT_DOCUMENT_CATEGORIES = [
   'Estatutos & Regulamentos',
   'Atas de Assembleia / Direção',
@@ -31,5 +39,5 @@ export const DEFAULT_DOCUMENT_CATEGORIES = [
   'Contratos & Parcerias',
   'Seguros & Licenças',
   'Comunicação & Circulares',
-  'Geral',
 ]
+

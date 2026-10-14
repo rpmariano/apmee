@@ -123,7 +123,7 @@ export function MovementForm({
   const [inventoryItemsList, setInventoryItemsList] = useState<InventoryEntryPayload[]>([])
   const [currentItemName, setCurrentItemName] = useState('')
   const [currentItemCategory, setCurrentItemCategory] = useState<'consumivel' | 'alimento' | 'mobilizado'>('consumivel')
-  const [currentItemQuantity, setCurrentItemQuantity] = useState(1)
+  const [currentItemQuantity, setCurrentItemQuantity] = useState<number | ''>(1)
   const [currentItemUnit, setCurrentItemUnit] = useState('un')
 
   // Automatically update the default category of the item when the expense category changes
@@ -609,7 +609,21 @@ export function MovementForm({
                           type="number"
                           min="1"
                           value={currentItemQuantity}
-                          onChange={(e) => setCurrentItemQuantity(Math.max(1, Number(e.target.value)))}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            if (val === '') {
+                              setCurrentItemQuantity('')
+                            } else {
+                              const num = parseInt(val, 10)
+                              setCurrentItemQuantity(isNaN(num) ? '' : num)
+                            }
+                          }}
+                          onBlur={() => {
+                            if (currentItemQuantity === '' || Number(currentItemQuantity) < 1) {
+                              setCurrentItemQuantity(1)
+                            }
+                          }}
+                          onFocus={(e) => e.target.select()}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault()

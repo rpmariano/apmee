@@ -6,6 +6,8 @@ import { useHardwareBack } from '@/hooks/use-hardware-back'
 import {
   type DocumentStatus,
   DEFAULT_DOCUMENT_CATEGORIES,
+  ROOT_CATEGORY,
+  isRootFolder,
 } from '../types'
 import { uploadDocumentFile } from '../api/use-documents'
 import { cn } from '@/lib/utils'
@@ -24,6 +26,7 @@ interface DocumentUploadModalProps {
     notes?: string
   }) => Promise<void>
   existingCategories: string[]
+  initialFolder?: string | null
 }
 
 export function DocumentUploadModal({
@@ -31,10 +34,11 @@ export function DocumentUploadModal({
   onClose,
   onSubmit,
   existingCategories,
+  initialFolder,
 }: DocumentUploadModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
-  const [category, setCategory] = useState('Geral')
+  const [category, setCategory] = useState(initialFolder || ROOT_CATEGORY)
   const [status, setStatus] = useState<DocumentStatus>('em_uso')
   const [notes, setNotes] = useState('')
   const [isUploading, setIsUploading] = useState(false)
@@ -44,7 +48,8 @@ export function DocumentUploadModal({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
-  const isDirty = Boolean(selectedFile || title || notes || category !== 'Geral')
+  const defaultCat = initialFolder || ROOT_CATEGORY
+  const isDirty = Boolean(selectedFile || title || notes || category !== defaultCat)
 
   const handleClose = () => {
     if (isDirty && !isUploading) {
@@ -56,13 +61,19 @@ export function DocumentUploadModal({
 
   useHardwareBack(isOpen, handleClose)
 
-  // Merge default categories with any custom ones already in use
+  // Merge default categories with any custom ones already in use, plus root option
   const categoryOptions = useMemo(() => {
-    const set = new Set([...DEFAULT_DOCUMENT_CATEGORIES, ...existingCategories])
-    return Array.from(set).map((cat) => ({
-      label: cat,
-      value: cat,
-    }))
+    const set = new Set([
+      ...DEFAULT_DOCUMENT_CATEGORIES,
+      ...existingCategories.filter((c) => !isRootFolder(c)),
+    ])
+    return [
+      { label: '📁 Sem Pasta (Fica na Raiz)', value: ROOT_CATEGORY },
+      ...Array.from(set).map((cat) => ({
+        label: `📁 ${cat}`,
+        value: cat,
+      })),
+    ]
   }, [existingCategories])
 
   const handleFileChange = (file: File | null) => {
@@ -211,21 +222,21 @@ export function DocumentUploadModal({
               />
             </div>
 
-            {/* Category Select with creatable option */}
+            {/* Folder / Category Select with creatable option */}
             <div className="flex flex-col gap-1.5 z-[55]">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase tracking-wider text-secondary-600">
-                  Categoria <span className="text-primary-500">*</span>
+                  Pasta / Destino <span className="text-primary-500">*</span>
                 </label>
                 <span className="text-[11px] text-muted font-normal">
-                  Pode escrever uma nova
+                  Pode criar nova pasta
                 </span>
               </div>
               <CustomSelect
                 value={category}
                 onChange={(val) => setCategory(val)}
                 options={categoryOptions}
-                placeholder="Selecione ou digite uma nova categoria..."
+                placeholder="Selecione pasta ou escreva nova..."
                 creatable
               />
             </div>

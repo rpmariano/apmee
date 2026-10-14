@@ -59,7 +59,7 @@ export function EventInventoryManager({
   // Form state for adding
   const [activeCategory, setActiveCategory] = useState<InventoryCategory>('consumivel')
   const [selectedItemValue, setSelectedItemValue] = useState('')
-  const [quantity, setQuantity] = useState(1)
+  const [quantity, setQuantity] = useState<number | ''>(1)
 
   // In-line editing quantities map { [reqId]: number }
   const [editingQuantities, setEditingQuantities] = useState<Record<string, number>>({})
@@ -143,6 +143,7 @@ export function EventInventoryManager({
     if (!selectedItemValue.trim()) return
 
     const trimmed = selectedItemValue.trim()
+    const numQty = Math.max(1, Number(quantity) || 1)
     const existingItem = inventory?.find(
       (i) => i.id === trimmed || i.name.toLowerCase() === trimmed.toLowerCase()
     )
@@ -152,7 +153,7 @@ export function EventInventoryManager({
       if (existingReqIndex >= 0) {
         setLocalRequirements((prev) =>
           prev.map((r, idx) =>
-            idx === existingReqIndex ? { ...r, quantity: r.quantity + quantity } : r
+            idx === existingReqIndex ? { ...r, quantity: r.quantity + numQty } : r
           )
         )
       } else {
@@ -160,7 +161,7 @@ export function EventInventoryManager({
           id: `temp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
           event_id: eventId,
           item_id: existingItem.id,
-          quantity,
+          quantity: numQty,
           item: existingItem,
         }
         setLocalRequirements((prev) => [...prev, newReq])
@@ -181,7 +182,7 @@ export function EventInventoryManager({
         id: `temp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
         event_id: eventId,
         item_id: tempItemId,
-        quantity,
+        quantity: Number(quantity) || 1,
         item: tempItem,
       }
       setLocalRequirements((prev) => [...prev, newReq])
@@ -209,6 +210,7 @@ export function EventInventoryManager({
     // If an item was typed in the select input and hasn't been added yet, incorporate it
     if (selectedItemValue.trim()) {
       const trimmed = selectedItemValue.trim()
+      const numQty = Math.max(1, Number(quantity) || 1)
       const existing = inventory?.find(
         (i) => i.id === trimmed || i.name.toLowerCase() === trimmed.toLowerCase()
       )
@@ -216,14 +218,14 @@ export function EventInventoryManager({
         const existIdx = currentList.findIndex((r) => r.item_id === existing.id)
         if (existIdx >= 0) {
           currentList = currentList.map((r, idx) =>
-            idx === existIdx ? { ...r, quantity: r.quantity + quantity } : r
+            idx === existIdx ? { ...r, quantity: r.quantity + numQty } : r
           )
         } else {
           currentList.push({
             id: `temp_${Date.now()}`,
             event_id: eventId,
             item_id: existing.id,
-            quantity,
+            quantity: numQty,
             item: existing,
           })
         }
@@ -233,7 +235,7 @@ export function EventInventoryManager({
           id: `temp_${Date.now()}`,
           event_id: eventId,
           item_id: tempItemId,
-          quantity,
+          quantity: numQty,
           item: {
             id: tempItemId,
             name: trimmed,
@@ -445,7 +447,21 @@ export function EventInventoryManager({
                 type="number"
                 min="1"
                 value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
+                onChange={(e) => {
+                  const val = e.target.value
+                  if (val === '') {
+                    setQuantity('')
+                  } else {
+                    const num = parseInt(val, 10)
+                    setQuantity(isNaN(num) ? '' : num)
+                  }
+                }}
+                onBlur={() => {
+                  if (quantity === '' || Number(quantity) < 1) {
+                    setQuantity(1)
+                  }
+                }}
+                onFocus={(e) => e.target.select()}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault()

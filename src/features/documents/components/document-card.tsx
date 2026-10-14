@@ -12,7 +12,7 @@ import {
 import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import { CustomDialog } from '@/components/ui/custom-dialog'
-import type { AppDocument, DocumentStatus } from '../types'
+import { type AppDocument, type DocumentStatus, isRootFolder } from '../types'
 import { cn } from '@/lib/utils'
 
 interface DocumentCardProps {
@@ -114,10 +114,17 @@ export function DocumentCard({
         </span>
       </div>
 
-      {/* Meta tags: Category, Size, Date */}
+      {/* Meta tags: Folder, Size, Date */}
       <div className="flex flex-wrap items-center gap-2 pt-1">
-        <span className="rounded-md bg-primary-50 border border-primary-200/60 px-2 py-0.5 text-xs font-semibold text-primary-800">
-          📁 {document.category}
+        <span
+          className={cn(
+            'rounded-md px-2 py-0.5 text-xs font-semibold',
+            isRootFolder(document.category)
+              ? 'bg-warm-100 text-secondary-600 border border-warm-200'
+              : 'bg-primary-50 border border-primary-200/60 text-primary-800'
+          )}
+        >
+          {isRootFolder(document.category) ? '📄 Na Raiz' : `📁 ${document.category}`}
         </span>
 
         {document.file_size ? (

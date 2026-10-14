@@ -17,7 +17,7 @@ type OutReason = 'quebra_stock' | 'doacao'
 export function TransactionForm({ item, onClose }: TransactionFormProps) {
   const [type, setType] = useState<'in' | 'out'>('out')
   const [outReason, setOutReason] = useState<OutReason>('quebra_stock')
-  const [quantity, setQuantity] = useState(1)
+  const [quantity, setQuantity] = useState<number | ''>(1)
   const [notes, setNotes] = useState('')
   const [showUnsaved, setShowUnsaved] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -39,12 +39,13 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (quantity <= 0) return
+    const finalQuantity = Number(quantity) || 1
+    if (finalQuantity <= 0) return
 
     // Validation for outbound
-    if (type === 'out' && quantity > maxAllowedOut) {
+    if (type === 'out' && finalQuantity > maxAllowedOut) {
       setErrorMessage(
-        `Não é possível retirar ${quantity} unidades. Apenas ${maxAllowedOut} unidades estão disponíveis para saída manual (${availability.captiveQuantity} unidade(s) estão cativas para eventos programados).`
+        `Não é possível retirar ${finalQuantity} unidades. Apenas ${maxAllowedOut} unidades estão disponíveis para saída manual (${availability.captiveQuantity} unidade(s) estão cativas para eventos programados).`
       )
       return
     }
@@ -63,7 +64,7 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
       await createMutation.mutateAsync({
         item_id: item.id,
         type,
-        quantity,
+        quantity: finalQuantity,
         event_id: null, // Regra: movimentos manuais de inventário nunca são associados a eventos
         notes: fullNotes,
       })
@@ -201,7 +202,21 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
                   min="1"
                   max={type === 'out' ? maxAllowedOut : undefined}
                   value={quantity}
-                  onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    if (val === '') {
+                      setQuantity('')
+                    } else {
+                      const num = parseInt(val, 10)
+                      setQuantity(isNaN(num) ? '' : num)
+                    }
+                  }}
+                  onBlur={() => {
+                    if (quantity === '' || Number(quantity) < 1) {
+                      setQuantity(1)
+                    }
+                  }}
+                  onFocus={(e) => e.target.select()}
                   required
                   className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2.5 text-lg font-bold text-center focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
                 />
@@ -233,7 +248,12 @@ export function TransactionForm({ item, onClose }: TransactionFormProps) {
 
               <button
                 type="submit"
-                disabled={createMutation.isPending || quantity <= 0 || (type === 'out' && quantity > maxAllowedOut)}
+                disabled={
+                  createMutation.isPending ||
+                  !quantity ||
+                  Number(quantity) <= 0 ||
+                  (type === 'out' && Number(quantity) > maxAllowedOut)
+                }
                 className="mt-2 w-full rounded-[var(--radius-button)] bg-primary-500 px-4 py-3 text-sm font-bold text-white shadow-sm transition-transform hover:bg-primary-600 active:scale-95 disabled:opacity-50 disabled:active:scale-100"
               >
                 {createMutation.isPending ? 'A registar...' : 'Confirmar Movimento'}
