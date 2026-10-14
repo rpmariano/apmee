@@ -54,18 +54,18 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading, onDelete, ca
 
   const [name, setName] = useState(item?.name ?? '')
   const [category, setCategory] = useState<InventoryCategory>(item?.category ?? 'consumivel')
-  const [quantity, setQuantity] = useState(item?.quantity ?? 0)
+  const [quantity, setQuantity] = useState<number | ''>(item?.quantity ?? 0)
   const [unit, setUnit] = useState(item?.unit ?? 'un')
-  const [minStock, setMinStock] = useState(item?.min_stock ?? 0)
+  const [minStock, setMinStock] = useState<number | ''>(item?.min_stock ?? 0)
   const [location, setLocation] = useState(item?.location ?? '')
   const [notes, setNotes] = useState(item?.notes ?? '')
 
   const isDirty = (
     name !== (item?.name ?? '') ||
     category !== (item?.category ?? 'consumivel') ||
-    quantity !== (item?.quantity ?? 0) ||
+    (quantity === '' ? 0 : quantity) !== (item?.quantity ?? 0) ||
     unit !== (item?.unit ?? 'un') ||
-    minStock !== (item?.min_stock ?? 0) ||
+    (minStock === '' ? 0 : minStock) !== (item?.min_stock ?? 0) ||
     location !== (item?.location ?? '') ||
     notes !== (item?.notes ?? '')
   )
@@ -196,7 +196,21 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading, onDelete, ca
                 type="number"
                 min="0"
                 value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
+                onChange={(e) => {
+                  const val = e.target.value
+                  if (val === '') {
+                    setQuantity('')
+                  } else {
+                    const num = parseInt(val, 10)
+                    setQuantity(isNaN(num) ? '' : Math.max(0, num))
+                  }
+                }}
+                onBlur={() => {
+                  if (quantity === '') {
+                    setQuantity(0)
+                  }
+                }}
+                onFocus={(e) => e.target.select()}
                 required
                 className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
               />
@@ -220,7 +234,21 @@ export function InventoryForm({ item, onClose, onSubmit, isLoading, onDelete, ca
               type="number"
               min="0"
               value={minStock}
-              onChange={(e) => setMinStock(Number(e.target.value))}
+              onChange={(e) => {
+                const val = e.target.value
+                if (val === '') {
+                  setMinStock('')
+                } else {
+                  const num = parseInt(val, 10)
+                  setMinStock(isNaN(num) ? '' : Math.max(0, num))
+                }
+              }}
+              onBlur={() => {
+                if (minStock === '') {
+                  setMinStock(0)
+                }
+              }}
+              onFocus={(e) => e.target.select()}
               className="rounded-[var(--radius-button)] border border-warm-200 bg-surface px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
               placeholder="Avisar se descer de..."
             />

@@ -266,6 +266,7 @@ export function QuotaForm({ quota, onClose, onSubmit, isLoading, onDelete }: Quo
                   min="0"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
+                  onFocus={(e) => e.target.select()}
                   required
                   placeholder={DEFAULT_QUOTA_AMOUNT}
                   className="w-full rounded-[var(--radius-button)] border border-warm-200 bg-surface pl-3 pr-7 py-2 text-sm font-semibold focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"

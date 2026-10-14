@@ -61,8 +61,8 @@ export function EventInventoryManager({
   const [selectedItemValue, setSelectedItemValue] = useState('')
   const [quantity, setQuantity] = useState<number | ''>(1)
 
-  // In-line editing quantities map { [reqId]: number }
-  const [editingQuantities, setEditingQuantities] = useState<Record<string, number>>({})
+  // In-line editing quantities map { [reqId]: number | '' }
+  const [editingQuantities, setEditingQuantities] = useState<Record<string, number | ''>>({})
 
   // Custom dialog state
   const [deleteReqId, setDeleteReqId] = useState<string | null>(null)
@@ -570,12 +570,19 @@ export function EventInventoryManager({
                               aria-label="Editar quantidade"
                               value={editingQuantities[req.id] !== undefined ? editingQuantities[req.id] : req.quantity}
                               onChange={(e) => {
-                                const val = parseInt(e.target.value) || 0
-                                setEditingQuantities((prev) => ({ ...prev, [req.id]: val }))
+                                const val = e.target.value
+                                if (val === '') {
+                                  setEditingQuantities((prev) => ({ ...prev, [req.id]: '' }))
+                                } else {
+                                  const num = parseInt(val, 10)
+                                  setEditingQuantities((prev) => ({ ...prev, [req.id]: isNaN(num) ? '' : Math.max(0, num) }))
+                                }
                               }}
+                              onFocus={(e) => e.target.select()}
                               onBlur={() => {
-                                const val = editingQuantities[req.id]
-                                if (val !== undefined && val > 0 && val !== req.quantity) {
+                                const raw = editingQuantities[req.id]
+                                const val = typeof raw === 'number' ? raw : (raw === '' ? 0 : parseInt(raw, 10))
+                                if (val && val > 0 && val !== req.quantity) {
                                   handleUpdateQuantity(req.id, val)
                                 }
                                 setEditingQuantities((prev) => {
@@ -587,8 +594,9 @@ export function EventInventoryManager({
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                   e.preventDefault()
-                                  const val = editingQuantities[req.id]
-                                  if (val !== undefined && val > 0 && val !== req.quantity) {
+                                  const raw = editingQuantities[req.id]
+                                  const val = typeof raw === 'number' ? raw : (raw === '' ? 0 : parseInt(raw, 10))
+                                  if (val && val > 0 && val !== req.quantity) {
                                     handleUpdateQuantity(req.id, val)
                                   }
                                   setEditingQuantities((prev) => {
