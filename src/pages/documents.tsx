@@ -35,8 +35,6 @@ import {
   ROOT_CATEGORY,
 } from '@/features/documents/types'
 import { useToast } from '@/components/ui/toast'
-import { useAuth } from '@/providers/auth-provider'
-import { usePermissions } from '@/hooks/use-permissions'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { cn } from '@/lib/utils'
 
@@ -90,9 +88,8 @@ export default function DocumentsPage() {
   const updateMutation = useUpdateDocument()
   const deleteMutation = useDeleteDocument()
   const { toast } = useToast()
-  const { user } = useAuth()
-  const { canWrite } = usePermissions()
-  const canEditDocuments = !user || canWrite('documents') || canWrite('contacts')
+  // Qualquer utilizador tem autorização para gerir e eliminar documentos
+  const canEditDocuments = true
 
   const [currentFolder, setCurrentFolder] = useState<string | null>(null)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
