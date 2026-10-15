@@ -26,6 +26,7 @@ export function useDocuments() {
   return useQuery({
     queryKey: [DOCUMENTS_QUERY_KEY],
     queryFn: async () => {
+      const localDocs = getLocalFallback().filter((d) => !d.deleted_at)
       try {
         const { data, error } = await (supabase as any)
           .from('documents')
@@ -41,15 +42,22 @@ export function useDocuments() {
             error.message?.includes('schema cache')
           ) {
             console.warn('Tabela documents ainda não existe no Supabase. A usar armazenamento local.')
-            return getLocalFallback()
+            return localDocs
           }
           throw error
         }
 
-        return (data || []) as AppDocument[]
+        const supabaseDocs = (data || []) as AppDocument[]
+        if (supabaseDocs.length === 0) {
+          return localDocs
+        }
+
+        const supabaseIds = new Set(supabaseDocs.map((d) => d.id))
+        const remainingLocal = localDocs.filter((d) => !supabaseIds.has(d.id))
+        return [...supabaseDocs, ...remainingLocal]
       } catch (err: any) {
         console.warn('Falha ao carregar documentos do Supabase, a recorrer ao fallback local:', err)
-        return getLocalFallback()
+        return localDocs
       }
     },
   })
@@ -234,26 +242,40 @@ export function useDeleteDocument() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // 1. Unconditionally remove from local fallback storage
+      const existing = getLocalFallback()
+      saveLocalFallback(existing.filter((d) => d.id !== id))
+
+      // 2. Attempt deletion in Supabase (soft-delete first, then hard-delete fallback)
       try {
-        const { error } = await (supabase as any)
+        const { data, error: softErr } = await (supabase as any)
           .from('documents')
           .update({ deleted_at: new Date().toISOString() })
           .eq('id', id)
+          .select('id')
 
-        if (error) {
-          const existing = getLocalFallback()
-          saveLocalFallback(existing.filter((d) => d.id !== id))
-          return id
+        // If soft-delete failed or affected 0 rows, attempt hard delete
+        if (softErr || !data || data.length === 0) {
+          const { error: hardErr } = await (supabase as any)
+            .from('documents')
+            .delete()
+            .eq('id', id)
+
+          if (hardErr && softErr) {
+            console.warn('Ambos os métodos de remoção falharam no Supabase:', { softErr, hardErr })
+          }
         }
-
-        return id
-      } catch {
-        const existing = getLocalFallback()
-        saveLocalFallback(existing.filter((d) => d.id !== id))
-        return id
+      } catch (err) {
+        console.warn('Erro ao eliminar documento no Supabase:', err)
       }
+
+      return id
     },
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
+      // Optimistically remove from query cache immediately
+      queryClient.setQueryData<AppDocument[]>([DOCUMENTS_QUERY_KEY], (old = []) =>
+        old.filter((d) => d.id !== id)
+      )
       queryClient.invalidateQueries({ queryKey: [DOCUMENTS_QUERY_KEY] })
     },
   })

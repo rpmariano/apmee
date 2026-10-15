@@ -1,4 +1,4 @@
-import { Calendar, Circle, CheckCircle2, Clock, User } from 'lucide-react'
+import { Calendar, CheckCircle2, Clock, User } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import type { Task, TaskPriority, TaskStatus } from '@/types/database'
@@ -21,9 +21,9 @@ const priorityConfig: Record<TaskPriority, { label: string; color: string }> = {
 
 const statusConfig: Record<TaskStatus, { label: string; icon: any; badgeColor: string }> = {
   [TASK_STATUSES.TODO]: { 
-    label: 'A Fazer', 
-    icon: Circle, 
-    badgeColor: 'bg-warm-100 text-secondary-600 border-warm-200'
+    label: 'Em Curso', 
+    icon: Clock, 
+    badgeColor: 'bg-amber-50 text-amber-700 border-amber-200'
   },
   [TASK_STATUSES.IN_PROGRESS]: { 
     label: 'Em Curso', 
@@ -74,7 +74,7 @@ export function TaskCard({ task, assigneeName, onEdit, onToggleStatus }: TaskCar
         type="button"
         role="checkbox"
         aria-checked={isDone}
-        aria-label={isDone ? "Marcar tarefa como a fazer" : "Marcar tarefa como concluída"}
+        aria-label={isDone ? "Marcar tarefa como em curso" : "Marcar tarefa como concluída"}
         onClick={handleToggle}
         className="flex min-h-[44px] min-w-[44px] items-center justify-center -ml-2.5 -mt-2.5 rounded-full focus:outline-none shrink-0"
       >

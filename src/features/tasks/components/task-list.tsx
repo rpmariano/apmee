@@ -5,14 +5,23 @@ import type { Task, TaskStatus } from '@/types/database'
 import { TASK_STATUSES } from '@/lib/constants'
 import { useBoardMembers } from '@/features/board/api/use-board'
 
+export type TaskSortCriteria = 'priority' | 'due_date' | 'newest' | 'title'
+
 interface TaskListProps {
   filter: TaskStatus | 'all'
   assigneeFilter?: string | 'all'
+  sortBy?: TaskSortCriteria
   onEditTask?: (task: Task) => void
   onToggleStatus?: (task: Task) => void
 }
 
-export function TaskList({ filter, assigneeFilter = 'all', onEditTask, onToggleStatus }: TaskListProps) {
+export function TaskList({ 
+  filter, 
+  assigneeFilter = 'all', 
+  sortBy = 'priority', 
+  onEditTask, 
+  onToggleStatus 
+}: TaskListProps) {
   const { data: tasks, isLoading, error } = useTasks()
 
   const { data: boardMembers, isLoading: isLoadingBoard } = useBoardMembers()
@@ -37,7 +46,8 @@ export function TaskList({ filter, assigneeFilter = 'all', onEditTask, onToggleS
 
   // Filter tasks
   const filteredTasks = (tasks || []).filter((task) => {
-    if (filter !== 'all' && task.status !== filter) return false
+    const effectiveStatus = task.status === 'todo' ? 'in_progress' : task.status
+    if (filter !== 'all' && effectiveStatus !== filter) return false
     if (assigneeFilter && assigneeFilter !== 'all' && task.assigned_to !== assigneeFilter) return false
     return true
   })
@@ -67,12 +77,46 @@ export function TaskList({ filter, assigneeFilter = 'all', onEditTask, onToggleS
   }
 
   const sortTasks = (a: Task, b: Task) => {
-    // 1. Tarefas não concluídas primeiro
+    // 1. Tarefas não concluídas sempre primeiro
     const aDone = a.status === TASK_STATUSES.DONE ? 1 : 0
     const bDone = b.status === TASK_STATUSES.DONE ? 1 : 0
     if (aDone !== bDone) return aDone - bDone
 
-    // 2. Data limite mais próxima primeiro
+    if (sortBy === 'due_date') {
+      // Data limite mais próxima primeiro
+      if (a.due_date && b.due_date) {
+        const dateDiff = new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+        if (dateDiff !== 0) return dateDiff
+      } else if (a.due_date && !b.due_date) {
+        return -1
+      } else if (!a.due_date && b.due_date) {
+        return 1
+      }
+      // Desempate por criticidade
+      const aPrio = priorityOrder[a.priority] ?? 2
+      const bPrio = priorityOrder[b.priority] ?? 2
+      if (aPrio !== bPrio) return aPrio - bPrio
+
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    }
+
+    if (sortBy === 'newest') {
+      // Mais recentes primeiro
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    }
+
+    if (sortBy === 'title') {
+      // Ordem alfabética pelo título
+      return a.title.localeCompare(b.title, 'pt')
+    }
+
+    // Default: 'priority' (Criticidade: do mais importante para o menos importante)
+    // Urgente (0) > Alta (1) > Média (2) > Baixa (3)
+    const aPrio = priorityOrder[a.priority] ?? 2
+    const bPrio = priorityOrder[b.priority] ?? 2
+    if (aPrio !== bPrio) return aPrio - bPrio
+
+    // Desempate por data limite mais próxima
     if (a.due_date && b.due_date) {
       const dateDiff = new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
       if (dateDiff !== 0) return dateDiff
@@ -82,12 +126,7 @@ export function TaskList({ filter, assigneeFilter = 'all', onEditTask, onToggleS
       return 1
     }
 
-    // 3. Prioridade (urgente > alta > media > baixa)
-    const aPrio = priorityOrder[a.priority] ?? 2
-    const bPrio = priorityOrder[b.priority] ?? 2
-    if (aPrio !== bPrio) return aPrio - bPrio
-
-    // 4. Data de criação decrescente
+    // Desempate por data de criação mais recente
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   }
 

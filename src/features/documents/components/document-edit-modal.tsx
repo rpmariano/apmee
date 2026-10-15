@@ -1,7 +1,8 @@
 import { useState, useRef, useMemo } from 'react'
-import { X, CheckCircle2, Archive, FileText, Download } from 'lucide-react'
+import { X, CheckCircle2, Archive, FileText, Download, Trash2 } from 'lucide-react'
 import { CustomSelect } from '@/components/ui/custom-select'
 import { UnsavedDialog } from '@/components/ui/unsaved-dialog'
+import { CustomDialog } from '@/components/ui/custom-dialog'
 import { useHardwareBack } from '@/hooks/use-hardware-back'
 import {
   type AppDocument,
@@ -22,6 +23,8 @@ interface DocumentEditModalProps {
     status: DocumentStatus
     notes?: string | null
   }) => Promise<void>
+  onDelete?: (id: string) => void
+  canDelete?: boolean
   folders: string[]
 }
 
@@ -30,6 +33,8 @@ export function DocumentEditModal({
   document,
   onClose,
   onSubmit,
+  onDelete,
+  canDelete = true,
   folders,
 }: DocumentEditModalProps) {
   if (!isOpen || !document) return null
@@ -42,6 +47,7 @@ export function DocumentEditModal({
   const [notes, setNotes] = useState(document.notes || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showUnsaved, setShowUnsaved] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
   const isDirty =
@@ -222,22 +228,37 @@ export function DocumentEditModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-warm-200 bg-surface px-4 py-3">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="rounded-[var(--radius-button)] border border-warm-200 px-4 py-2 text-xs font-semibold text-secondary-700 hover:bg-warm-100 transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={() => formRef.current?.requestSubmit()}
-            disabled={!title.trim() || isSubmitting}
-            className="rounded-[var(--radius-button)] bg-primary-500 px-4 py-2 text-xs font-bold text-white hover:bg-primary-600 active:scale-95 disabled:opacity-50 transition-all"
-          >
-            {isSubmitting ? 'A guardar...' : 'Guardar Alterações'}
-          </button>
+        <div className="flex items-center justify-between gap-2 border-t border-warm-200 bg-surface px-4 py-3">
+          <div>
+            {canDelete && onDelete && (
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="flex items-center gap-1.5 rounded-[var(--radius-button)] px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Eliminar Ficheiro</span>
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="rounded-[var(--radius-button)] border border-warm-200 px-4 py-2 text-xs font-semibold text-secondary-700 hover:bg-warm-100 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => formRef.current?.requestSubmit()}
+              disabled={!title.trim() || isSubmitting}
+              className="rounded-[var(--radius-button)] bg-primary-500 px-4 py-2 text-xs font-bold text-white hover:bg-primary-600 active:scale-95 disabled:opacity-50 transition-all"
+            >
+              {isSubmitting ? 'A guardar...' : 'Guardar Alterações'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -252,6 +273,21 @@ export function DocumentEditModal({
           formRef.current?.requestSubmit()
         }}
         onCancel={() => setShowUnsaved(false)}
+      />
+
+      <CustomDialog
+        isOpen={showDeleteConfirm}
+        title="Eliminar Documento?"
+        description={`Tem a certeza de que pretende eliminar o documento "${document.title}"? Esta ação removerá o registo da lista.`}
+        variant="danger"
+        confirmLabel="Sim, Eliminar"
+        cancelLabel="Cancelar"
+        onConfirm={() => {
+          setShowDeleteConfirm(false)
+          onDelete?.(document.id)
+          onClose()
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
       />
     </div>
   )

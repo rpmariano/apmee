@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Plus } from 'lucide-react'
-import { TaskList } from '@/features/tasks/components/task-list'
+import { Plus, ArrowUpDown, ChevronDown } from 'lucide-react'
+import { TaskList, type TaskSortCriteria } from '@/features/tasks/components/task-list'
 import { TaskForm } from '@/features/tasks/components/task-form'
 import { useCreateTask, useUpdateTask, useDeleteTask, useTasks } from '@/features/tasks/api/use-tasks'
 import { useAuth } from '@/providers/auth-provider'
@@ -16,21 +16,43 @@ import { cn } from '@/lib/utils'
 type FilterValue = TaskStatus | 'all'
 
 const tabs: { value: FilterValue; label: string }[] = [
-  { value: 'todo', label: 'A Fazer' },
   { value: 'in_progress', label: 'Em Curso' },
   { value: 'done', label: 'Concluídas' },
   { value: 'all', label: 'Todas' },
+]
+
+const TASK_SORT_OPTIONS: { value: TaskSortCriteria; label: string }[] = [
+  { value: 'priority', label: 'Criticidade' },
+  { value: 'due_date', label: 'Data limite' },
+  { value: 'newest', label: 'Mais recentes' },
+  { value: 'title', label: 'Nome (A-Z)' },
 ]
 
 export default function TasksPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const editTaskId = searchParams.get('edit')
   const isNew = searchParams.get('new') === 'true' || searchParams.get('new') === '1'
-  const [activeTab, setActiveTab] = useState<FilterValue>('todo')
+  const [activeTab, setActiveTab] = useState<FilterValue>('in_progress')
   const [scopeFilter, setScopeFilter] = useState<'all' | 'my'>('all')
+  const [sortBy, setSortBy] = useState<TaskSortCriteria>(() => {
+    try {
+      return (localStorage.getItem('apmee_tasks_sort_by') as TaskSortCriteria) || 'priority'
+    } catch {
+      return 'priority'
+    }
+  })
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const handleSortChange = (newSort: TaskSortCriteria) => {
+    setSortBy(newSort)
+    try {
+      localStorage.setItem('apmee_tasks_sort_by', newSort)
+    } catch {
+      // ignore
+    }
+  }
 
   const { data: allTasks } = useTasks()
   const { user } = useAuth()
@@ -59,10 +81,10 @@ export default function TasksPage() {
   const canWriteTasks = canWrite('tasks')
 
   const handleToggleStatus = async (task: Task) => {
-    const nextStatus: TaskStatus = task.status === 'done' ? 'todo' : 'done'
+    const nextStatus: TaskStatus = task.status === 'done' ? 'in_progress' : 'done'
     try {
       await updateMutation.mutateAsync({ id: task.id, status: nextStatus })
-      toast.success(nextStatus === 'done' ? 'Tarefa concluída!' : 'Tarefa marcada como a fazer.')
+      toast.success(nextStatus === 'done' ? 'Tarefa concluída!' : 'Tarefa marcada como em curso.')
     } catch (error: any) {
       console.error('Failed to toggle task status:', error)
       toast.error(getFriendlyErrorMessage(error, 'Erro ao atualizar estado da tarefa.'))
@@ -150,39 +172,72 @@ export default function TasksPage() {
           ))}
         </div>
 
-        {/* Assignee Scope Filter (Todas vs As Minhas) */}
-        {currentMemberId && (
-          <div className="mt-1 flex items-center gap-1.5 px-4 pb-2">
-            <button
-              type="button"
-              onClick={() => setScopeFilter('all')}
-              className={cn(
-                'rounded-lg px-2.5 py-1 text-xs font-semibold transition-all active:scale-95',
-                scopeFilter === 'all'
-                  ? 'bg-secondary-800 text-white shadow-xs'
-                  : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
-              )}
-            >
-              Todas
-            </button>
-            <button
-              type="button"
-              onClick={() => setScopeFilter('my')}
-              className={cn(
-                'rounded-lg px-2.5 py-1 text-xs font-semibold transition-all active:scale-95',
-                scopeFilter === 'my'
-                  ? 'bg-primary-500 text-white shadow-xs'
-                  : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
-              )}
-            >
-              As Minhas
-            </button>
+        {/* Assignee Scope & Sort Toolbar */}
+        <div className="mt-1 px-4 pb-2 flex items-center justify-between gap-2">
+          {currentMemberId ? (
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setScopeFilter('all')}
+                className={cn(
+                  'rounded-lg px-2.5 py-1 text-xs font-semibold transition-all active:scale-95 cursor-pointer',
+                  scopeFilter === 'all'
+                    ? 'bg-secondary-800 text-white shadow-xs'
+                    : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
+                )}
+              >
+                Todas
+              </button>
+              <button
+                type="button"
+                onClick={() => setScopeFilter('my')}
+                className={cn(
+                  'rounded-lg px-2.5 py-1 text-xs font-semibold transition-all active:scale-95 cursor-pointer',
+                  scopeFilter === 'my'
+                    ? 'bg-primary-500 text-white shadow-xs'
+                    : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
+                )}
+              >
+                As Minhas
+              </button>
+            </div>
+          ) : (
+            <div />
+          )}
+
+          {/* Sort Selector */}
+          <div className="flex items-center gap-1.5 ml-auto shrink-0">
+            <span className="text-[11px] text-muted font-medium flex items-center gap-1">
+              <ArrowUpDown className="h-3 w-3 text-secondary-500" />
+              <span className="hidden xs:inline">Ordenar:</span>
+            </span>
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => handleSortChange(e.target.value as TaskSortCriteria)}
+                className="appearance-none rounded-lg border border-warm-200 bg-surface pl-2 pr-6 py-1 text-xs font-semibold text-secondary-700 shadow-2xs hover:border-warm-300 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 cursor-pointer"
+                aria-label="Critério de ordenação de tarefas"
+              >
+                {TASK_SORT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted" />
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
       <div className="px-4">
-        <TaskList filter={activeTab} assigneeFilter={scopeFilter === 'my' && currentMemberId ? currentMemberId : 'all'} onEditTask={handleEditTask} onToggleStatus={handleToggleStatus} />
+        <TaskList 
+          filter={activeTab} 
+          assigneeFilter={scopeFilter === 'my' && currentMemberId ? currentMemberId : 'all'} 
+          sortBy={sortBy}
+          onEditTask={handleEditTask} 
+          onToggleStatus={handleToggleStatus} 
+        />
       </div>
 
       {isFormOpen && (

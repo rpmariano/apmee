@@ -271,14 +271,6 @@ export default function FormsPage() {
                 ? 'Nenhum formulário corresponde aos filtros selecionados.'
                 : 'Guarde links para formulários Microsoft Forms, questionários e inquéritos da associação.'}
             </p>
-            <button
-              type="button"
-              onClick={handleOpenNew}
-              className="mt-4 flex items-center gap-1.5 rounded-full bg-primary-500 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-primary-600 active:scale-95 transition-all"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Criar Primeiro Formulário</span>
-            </button>
           </div>
         ) : (
           <div className="flex flex-col gap-3">

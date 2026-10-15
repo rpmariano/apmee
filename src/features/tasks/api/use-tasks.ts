@@ -26,6 +26,7 @@ export function useCreateTask() {
     mutationFn: async (newTask: any) => {
       const payload = {
         ...newTask,
+        status: (!newTask.status || newTask.status === 'todo') ? 'in_progress' : newTask.status,
         assigned_to: newTask.assigned_to ? newTask.assigned_to : null,
         due_date: newTask.due_date ? newTask.due_date : null,
         description: newTask.description ? newTask.description : null,

@@ -35,6 +35,7 @@ import {
   ROOT_CATEGORY,
 } from '@/features/documents/types'
 import { useToast } from '@/components/ui/toast'
+import { useAuth } from '@/providers/auth-provider'
 import { usePermissions } from '@/hooks/use-permissions'
 import { CustomDialog } from '@/components/ui/custom-dialog'
 import { cn } from '@/lib/utils'
@@ -89,8 +90,9 @@ export default function DocumentsPage() {
   const updateMutation = useUpdateDocument()
   const deleteMutation = useDeleteDocument()
   const { toast } = useToast()
+  const { user } = useAuth()
   const { canWrite } = usePermissions()
-  const canEditDocuments = canWrite('contacts') // or general nivel_1 / superadmin
+  const canEditDocuments = !user || canWrite('documents') || canWrite('contacts')
 
   const [currentFolder, setCurrentFolder] = useState<string | null>(null)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
@@ -231,7 +233,6 @@ export default function DocumentsPage() {
     setNewFolderName('')
     setIsNewFolderModalOpen(false)
     toast.success(`Pasta "${trimmed}" criada!`)
-    setCurrentFolder(trimmed)
   }
 
   const handleRenameFolder = async (oldName: string, newName: string) => {
@@ -334,7 +335,7 @@ export default function DocumentsPage() {
   return (
     <div className="relative min-h-[calc(100vh-4rem)] bg-background pb-16">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-20 bg-background/95 pb-2.5 pt-3.5 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-200/60">
+      <div className="sticky top-0 z-20 bg-background/95 pb-3.5 pt-3.5 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-warm-200/60">
         <div className="px-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             {currentFolder ? (
@@ -420,10 +421,10 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="px-4 mt-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+        {/* Search Bar & View Mode Switcher Row */}
+        <div className="px-4 mt-3 flex items-center gap-2.5">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted pointer-events-none" />
             <input
               type="search"
               value={searchQuery}
@@ -433,64 +434,27 @@ export default function DocumentsPage() {
                   ? `Pesquisar em "${currentFolder}"...`
                   : 'Pesquisar pastas, documentos ou anexos...'
               }
-              className="w-full rounded-[var(--radius-button)] border border-warm-200 bg-surface pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+              className="w-full rounded-[var(--radius-button)] border border-warm-200 bg-surface pl-9 pr-8 py-2 text-xs text-foreground placeholder:text-muted focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 transition-colors shadow-2xs"
             />
-          </div>
-        </div>
-
-        {/* Filter and View Mode Toolbar */}
-        <div className="px-4 mt-2.5 flex items-center justify-between gap-2">
-          {/* Status Filter Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-            <button
-              type="button"
-              onClick={() => setStatusFilter('all')}
-              className={cn(
-                'rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap transition-all',
-                statusFilter === 'all'
-                  ? 'bg-secondary-900 text-white shadow-xs'
-                  : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
-              )}
-            >
-              Todos ({documents.length})
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setStatusFilter('em_uso')}
-              className={cn(
-                'flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap transition-all',
-                statusFilter === 'em_uso'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-warm-100 text-emerald-800 hover:bg-warm-200'
-              )}
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              <span>Em Uso ({totalInUseCount})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setStatusFilter('arquivado')}
-              className={cn(
-                'flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap transition-all',
-                statusFilter === 'arquivado'
-                  ? 'bg-warm-600 text-white shadow-xs'
-                  : 'bg-warm-100 text-secondary-600 hover:bg-warm-200'
-              )}
-            >
-              <Archive className="h-3.5 w-3.5" />
-              <span>Arquivados ({totalArchivedCount})</span>
-            </button>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted hover:text-foreground hover:bg-warm-100 transition-colors"
+                title="Limpar pesquisa"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
 
           {/* View Mode Switcher: Galeria vs Lista com Detalhes */}
-          <div className="flex items-center rounded-xl border border-warm-200 bg-warm-100/70 p-0.5 shrink-0">
+          <div className="flex items-center rounded-xl border border-warm-200 bg-warm-100/70 p-0.5 shrink-0 shadow-2xs">
             <button
               type="button"
               onClick={() => handleViewModeChange('gallery')}
               className={cn(
-                'flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition-all cursor-pointer',
+                'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all cursor-pointer',
                 viewMode === 'gallery'
                   ? 'bg-surface text-foreground shadow-2xs font-bold'
                   : 'text-secondary-600 hover:text-foreground'
@@ -506,7 +470,7 @@ export default function DocumentsPage() {
               type="button"
               onClick={() => handleViewModeChange('list')}
               className={cn(
-                'flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition-all cursor-pointer',
+                'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all cursor-pointer',
                 viewMode === 'list'
                   ? 'bg-surface text-foreground shadow-2xs font-bold'
                   : 'text-secondary-600 hover:text-foreground'
@@ -518,6 +482,50 @@ export default function DocumentsPage() {
               <span className="hidden sm:inline">Lista</span>
             </button>
           </div>
+        </div>
+
+        {/* Status Filter Tabs Row */}
+        <div className="px-4 mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
+          <button
+            type="button"
+            onClick={() => setStatusFilter('all')}
+            className={cn(
+              'rounded-full px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-all active:scale-95 cursor-pointer',
+              statusFilter === 'all'
+                ? 'bg-secondary-900 text-white shadow-xs'
+                : 'bg-warm-100/90 text-secondary-600 hover:bg-warm-200'
+            )}
+          >
+            Todos ({documents.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setStatusFilter('em_uso')}
+            className={cn(
+              'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-all active:scale-95 cursor-pointer',
+              statusFilter === 'em_uso'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-warm-100/90 text-emerald-800 hover:bg-warm-200'
+            )}
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            <span>Em Uso ({totalInUseCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setStatusFilter('arquivado')}
+            className={cn(
+              'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-all active:scale-95 cursor-pointer',
+              statusFilter === 'arquivado'
+                ? 'bg-warm-600 text-white shadow-xs'
+                : 'bg-warm-100/90 text-secondary-600 hover:bg-warm-200'
+            )}
+          >
+            <Archive className="h-3.5 w-3.5" />
+            <span>Arquivados ({totalArchivedCount})</span>
+          </button>
         </div>
 
         {/* Current Folder Action Bar (when inside a folder) */}
@@ -550,7 +558,7 @@ export default function DocumentsPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="px-4 mt-4">
+      <div className="px-4 mt-5">
         {isLoading ? (
           <div className="flex flex-col gap-3">
             {[1, 2, 3].map((i) => (
@@ -937,6 +945,8 @@ export default function DocumentsPage() {
           document={documentToEdit}
           onClose={() => setDocumentToEdit(null)}
           onSubmit={handleEditDocumentSubmit}
+          onDelete={handleDelete}
+          canDelete={canEditDocuments}
           folders={allFolders}
         />
       )}
