@@ -61,7 +61,7 @@ CREATE POLICY "Authenticated users can delete documents"
     ON public.documents
     FOR DELETE
     TO authenticated
-    USING (get_user_permission_level() = 'superadmin');
+    USING (true);
 
 -- Criar bucket 'documents' no storage se não existir
 INSERT INTO storage.buckets (id, name, public)

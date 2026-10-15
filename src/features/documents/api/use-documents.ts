@@ -246,36 +246,68 @@ export function useDeleteDocument() {
       const existing = getLocalFallback()
       saveLocalFallback(existing.filter((d) => d.id !== id))
 
-      // 2. Attempt deletion in Supabase (soft-delete first, then hard-delete fallback)
+      // 2. Try to clean up storage if we have the file url
       try {
-        const { data, error: softErr } = await (supabase as any)
-          .from('documents')
-          .update({ deleted_at: new Date().toISOString() })
-          .eq('id', id)
-          .select('id')
-
-        // If soft-delete failed or affected 0 rows, attempt hard delete
-        if (softErr || !data || data.length === 0) {
-          const { error: hardErr } = await (supabase as any)
-            .from('documents')
-            .delete()
-            .eq('id', id)
-
-          if (hardErr && softErr) {
-            console.warn('Ambos os métodos de remoção falharam no Supabase:', { softErr, hardErr })
+        const cachedDocs = queryClient.getQueryData<AppDocument[]>([DOCUMENTS_QUERY_KEY])
+        const targetDoc = cachedDocs?.find((d) => d.id === id)
+        if (targetDoc?.file_url) {
+          const match = targetDoc.file_url.match(/\/(documents|receipts)\/([^?#]+)/)
+          if (match) {
+            const bucket = match[1]
+            const path = decodeURIComponent(match[2])
+            await (supabase as any).storage.from(bucket).remove([path])
           }
         }
-      } catch (err) {
-        console.warn('Erro ao eliminar documento no Supabase:', err)
+      } catch (storageErr) {
+        console.warn('Não foi possível remover ficheiro do storage:', storageErr)
+      }
+
+      // 3. Attempt hard delete in Supabase first
+      const { error: hardErr } = await (supabase as any)
+        .from('documents')
+        .delete()
+        .eq('id', id)
+
+      // If hard delete succeeded, we are done!
+      if (!hardErr) {
+        return id
+      }
+
+      console.warn('Hard delete falhou no Supabase, a tentar soft-delete (deleted_at):', hardErr)
+
+      // 4. If hard delete failed (e.g. RLS restricts DELETE to superadmin), attempt soft-delete WITHOUT .select()
+      // Crucial: do NOT append .select() here, as PostgreSQL RETURNING runs the SELECT RLS policy on the row,
+      // which fails since deleted_at IS NOT NULL.
+      const { error: softErr } = await (supabase as any)
+        .from('documents')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id)
+
+      if (softErr) {
+        console.error('Ambos os métodos de remoção falharam no Supabase:', { hardErr, softErr })
+        throw new Error(hardErr.message || softErr.message || 'Erro ao eliminar documento no Supabase.')
       }
 
       return id
     },
-    onSuccess: (_data, id) => {
-      // Optimistically remove from query cache immediately
+    onMutate: async (id: string) => {
+      // Optimistic update: cancel ongoing refetches and immediately remove doc from cache
+      await queryClient.cancelQueries({ queryKey: [DOCUMENTS_QUERY_KEY] })
+      const previousDocs = queryClient.getQueryData<AppDocument[]>([DOCUMENTS_QUERY_KEY])
+
       queryClient.setQueryData<AppDocument[]>([DOCUMENTS_QUERY_KEY], (old = []) =>
         old.filter((d) => d.id !== id)
       )
+
+      return { previousDocs }
+    },
+    onError: (_err, _id, context) => {
+      // Rollback to previous docs on failure
+      if (context?.previousDocs) {
+        queryClient.setQueryData([DOCUMENTS_QUERY_KEY], context.previousDocs)
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [DOCUMENTS_QUERY_KEY] })
     },
   })

@@ -328,7 +328,7 @@ export default function DocumentsPage() {
       toast.success('Documento eliminado com sucesso!')
     } catch (err: any) {
       console.error('Falha ao eliminar documento:', err)
-      toast.error('Erro ao eliminar documento.')
+      toast.error(err?.message || 'Erro ao eliminar documento.')
     }
   }
 
