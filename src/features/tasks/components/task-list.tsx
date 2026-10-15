@@ -70,10 +70,20 @@ export function TaskList({
   }
 
   const priorityOrder: Record<string, number> = {
+    urgent: 0,
     urgente: 0,
+    high: 1,
     alta: 1,
+    medium: 2,
     media: 2,
+    média: 2,
+    low: 3,
     baixa: 3,
+  }
+
+  const getPriorityWeight = (p?: string | null): number => {
+    const key = (p || '').toLowerCase().trim()
+    return priorityOrder[key] ?? 2
   }
 
   const sortTasks = (a: Task, b: Task) => {
@@ -93,8 +103,8 @@ export function TaskList({
         return 1
       }
       // Desempate por criticidade
-      const aPrio = priorityOrder[a.priority] ?? 2
-      const bPrio = priorityOrder[b.priority] ?? 2
+      const aPrio = getPriorityWeight(a.priority)
+      const bPrio = getPriorityWeight(b.priority)
       if (aPrio !== bPrio) return aPrio - bPrio
 
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -110,10 +120,9 @@ export function TaskList({
       return a.title.localeCompare(b.title, 'pt')
     }
 
-    // Default: 'priority' (Criticidade: do mais importante para o menos importante)
-    // Urgente (0) > Alta (1) > Média (2) > Baixa (3)
-    const aPrio = priorityOrder[a.priority] ?? 2
-    const bPrio = priorityOrder[b.priority] ?? 2
+    // Default: 'priority' (Criticidade: Urgente > Alta > Média > Baixa)
+    const aPrio = getPriorityWeight(a.priority)
+    const bPrio = getPriorityWeight(b.priority)
     if (aPrio !== bPrio) return aPrio - bPrio
 
     // Desempate por data limite mais próxima
@@ -130,7 +139,7 @@ export function TaskList({
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   }
 
-  // Group tasks by assignee
+  // Group tasks by assignee (Mantém rigorosamente o agrupamento por utilizador)
   const groupedTasks = filteredTasks.reduce((acc, task) => {
     const assigneeId = task.assigned_to || 'unassigned'
     if (!acc[assigneeId]) acc[assigneeId] = []
@@ -138,7 +147,7 @@ export function TaskList({
     return acc
   }, {} as Record<string, Task[]>)
 
-  // Sort tasks within each group
+  // Sort tasks within each user group according to sortBy
   Object.values(groupedTasks).forEach(list => list.sort(sortTasks))
 
   // Helper to get assignee name
@@ -148,20 +157,25 @@ export function TaskList({
     return member ? (member.display_name || member.email) : 'Desconhecido'
   }
 
-  // Sort groups: Unassigned first, then alphabetically
+  // Sort groups: Utilizadores por ordem alfabética, 'Sem atribuição' no fim
   const groupKeys = Object.keys(groupedTasks).sort((a, b) => {
-    if (a === 'unassigned') return -1
-    if (b === 'unassigned') return 1
-    return getAssigneeName(a).localeCompare(getAssigneeName(b))
+    if (a === 'unassigned') return 1
+    if (b === 'unassigned') return -1
+    return getAssigneeName(a).localeCompare(getAssigneeName(b), 'pt')
   })
 
   return (
     <div className="flex flex-col gap-6 py-4">
       {groupKeys.map((assigneeId) => (
         <div key={assigneeId} className="flex flex-col gap-3">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-secondary-600">
-            {getAssigneeName(assigneeId)}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-secondary-600">
+              {getAssigneeName(assigneeId)}
+            </h3>
+            <span className="rounded-full bg-warm-200/70 px-2 py-0.5 text-[10px] font-bold text-secondary-700">
+              {groupedTasks[assigneeId].length}
+            </span>
+          </div>
           <div className="flex flex-col gap-3">
             {groupedTasks[assigneeId].map((task) => (
               <TaskCard 
